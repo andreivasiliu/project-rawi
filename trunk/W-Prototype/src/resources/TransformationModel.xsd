@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.example.org/TransformationModel" elementFormDefault="qualified" xmlns:tm="http://www.example.org/TransformationModel">
+
+    <element name="transformationModel"
+    	type="tm:transformationModelType">
+    </element>
+    
+    <complexType name="transformationGraphType">
+        <sequence>        	<choice minOccurs="0" maxOccurs="unbounded"><element name="packNode" type="tm:packNodeType">
+        	</element><element name="packTransformerNode" type="tm:packTransformerType">
+        	</element></choice>
+        </sequence>
+    </complexType>
+
+    <complexType name="packNodeType">
+    	<complexContent>
+            <extension base="tm:nodeType">
+    		</extension>
+    	</complexContent>
+    </complexType>
+
+    <complexType name="packTransformerType">
+    	<complexContent>
+            <extension base="tm:nodeType"></extension>
+    	</complexContent>
+    </complexType>
+    
+    <complexType name="nodeType" abstract="true">
+    	<sequence>
+    		<element name="input" type="tm:linkType" minOccurs="0"
+    			maxOccurs="unbounded">
+    		</element>
+    		<element name="output" type="tm:linkType" minOccurs="0"
+    			maxOccurs="unbounded">
+    		</element>
+    	</sequence>
+    	<attribute name="id" use="required" type="tm:idType">
+    	</attribute>
+    	<attribute name="name" type="tm:nameType" use="optional"></attribute>
+    </complexType>
+
+    <simpleType name="idType">
+    	<annotation>
+    		<documentation>
+    			A node ID is a positive number. It may not be 0.
+    		</documentation>
+    	</annotation>
+    	<restriction base="int">
+    		<minInclusive value="1"></minInclusive>
+    	</restriction>
+    </simpleType>
+
+
+    <complexType name="linkType">
+    	<attribute name="node" type="tm:idType"></attribute>
+    </complexType>
+
+    <complexType name="transformationModelType">
+        <sequence>
+        	<element name="transformationGraph" type="tm:transformationGraphType" minOccurs="1" maxOccurs="1"></element>
+        </sequence>
+    </complexType>
+
+    <simpleType name="nameType">
+    	<restriction base="string">
+    		<minLength value="1"></minLength>
+    	</restriction>
+    </simpleType>
+</schema>
