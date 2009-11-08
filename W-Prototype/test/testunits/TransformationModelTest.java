@@ -9,6 +9,8 @@ import java.util.regex.Pattern;
 import org.junit.Before;
 import org.junit.Test;
 
+import project.Common.CommandList;
+import project.Common.ConsoleCommand;
 import project.Exceptions.DuplicateNameException;
 import project.MainServer.TransformationModel;
 import project.MainServer.TransformationModel.*;
@@ -98,18 +100,16 @@ public class TransformationModelTest
     @Test
     public void testSetCommand()
     {
-        assertTrue(false);
+        PackTransformer packTransformer = model.addPackTransformerNode();
+        CommandList command = new CommandList();
+        command.addCommand(new ConsoleCommand("cp a.txt b.txt\n"));
+        command.addCommand(new ConsoleCommand("cp b.txt c.txt\n"));
+
+        packTransformer.setCommand(command);
     }
     
     /* TODO:
      * 
-     * - setCommand/Script
      * - setJoiner/Splitter
      */
-    
-    @Test
-    public void testAllDone()
-    {
-        assertFalse("Still need to add tests!", true);
-    }
 }

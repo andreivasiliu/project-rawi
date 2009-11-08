@@ -1,7 +1,6 @@
 package project.MainServer;
 
 import project.MainServer.TransformationModel.*;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException; // TODO: remove
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -39,7 +38,7 @@ public class WorkSession
     public Task getPendingTask()
     {
         // TODO
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException("Not supported yet.");
     }
     
     // TODO: Find out how to do that link.
@@ -49,19 +48,19 @@ public class WorkSession
     public void markTaskAsFinished(Task task)
     {
         // TODO
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public void setDestination(int packId)
     {
         // TODO Auto-generated method stub
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException("Not supported yet.");
     }
     
     public void setDestination(String packName)
     {
         // TODO Auto-generated method stub
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException("Not supported yet.");
     }
     
     public PackInstance getPackInstance(int id)
@@ -125,35 +124,35 @@ public class WorkSession
         public void removeFiles(String pattern)
         {
             // TODO Auto-generated method stub
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException("Not supported yet.");
         }
 
         public void removeAllFiles()
         {
             // TODO Auto-generated method stub
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException("Not supported yet.");
         }
 
         public void removeFile(String fileName)
         {
             // TODO Auto-generated method stub
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException("Not supported yet.");
         }
 
         public boolean acceptsFileName(String fileName)
         {
-            return origin.acceptsFileName(fileName);
+            throw new UnsupportedOperationException("Not supported yet.");
         }
 
         public PackFileWriter putFile(String fileName) throws IOException
         {
-            return new PackFileWriter(fileName);
+            throw new UnsupportedOperationException("Not supported yet.");
         }
 
         public void markAsReady()
         {
             // TODO Auto-generated method stub
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException("Not supported yet.");
         }
     }
     
@@ -179,7 +178,7 @@ public class WorkSession
         public PackFileWriter(String fileName) throws IOException
         {
             super(fileName);
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException("Not supported yet.");
         }
     }
 }
