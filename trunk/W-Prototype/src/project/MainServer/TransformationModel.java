@@ -18,8 +18,8 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
+import project.Common.Command;
 import project.Exceptions.DuplicateNameException;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /** 
  * An abstract description of the processing graph.
@@ -295,9 +295,9 @@ public class TransformationModel
             }
             else
             {
-                for (Pattern pattern: patternList)
+                for (Pattern p: patternList)
                 {
-                    Matcher m = pattern.matcher(fileName);
+                    Matcher m = p.matcher(fileName);
                     if (m.matches())
                         return true;
                 }
@@ -336,6 +336,7 @@ public class TransformationModel
     {
         private Set<Pack> inputs = new HashSet<Pack>();
         private Set<Pack> outputs = new HashSet<Pack>();
+        Command command;
 
         private PackTransformer()
         {
@@ -366,7 +367,16 @@ public class TransformationModel
             packTransformerNameToPack.put(name, this);
             super.name = name;
         }
-        
+
+        public Command getCommand()
+        {
+            return command;
+        }
+
+        public void setCommand(Command command)
+        {
+            this.command = command;
+        }
     }
     
     /**
