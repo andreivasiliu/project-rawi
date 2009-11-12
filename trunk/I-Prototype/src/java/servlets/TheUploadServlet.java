@@ -9,7 +9,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,6 +24,7 @@ import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import java.util.UUID;
 
 /**
  *
@@ -29,60 +32,17 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
  */
 public class TheUploadServlet extends HttpServlet {
 
-    /** 
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        PrintWriter out = response.getWriter();
-        try {
-            /* TODO output your page here
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet TheServlet</title>");  
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet TheServlet at " + request.getContextPath () + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-             */
-        } finally {
-            out.close();
-        }
-    }
+    public String filesPath;
+    // hash map with: <userAddr, userID>
+    // userID = unique - for the folder name
+    private static HashMap<String, String> users = new HashMap<String, String>();
+    private static List<File> fileList = new LinkedList<File>();
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /** 
-     * Handles the HTTP <code>GET</code> method.
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
 
-    }
-
-    /** 
-     * Handles the HTTP <code>POST</code> method.
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    @Override
+   @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
-
+ 
         // Check that we have a file upload request
         boolean isMultipart = ServletFileUpload.isMultipartContent(request);
 
@@ -108,11 +68,14 @@ public class TheUploadServlet extends HttpServlet {
             if (item.isFormField()) {
                 processFormField(item);
             } else {
-                processUploadedFile(item);
+                System.out.println("==> " + request.getRemoteAddr() + " <==");
+                processUploadedFile(item, request.getRemoteAddr());
             }
         }
+        response.sendRedirect("index.jsp");
     }
 
+    
     private void processFormField(FileItem item) {
         String name = item.getFieldName();
         String value = item.getString();
@@ -120,26 +83,47 @@ public class TheUploadServlet extends HttpServlet {
                 "value = " + value);
     }
 
-    private void processUploadedFile(FileItem item) throws IOException{
+    private void processUploadedFile(FileItem item, String userAddr) throws IOException {
         InputStream uploadedStream = item.getInputStream();
 
-        File myFile = new File("NuConteaza.txt");
+        // Generate random numbers for  the file name,
+        // and associate them to the user addr
+        String userID;
+        if (!users.containsKey(userAddr)) {
+            userID = UUID.randomUUID().toString();
+            users.put(userAddr, userID);
+        }
+        else
+            userID = users.get(userAddr);
+
+        String fileName = item.getName();
+        if(fileName.isEmpty())
+            return;
+
+        // Create or use the folder for the given file
+        String folderPath = System.getProperty("user.dir") +
+                "\\Uploaded XML Files\\";
+        String folderName = userID;
+        File folder = new File(folderPath + folderName);
+        folder.mkdir();
+
+        System.out.println(folderPath + " - " + folderName + " - " + fileName);
+        File myFile = new File(folderPath + folderName + "\\" + fileName);
+        if(!fileList.contains(myFile))
+            fileList.add(myFile);
         FileOutputStream fos = new FileOutputStream(myFile);
         int sth;
-        while((sth = uploadedStream.read()) != -1) {
+        while ((sth = uploadedStream.read()) != -1) {
             fos.write(sth);
         }
         fos.write(32);
         fos.close();
         uploadedStream.close();
+
     }
 
-    /** 
-     * Returns a short description of the servlet.
-     * @return a String containing servlet description
-     */
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
+    public static List<File> getFileList() {
+        return fileList;
+    }
+
 }

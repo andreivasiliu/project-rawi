@@ -14,7 +14,7 @@
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>TheDownloadServlet</servlet-name>
-        <url-pattern>/TheDownloadServlet</url-pattern>
+        <url-pattern>/TheDownloadServlet/*</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>
