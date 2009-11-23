@@ -5,9 +5,6 @@
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%@ page import="servlets.TheUploadServlet" %>
-<%@ page import="java.util.*" %>
-<%@ page import="java.io.*" %>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
     "http://www.w3.org/TR/html4/loose.dtd">
@@ -18,29 +15,12 @@
         <title>I-Prototype</title>
     </head>
     <body>
-        <h1>Download/Upload Page</h1>
+        <h2>Message Administration Page</h2>
 
-        <form method="post" action="TheUploadServlet" enctype='multipart/form-data'>
-            <input type="file" name="myFileAttribute" /> <br />
-            <input type="file" name="mySecondFileAttribute" /> <br />
-            <input type="submit" value="Upload"/>
+        <form method="get" action="CentralMessageService" enctype='multipart/form-data'>
+            From Index: <input type="text" name="fromId" /> <br />
+            <input type="submit" value="Get XML"/>
         </form><br />
-
-        <ul>
-            <%
-            List<File> fileList = TheUploadServlet.getFileList();
-
-            for (int i = 0; i < fileList.size(); i++) {
-                File f = fileList.get(i);
-                String hrefMsg = f.getName() + "?path=" + f.getPath();
-            %>
-                <li>
-                    <a href="TheDownloadServlet/<%= hrefMsg%>">
-                        <%= f.getName()%>
-                    </a>
-                </li>
-            <% } %>
-        </ul>
 
     </body>
 </html>

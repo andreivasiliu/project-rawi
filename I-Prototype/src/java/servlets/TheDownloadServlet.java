@@ -25,10 +25,12 @@ public class TheDownloadServlet extends HttpServlet {
             throws ServletException, IOException {
         //processRequest(request, response);
         response.setContentType("application/octet-stream");
+        //response.setContentType("text/xml");
 
         OutputStream out = response.getOutputStream();
-        String path = request.getParameter("path");
-        
+        String path = request.getParameter("selectFiles");
+        System.out.println(request.getParameter("selectFiles"));
+
         File requestedFile = new File(path);
         InputStream is = new FileInputStream(requestedFile);
         
