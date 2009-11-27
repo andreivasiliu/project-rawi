@@ -1,0 +1,61 @@
+#summary An analysis of the entire system with the help of a possible usage scenario.
+#labels Phase-Design
+
+= Requirements =
+
+All components (mainserver, webserver, clustercomputer) must use the "fire and forget" principle. This means that components must self-configure themselves, must find each other automatically, and must be controllable remotely.
+
+Components can be started or stopped at any time, without severely affecting other components.
+
+All persistent data must stored on the webserver.
+
+= Details =
+
+Setup involves running a RAWI-MainServer.jar on a computer, running RAWI-ClusterComputer.jar on zero or more other computers, and deploying RAWI-WebServer.war on a servlet container. A user then goes to http://.../rawi/ and receives an user interface.
+
+== Working with Transformation Models ==
+
+ * The user should be presented with a list of available transformation models.
+   * The client interface must request this list and show it when the interface is first started
+   * This list resides on the webserver... the webserver must have a servlet that serves a list of models in XML format
+     * If the models are in a well-known location (one returned by context.getRealPath("/models")), then scan the folder for .xml files, and consider each file name (sans the .xml extension) as a model name
+     * If the models are in a database (requires setting up a database), then just do a simple query
+     * (more detail needed)
+ * The user should be allowed to create a new model from scratch.
+   * This means a "New Model" button. No requests to the webserver are sent yet.
+   * The new model will have a single pack node (or even no nodes), and will have a generic name ("Untitled Model")
+ * The user creates new nodes on the transformation model, links them to each other, and sets various properties
+   * Not required, but the client could periodically ask the webserver to validate a model without saving it
+     * The webserver needs a servlet for this
+     * To validate it, the webserver needs to ask the mainserver. For this, it must know where the mainserver is...
+     * The webserver queries the IP tracker to find a mainserver...
+       * This assumes that the mainserver announced its presence to the IP tracker...
+         * Every 2-3 minutes, the mainserver must send a request to http://testbot73.appspot.com/PutIPServlet?type=MainServer&name=IpAddress, probably for each IP address it has
+         * The mainserver must figure out its IPs whenever it sends a request
+       * If the IP tracker knows of no mainservers, it sends a "Cannot validate; no mainserver found" response to the client
+       * If it receives one or more IPs, it checks them one by one (with RMI) until one responds
+         * (exactly how to check is not yet clear... probably by attempting to call a ping() method that is exported by the mainserver through RMI)
+     * If it finds a mainserver, it asks it to validate the model
+       * This involves just a RMI call
+       * The server will parse the model XML, attempt to construct a representation, and return whether it succeeded (the representation is then discarded)
+     * The webserver will take the mainserver's response, and construct an XML from it
+       * (no idea how... maybe by forwarding to a JSP page)
+     * The web client receives this XML as a response, and in case of an error, it highlights the guilty node, and somehow shows the message (in a statusbar or tooltip)
+   * The user clicks "Save model", and expects to see the model added to the listbox of available models
+     * If the user did not change the name from "Untitled Model", then "Save model" will not work
+     * Otherwise, it sends a Save request to the webserver
+       * The webserver needs a servlet for this... probably the same one as before
+       * The webserver validates the model (as above)
+       * On success, it somehow saves/overwrites the XML in a well-known fixed location
+         * Either as a file on a path returned by context.getRealPath("/models")
+         * Or as text in a database (but this requires a database)
+       * The webserver responds with an XML response (whether successful or not, as above)
+     * The client receives the XML, and if successful, it adds the model to a listbox.
+   * The user may want to see or modify a stored model
+     * The web client must be able to retrieve a model XML from the webserver
+       * If the model was stored in a well-known location, no servlet is needed for this
+     * The web client downloads http://.../rawi/models/Model%20Name.xml, and displays it as a graph
+
+== Working with Work Sessions ==
+
+_Under Construction_
