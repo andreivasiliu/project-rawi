@@ -1,6 +1,6 @@
 package servlets;
 
-import classes.RMIMessage;
+import rawi.common.RMIMessage;
 import classes.RmiServer;
 import java.io.IOException;
 import java.io.PrintWriter;

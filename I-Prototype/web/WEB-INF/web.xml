@@ -16,6 +16,10 @@
         <servlet-name>CentralMessageService</servlet-name>
         <servlet-class>servlets.CentralMessageService</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>XmlTestServlet</servlet-name>
+        <servlet-class>servlets.XmlTestServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>TheUploadServlet</servlet-name>
         <url-pattern>/TheUploadServlet</url-pattern>
@@ -27,6 +31,10 @@
     <servlet-mapping>
         <servlet-name>CentralMessageService</servlet-name>
         <url-pattern>/CentralMessageService</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>XmlTestServlet</servlet-name>
+        <url-pattern>/XmlTestServlet</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>
