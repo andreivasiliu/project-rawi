@@ -18,7 +18,7 @@
         <h2>Message Administration Page</h2>
 
         <form method="get" action="CentralMessageService" enctype='multipart/form-data'>
-            From Index: <input type="text" name="fromId" /> <br />
+            From Index: <input type="text" name="fromId" value="0" /> <br />
             <input type="submit" value="Get XML"/>
         </form><br />
 
