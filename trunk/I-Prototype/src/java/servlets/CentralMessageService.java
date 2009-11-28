@@ -1,7 +1,7 @@
 package servlets;
 
 import rawi.common.RMIMessage;
-import classes.RmiServer;
+import classes.RMIWebServer;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
@@ -13,11 +13,11 @@ import javax.servlet.http.HttpServletResponse;
 
 public class CentralMessageService extends HttpServlet {
 
-    static RmiServer server;
+    static RMIWebServer server;
     
     @Override
     public void init(ServletConfig config) {
-        server = (RmiServer)config.getServletContext().getAttribute("server");
+        server = (RMIWebServer)config.getServletContext().getAttribute("server");
     }
     
     @Override
