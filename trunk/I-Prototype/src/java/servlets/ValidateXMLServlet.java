@@ -43,14 +43,14 @@ public class ValidateXMLServlet extends HttpServlet{
         } catch (NotBoundException ex) {
             throw new ServerException("Not bound exception", ex);
         }
-        ValidateXMLInfo info = msi.validateXml(xml);
+        ValidateXMLInfo info = msi.validateXML(xml);
 
-        out.println("<validateXmlInfo>");
+        out.println("<validateXMLInfo>");
             out.println("<xml-name>" + name + "</xml-name>");
             out.println("<xml-success>" + info.success +
                     "</xml-success>");
             out.println("<xml-message>" + info.message + "</xml-message>");
             out.println("<xml-nodeId>" + info.nodeID + "</xml-nodeId>");
-        out.println("</validateXmlInfo>");
+        out.println("</validateXMLInfo>");
     }
 }
