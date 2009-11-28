@@ -5,6 +5,7 @@ import rawi.common.WebServerInterface;
 import java.rmi.*;
 import java.util.ArrayList;
 import java.util.List;
+import rawi.common.Ports;
 import rawi.rmiinfrastructure.RMIServerModel;
 
 public class RMIWebServer extends RMIServerModel
@@ -40,6 +41,6 @@ public class RMIWebServer extends RMIServerModel
     }
 
     public RMIWebServer() throws RemoteException {
-        super(3232);
+        super(Ports.WebServerPort);
     }
 }
