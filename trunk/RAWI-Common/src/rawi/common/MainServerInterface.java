@@ -4,6 +4,6 @@ import java.rmi.*;
 
 public interface MainServerInterface extends Remote
 {
-   ValidateXMLInfo validateXml(String xml)
+   ValidateXMLInfo validateXML(String xml)
            throws RemoteException;
 }
