@@ -61,7 +61,6 @@ public class GetIPServlet extends HttpServlet {
 
     private void updateList(List<IPType> ipList, int minutes) {
         List<IPType> newList = new LinkedList<IPType>();
-
         for (IPType elt : ipList) {
             long age = rightNow.getTimeInMillis() - elt.time;
             int ageInMinutes = (int) TimeUnit.MILLISECONDS.toMinutes(age);
@@ -69,7 +68,6 @@ public class GetIPServlet extends HttpServlet {
                 newList.add(elt);
             }
         }
-
         PutIPServlet.setIdList(ipList);
     }
 }
