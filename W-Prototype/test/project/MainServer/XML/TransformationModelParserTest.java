@@ -1,5 +1,6 @@
-package testunits;
+package project.MainServer.XML;
 
+import project.MainServer.*;
 import java.io.InputStream;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -11,9 +12,7 @@ import java.io.Reader;
 import org.junit.Before;
 import org.junit.Test;
 
-import project.MainServer.TransformationModel;
-
-public class ModelFromXMLTest
+public class TransformationModelParserTest
 {
     TransformationModel model;
 
@@ -23,7 +22,7 @@ public class ModelFromXMLTest
         InputStream stream = this.getClass().
                 getResourceAsStream("/resources/SampleModel.xml");
         Reader reader = new InputStreamReader(stream);
-        model = TransformationModel.parseFromXML(reader);
+        model = TransformationModelParser.parseFromXML(reader);
     }
 
     @Test
