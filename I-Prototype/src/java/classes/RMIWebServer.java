@@ -3,21 +3,16 @@ package classes;
 import rawi.common.RMIMessage;
 import rawi.common.WebServerInterface;
 import java.rmi.*;
-import java.rmi.registry.*;
-import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
+import rawi.rmiinfrastructure.RMIServerModel;
 
-public class RmiServer extends java.rmi.server.UnicastRemoteObject
+public class RMIWebServer extends RMIServerModel
         implements WebServerInterface {
 
-    int thisPort;
-    String thisAddress;
-    Registry registry;    // rmi registry for lookup the remote objects.
     List<RMIMessage> messageList = new ArrayList<RMIMessage>();
 
-    // This method is called from the remote client by the RMI.
-    // This is the implementation of the “WebServerInterface”.
+    // RMI Metod
     public void logMessage(String source, String severity, String message)
             throws RemoteException {
 
@@ -44,19 +39,7 @@ public class RmiServer extends java.rmi.server.UnicastRemoteObject
         return list;
     }
 
-    public RmiServer() throws RemoteException {
-        try {
-            // get the address of this host.
-            thisAddress = (InetAddress.getLocalHost()).toString();
-        } catch (Exception e) {
-            throw new RemoteException("can't get inet address.");
-        }
-
-        thisPort = 3232;  // this port(registry’s port)
-        System.out.println("this address=" + thisAddress + ",port=" + thisPort);
-
-        // create the registry and bind the name and object.
-        registry = LocateRegistry.createRegistry(thisPort);
-        registry.rebind("rmiServer", this);
+    public RMIWebServer() throws RemoteException {
+        super(3232);
     }
 }
