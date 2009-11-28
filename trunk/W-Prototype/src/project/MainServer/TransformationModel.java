@@ -1,7 +1,5 @@
 package project.MainServer;
 
-import java.io.IOException;
-import java.io.Reader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -11,14 +9,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.DefaultHandler;
-import org.xml.sax.helpers.XMLReaderFactory;
-
 import project.Common.Command;
+import project.Exceptions.DoubleSplitterException;
 import project.Exceptions.DuplicateNameException;
 
 /** 
@@ -35,124 +27,8 @@ public class TransformationModel
     private Map<String, PackTransformer> packTransformerNameToPack =
         new HashMap<String, PackTransformer>();
     private int lastUsedID = 0;
-    
-    /**
-     * Will produce a graph from an XML description.
-     * 
-     * @param inputXml A reader for the source XML.
-     * @return A new TransformationModel object that corresponds with the XML
-     * description.
-     * @throws SAXException 
-     * @throws IOException 
-     */
-    public static TransformationModel parseFromXML(Reader inputXml)
-            throws SAXException, IOException
-    {
-        XMLReader reader = XMLReaderFactory.createXMLReader();
-        TransformationModel model = new TransformationModel();
-        
-        // TODO: Add more error-checking.
-        reader.setContentHandler(new DefaultHandler()
-        {
-            final String URI = "http://www.example.org/TransformationModel";
-            
-            Map<String, Node> localIdToNode = new HashMap<String, Node>();
-            Map<String, Set<String>> localIdToOutputList = new HashMap<String, Set<String>>();
-            TransformationModel model;
-            
-            Pack packNode = null;
-            PackTransformer packTransformerNode = null;
-            String currentID = null;
-            
-            @Override
-            public void startElement(String uri, String localName, String name,
-                    Attributes attributes) throws SAXException
-            {
-                if (!uri.equals(URI))
-                    return;
-                
-                if (localName.equals("packNode"))
-                {
-                    packNode = model.addPackNode();
-                    
-                    currentID = attributes.getValue("id");
-                    localIdToNode.put(currentID, packNode);
-                    
-                    String nodeName = attributes.getValue("name"); 
-                    if (nodeName != null)
-                        packNode.setName(nodeName);
-                }
-                else if (localName.equals("packTransformerNode"))
-                {
-                    packTransformerNode = model.addPackTransformerNode();
-                    
-                    currentID = attributes.getValue("id");
-                    localIdToNode.put(currentID, packTransformerNode);
-                    
-                    String nodeName = attributes.getValue("name"); 
-                    if (nodeName != null)
-                        packTransformerNode.setName(nodeName);
-                }
-                else if (localName.equals("output"))
-                {
-                    // TODO: Throw exception if ID is null.
-                    
-                    if (!localIdToOutputList.containsKey(currentID))
-                        localIdToOutputList.put(currentID, new HashSet<String>());
-                    
-                    Set<String> outputs = localIdToOutputList.get(currentID);
-                    outputs.add(attributes.getValue("node"));
-                }
-            }
-            
-            @Override
-            public void endElement(String uri, String localName, String name)
-                    throws SAXException
-            {
-                if (localName.equals("packNode"))
-                    packNode = null;
-                else if (localName.equals("packTransformerNode"))
-                    packTransformerNode = null;
-                else if (localName.equals("transformationGraph"))
-                    linkAllNodes();
-            }
-
-            private void linkAllNodes()
-            {
-                for (String from: localIdToOutputList.keySet())
-                {
-                    Set<String> toList = localIdToOutputList.get(from);
-                    
-                    Node fromNode = localIdToNode.get(from);
-                    if (fromNode == null)
-                        ;// TODO: throw Exception
-                    for (String to: toList)
-                    {
-                        Node toNode = localIdToNode.get(to);
-                        if (toNode == null)
-                            ;// TODO: throw Exception
-                        
-                        if (fromNode instanceof Pack && toNode instanceof PackTransformer)
-                            model.addOutput((Pack)fromNode, (PackTransformer)toNode);
-                        else if (fromNode instanceof PackTransformer && toNode instanceof Pack)
-                            model.addOutput((PackTransformer)fromNode, (Pack)toNode);
-                        else
-                            ;// TODO: throw Exception
-                    }
-                }
-            }
-            
-            public DefaultHandler withModel(TransformationModel model)
-            {
-                this.model = model;
-                return this;
-            }
-        }.withModel(model));
-        
-        reader.parse(new InputSource(inputXml));
-
-        return model;
-    }
+    private Set<ModelChangeListener> listeners =
+        new HashSet<ModelChangeListener>();
     
     public List<Node> getNodeList()
     {
@@ -161,12 +37,22 @@ public class TransformationModel
     
     public Pack addPackNode()
     {
-        return new Pack();
+        Pack pack = new Pack();
+
+        for (ModelChangeListener listener: listeners)
+            listener.packAdded(pack);
+
+        return pack;
     }
     
     public PackTransformer addPackTransformerNode()
     {
-        return new PackTransformer();
+        PackTransformer packTransformer = new PackTransformer();
+
+        for (ModelChangeListener listener: listeners)
+            listener.packTransformerAdded(packTransformer);
+
+        return packTransformer;
     }
     
     public void addOutput(Pack fromNode, PackTransformer toNode)
@@ -176,15 +62,51 @@ public class TransformationModel
         
         fromNode.outputs.add(toNode);
         toNode.inputs.add(fromNode);
+
+        if (fromNode.getSplitter() != null)
+        {
+            try
+            {
+                toNode.updateSplitter(fromNode.getSplitter());
+            }
+            catch (DoubleSplitterException e)
+            {
+                fromNode.outputs.remove(toNode);
+                toNode.inputs.remove(fromNode);
+
+                throw e;
+            }
+        }
+
+        for (ModelChangeListener listener: listeners)
+            listener.outputAdded(fromNode, toNode);
     }
-    
+
     public void addOutput(PackTransformer fromNode, Pack toNode)
     {
         if (fromNode == null || toNode == null)
             throw new NullPointerException();
-        
+
         fromNode.outputs.add(toNode);
         toNode.inputs.add(fromNode);
+
+        if (fromNode.getSplitter() != null)
+        {
+            try
+            {
+                toNode.updateSplitter(fromNode.getSplitter());
+            }
+            catch (DoubleSplitterException e)
+            {
+                fromNode.outputs.remove(toNode);
+                toNode.inputs.remove(fromNode);
+
+                throw e;
+            }
+        }
+
+        for (ModelChangeListener listener: listeners)
+            listener.outputAdded(fromNode, toNode);
     }
     
     public Pack getPack(int packId)
@@ -206,6 +128,16 @@ public class TransformationModel
     {
         return packTransformerNameToPack.get(name);
     }
+
+    public void addListener(ModelChangeListener listener)
+    {
+        listeners.add(listener);
+    }
+
+    public void removeListener(ModelChangeListener listener)
+    {
+        listeners.remove(listener);
+    }
     
     /**
      * A node in the Transformation Model.
@@ -214,7 +146,11 @@ public class TransformationModel
     {
         private int ID = ++lastUsedID;
         private String name = null;
+        protected Pack splitterPack;
         
+        abstract public Set<? extends Node> getInputs();
+        abstract public Set<? extends Node> getOutputs();
+
         private Node()
         {
             nodes.add(this);
@@ -232,8 +168,68 @@ public class TransformationModel
         
         public abstract void setName(String name);
         
-        abstract public Set<? extends Node> getInputs();
-        abstract public Set<? extends Node> getOutputs();
+        public Pack getSplitter()
+        {
+            return splitterPack;
+        }
+
+        protected void removeSplitter(Pack splitterPackToRemove)
+        {
+            if (splitterPack == null || splitterPack != splitterPackToRemove)
+                return;
+
+            splitterPack = null;
+
+            for (Node output: getOutputs())
+                output.removeSplitter(splitterPackToRemove);
+
+            for (ModelChangeListener listener: listeners)
+                listener.splitterChanged(this);
+        }
+
+        /* Note: This method is overrided by pack transformers, and this code
+         * is not executed by those pack transformers that are set as joiners.
+         */
+        protected void updateSplitter(Pack newSplitterPack)
+        {
+            if (splitterPack == newSplitterPack)
+                return;
+
+            if (newSplitterPack == null)
+                throw new NullPointerException();
+
+            if (newSplitterPack != null && splitterPack != null)
+                throw new DoubleSplitterException("Node " + getId() + " has " +
+                        "two splitter packs.");
+
+            try
+            {
+                splitterPack = newSplitterPack;
+
+                for (Node output: getOutputs())
+                    output.updateSplitter(newSplitterPack);
+
+                // Due to the depth-first-search nature of updateSplitter,
+                // listeners may be called even though another branch might
+                // throw an exception. For that reason, the catch() block will
+                // set all changed branches back to null, so the listeners
+                // can revert their changes as well.
+                for (ModelChangeListener listener: listeners)
+                    listener.splitterChanged(this);
+            }
+            catch (DoubleSplitterException e)
+            {
+                this.removeSplitter(newSplitterPack);
+                
+                throw e;
+            }
+        }
+
+        // This is overridden by packs.
+        boolean isSplitter()
+        {
+            return false;
+        }
     }
     
     /** 
@@ -244,10 +240,11 @@ public class TransformationModel
     {
         private Set<PackTransformer> inputs = new HashSet<PackTransformer>();
         private Set<PackTransformer> outputs = new HashSet<PackTransformer>();
-        Pattern pattern = Pattern.compile(".*");
-        List<Pattern> patternList;
-        private boolean isMultiPack = false;
-        
+        private Pattern pattern = Pattern.compile(".*");
+        private List<Pattern> patternList;
+        private boolean isSplitter = false;
+        private boolean allowsEmptyPack;
+
         private Pack()
         {
             super();
@@ -281,9 +278,46 @@ public class TransformationModel
         /**
          * Returns whether this pack has multiple states.
          */
-        public boolean isMultiPack()
+        @Override
+        public boolean isSplitter()
         {
-            return isMultiPack;
+            return isSplitter;
+        }
+
+        public void setIsSplitter(boolean isSplitter)
+        {
+            this.isSplitter = isSplitter;
+
+            if (isSplitter == false)
+            {
+                this.removeSplitter(this);
+                return;
+            }
+
+            try
+            {
+                this.updateSplitter(isSplitter ? this : null);
+            }
+            catch (DoubleSplitterException e)
+            {
+                this.isSplitter = false;
+
+                throw e;
+            }
+        }
+
+        public boolean allowsEmptyPack()
+        {
+            return allowsEmptyPack;
+        }
+
+        /** Sets whether this splitter pack will be considered "ready" when it
+         * has no files. This option has no effect on packs that are not
+         * splitters.
+         */
+        public void setAllowsEmptyPack(boolean allowsEmptyPack)
+        {
+            this.allowsEmptyPack = allowsEmptyPack;
         }
 
         public boolean acceptsFileName(String fileName)
@@ -308,23 +342,32 @@ public class TransformationModel
 
         public void setPattern(Pattern pattern)
         {
+            setIsSplitter(false);
             this.pattern = pattern;
             this.patternList = null;
-            isMultiPack = false;
+
+            for (ModelChangeListener listener: listeners)
+                listener.patternChanged(this);
         }
 
         public void setPattern(Pattern pattern, boolean createMultiPack)
         {
+            setIsSplitter(createMultiPack);
             this.pattern = pattern;
             this.patternList = null;
-            isMultiPack = createMultiPack;
+
+            for (ModelChangeListener listener: listeners)
+                listener.patternChanged(this);
         }
 
         public void setPatternList(List<Pattern> patternList)
         {
+            setIsSplitter(true);
             this.pattern = null;
             this.patternList = patternList;
-            isMultiPack = true;
+
+            for (ModelChangeListener listener: listeners)
+                listener.patternChanged(this);
         }
     }
     
@@ -336,7 +379,8 @@ public class TransformationModel
     {
         private Set<Pack> inputs = new HashSet<Pack>();
         private Set<Pack> outputs = new HashSet<Pack>();
-        Command command;
+        private Command command;
+        private boolean isJoiner;
 
         private PackTransformer()
         {
@@ -366,6 +410,54 @@ public class TransformationModel
             
             packTransformerNameToPack.put(name, this);
             super.name = name;
+        }
+
+        public boolean isJoiner()
+        {
+            return isJoiner;
+        }
+
+        public void setIsJoiner(boolean isJoiner)
+        {
+            if (this.isJoiner == isJoiner)
+                return;
+
+            this.isJoiner = isJoiner;
+
+            if (isJoiner == true)
+            {
+                // From false to true
+                this.isJoiner = true;
+
+                if (getSplitter() != null)
+                    removeSplitter(getSplitter());
+            }
+            else
+            {
+                // From true to false
+                try
+                {
+                    for (Pack input: inputs)
+                        if (input.getSplitter() != null)
+                            updateSplitter(input.getSplitter());
+                }
+                catch (DoubleSplitterException e)
+                {
+                    // If it was true, then getSplitter() was definitely null.
+                    // That's what we will revert to in case of an exception.
+                    if (getSplitter() != null)
+                        removeSplitter(getSplitter());
+
+                    throw e;
+                }
+            }
+        }
+
+        @Override
+        protected void updateSplitter(Pack newSplitterPack)
+        {
+            if (isJoiner() == false)
+                super.updateSplitter(newSplitterPack);
         }
 
         public Command getCommand()

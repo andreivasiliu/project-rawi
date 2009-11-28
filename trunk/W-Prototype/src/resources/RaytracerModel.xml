@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- The <pattern/> and <command/> elements will eventually look different. -->
+
+<transformationModel
+   xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+   xmlns='http://www.example.org/TransformationModel'
+   xsi:schemaLocation='http://www.example.org/TransformationModel TransformationModel.xsd'>
+    <globalParameters>
+        <parameter name="nr" default="10" />
+    </globalParameters>
+
+    <transformationGraph>
+        <packNode id="1" name="Scene File" x="180" y="40">
+            <output node="2" />
+            <output node="4" />
+            <pattern name="scene" regex=".*\\.tr" />
+        </packNode>
+        <packTransformerNode id="2" name="Splitter" x="80" y="120">
+            <input node="1" />
+            <output node="3" />
+            <command exec="Splitter.exe $nr 1234 1324" />
+        </packTransformerNode>
+        <packNode id="3" x="80" y="210" isSplitter="true">
+            <input node="2" />
+            <output node="4" />
+            <output node="6" />
+            <pattern name="section" regex=".*\\.rd" />
+        </packNode>
+        <packTransformerNode id="4" name="Renderer" x="180" y="290">
+            <input node="1" />
+            <input node="3" />
+            <output node="5" />
+            <command exec="TinyRaytracer.exe $scene $section" />
+        </packTransformerNode>
+        <packNode id="5" x="180" y="380">
+            <input node="4" />
+            <output node="6" />
+            <pattern regex=".*\\.bmp" />
+        </packNode>
+        <packTransformerNode id="6" name="Joiner" x="80" y="450" isJoiner="true">
+            <input node="3" />
+            <input node="5" />
+            <output node="7" />
+            <command exec="Joiner.exe $*section" />
+        </packTransformerNode>
+        <packNode id="7" name="Rendered Scene" x="80" y="560">
+            <input node="6" />
+            <pattern regex=".*\\.bmp" />
+        </packNode>
+    </transformationGraph>
+</transformationModel>
