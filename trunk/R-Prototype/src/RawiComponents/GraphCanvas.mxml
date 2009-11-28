@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%"
+	mouseUp="activeNode=null;"
+	>
+	<mx:Script>
+		<![CDATA[
+			// a map and an array to hold the graph elements
+			public var nodesMap:Dictionary = new Dictionary();
+			public var bgCanvas:Canvas;
+			public var activeNode:GraphNode;		// used as a reference to create new connections
+			public function reset():void
+			{
+				nodesMap = new Dictionary();
+				removeAllChildren();
+				bgCanvas = new Canvas();
+				addChild(bgCanvas);
+			}
+			public function reDrawConnections():void
+			{
+				bgCanvas.graphics.clear();
+				bgCanvas.graphics.lineStyle(0);
+				for each (var n:GraphNode in nodesMap)
+					for each (var c:String in n.outputToNodes)
+					{
+						{
+							var x:int, y:int;
+							x = n.x + n.width/2;
+							y = n.y + n.height;
+							bgCanvas.graphics.moveTo(x, y);
+							x = GraphNode(nodesMap[c]).x + GraphNode(nodesMap[c]).width/2;
+							y = GraphNode(nodesMap[c]).y;
+							bgCanvas.graphics.lineTo(x, y);
+						}
+					}
+			}
+		]]>
+	</mx:Script>
+</mx:Canvas>
