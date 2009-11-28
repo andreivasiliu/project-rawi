@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml"
+	layout="absolute" width="100%" height="100%"
+	xmlns:ns1="RawiComponents.*"
+	initialize="init()"
+	creationComplete="ecran.reDrawConnections()"
+	>
+	<mx:ApplicationControlBar id="controlBar" dock="true">
+		<mx:Spacer width="50" />
+		<mx:Label text="RAWI" fontSize="20" alpha="1.0" fontWeight="bold" fontStyle="italic"/>
+		<mx:Spacer width="100" />
+		<mx:Button label="Add Node" click="addNodeHandler()"/>
+		<mx:Button label="TraceXmlRepr" click="traceXml()"/>
+	</mx:ApplicationControlBar>
+	<mx:Panel width="250" layout="absolute" id="propertiesPanel" title="Properties" top="3" bottom="3" left="3">
+	</mx:Panel>
+	
+	<ns1:GraphCanvas x="261" y="0" width="100%" height="100%" id="ecran">
+	</ns1:GraphCanvas>
+	<mx:XML source="exemplu_model.xml" id="raytracer" format="xml" xmlns="" />
+	<mx:XML source="RaytracerSession.xml" id="raytracerWS" format="xml" xmlns="" />
+
+	<mx:Script>
+		<![CDATA[
+			import RawiComponents.GraphNode;
+			public function addNodeHandler():void
+			{
+				var gn:GraphNode = new GraphNode();
+				gn.x = 300;
+				gn.y = 100;
+				gn.targetContainer = propertiesPanel;
+				gn.nodeId = generateUniqueId(ecran.nodesMap);
+				ecran.nodesMap[gn.nodeId] = gn;
+				gn.propsContainer.initialize()
+				
+				this.ecran.addChild(gn);
+			}
+			public function init():void
+			{
+				//var xxx:XMLDocument = new XMLDocument(String(raytracer));
+				//createGraphFromXML(xxx);
+				var xxy:XML = new XML(String(raytracer));
+				createGraphFromXML2(xxy);
+				var xxz:XML = new XML(String(raytracerWS));
+				
+			}
+			public function createGraphFromXML(data:XMLDocument):void
+			{
+				ecran.reset();
+
+				var workingNode:XMLNode = data.firstChild.firstChild.nextSibling;
+				trace(workingNode.childNodes.length)
+				for (var i:int = 0; i < workingNode.childNodes.length; i++)
+				{
+					var gn:GraphNode = new GraphNode()
+					ecran.addChild(gn);
+					ecran.nodesMap[XMLNode(workingNode.childNodes[i]).attributes.id] = gn;
+					gn.propsContainer.initialize()
+					gn.nodeId = XMLNode(workingNode.childNodes[i]).attributes.id;
+					gn.x = XMLNode(workingNode.childNodes[i]).attributes.x;
+					gn.y = XMLNode(workingNode.childNodes[i]).attributes.y;
+					gn.nodeType = XMLNode(workingNode.childNodes[i]).nodeName;
+					gn.propsContainer.nameInput.text = XMLNode(workingNode.childNodes[i]).attributes.name + XMLNode(workingNode.childNodes[i]).attributes.id;
+					gn.targetContainer = propertiesPanel;
+					
+					for (var j:int = 0; j < XMLNode(workingNode.childNodes[i]).childNodes.length; j++)
+					{
+						var insideNode:XMLNode = XMLNode(workingNode.childNodes[i]).childNodes[j]; 
+						if (insideNode.nodeName == "output")
+							gn.outputToNodes[insideNode.attributes.node] = insideNode.attributes.node;
+						if (insideNode.nodeName == "input")
+							gn.inputFromNodes[insideNode.attributes.node] = insideNode.attributes.node;
+					}
+				}
+			}
+			
+			public namespace tm = "http://www.example.org/TransformationModel"; 
+			
+			public function createGraphFromXML2(data:XML):void
+			{
+				use namespace tm;
+				ecran.reset();
+				
+				var graph:XMLList = data.transformationGraph;
+				
+				for each (var node:XML in graph.packNode + graph.packTransformerNode)
+				{
+					var gn:GraphNode = new GraphNode();
+					ecran.addChild(gn);
+					ecran.nodesMap[int(node.@id)] = gn;
+					gn.propsContainer.initialize();
+					gn.nodeId = node.@id;
+					gn.x = node.@x;
+					gn.y = node.@y;
+					gn.nodeType = node.localName();
+					gn.propsContainer.nameInput.text = node.@name + node.@id;
+					gn.targetContainer = propertiesPanel;
+					
+					for each (var output:XML in node.output)
+						gn.outputToNodes[output.@node] = output.@node;
+					
+					for each (var input:XML in node.input)
+						gn.inputFromNodes[input.@node] = input.@node;
+				}
+			}
+			public namespace ws = "http://www.example.org/WorkSession";
+			public function updateWSGraphFromXML(data:XML):void
+			{
+				use namespace ws;
+				var graph:XMLList = data.nodeInstances;
+				for each (var node:XML in graph.packNode + graph.packTransformerNode)
+				{
+					GraphNode(ecran.nodesMap[int(node.@id)]).updateNodeState(node);
+				}
+			}
+
+			public function generateUniqueId(source:Dictionary):String
+			{
+				// find the first id that is free in the given dictionary
+				var id:int = 1;
+				while (source[id.toString()] != undefined)
+					id++;
+				return id.toString();
+			}
+			public function traceXml():void
+			{
+				var trGraph:XMLNode = new XMLNode(XMLNodeType.ELEMENT_NODE, "transformationGraph");
+				for each (var gn:GraphNode in ecran.nodesMap)
+					trGraph.appendChild(gn.getXmlRepresentation());
+				trace(trGraph);
+			}
+		]]>
+	</mx:Script>
+
+</mx:Application>
