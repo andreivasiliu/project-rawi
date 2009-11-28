@@ -5,7 +5,7 @@ package rawi.common;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 
-public class ValidateXMLInfo implements Serializable {
+public class ValidateXMLInfo implements Serializable{
     public boolean success;
     public String message;
     public int nodeID;
