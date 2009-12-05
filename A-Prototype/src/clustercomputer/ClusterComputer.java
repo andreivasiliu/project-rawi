@@ -8,8 +8,6 @@ import java.io.OutputStream;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
@@ -58,37 +56,30 @@ public class ClusterComputer
 		}*/
 	}
 
-	public void execute(Task task, Command command)
+	/**
+	 * This function will be called by a RMI Client.
+	 * It executes the command, having the task arguments.
+	 * @param task
+	 * @param command
+	 * @throws IOException
+	 */
+	public void execute(Task task, Command command) throws IOException
 	{
-		try
-		{
-			downloadFiles(task, URI);
-		} catch (IOException ex)
-		{
-			Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
-		}
-
-		try
-		{
-			// execute
-			Runtime.getRuntime().exec(command.getExecString());
-		} catch (IOException ex)
-		{
-			Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
-		}
-		try
-		{
-			uploadFiles(task);
-		} catch (IOException ex)
-		{
-			Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
-		}
+		downloadFiles(task, URI);
+		Runtime.getRuntime().exec(command.getExecString());
+		uploadFiles(task);
 		deleteCurrentDir(task);
 	}
 
+
+	/**
+	 * Downloads a Task component from the repository_uri.
+	 * @param task
+	 * @param repository_uri
+	 * @throws IOException
+	 */
 	private void downloadFiles(Task task, String repository_uri) throws IOException
 	{
-		//TODO
 		HttpClient httpclient = new DefaultHttpClient();
 		File currentDir = new File("task" + task.id);
 		currentDir.mkdir();
@@ -113,6 +104,12 @@ public class ClusterComputer
 
 	}
 
+	/**
+	 * Uploads modified or created files after the execution,
+	 * a given task.
+	 * @param task
+	 * @throws IOException
+	 */
 	private void uploadFiles(Task task) throws IOException
 	{
 
@@ -162,9 +159,12 @@ public class ClusterComputer
 
 	}
 
+	/**
+	 * Delete the current task folder.
+	 * @param task
+	 */
 	private void deleteCurrentDir(Task task)
 	{
-		//throw new UnsupportedOperationException("Not yet implemented");
 		File f = new File("task" + task.id);
 		f.delete();
 	}
