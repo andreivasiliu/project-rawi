@@ -20,6 +20,17 @@ public class RMIClientModel<T> {
         rmiServer = (T) (registry.lookup("rmiServer"));
     }
 
+	public RMIClientModel(String serverAddress, int port)
+            throws RemoteException, NotBoundException {
+        Registry registry;
+        // get the “registry”
+        registry = LocateRegistry.getRegistry(serverAddress, port);
+
+        // look up the remote object
+        rmiServer = (T) (registry.lookup("rmiServer"));
+    }
+
+
     public T getInterface()
     {
         return rmiServer;

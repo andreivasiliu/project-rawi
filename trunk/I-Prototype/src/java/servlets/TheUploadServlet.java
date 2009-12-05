@@ -71,7 +71,7 @@ public class TheUploadServlet extends HttpServlet {
                 processUploadedFile(item, request.getRemoteAddr());
             }
         }
-        response.sendRedirect("index.jsp");
+        response.sendRedirect("DownUpLoad.jsp");
     }
 
     
@@ -100,14 +100,13 @@ public class TheUploadServlet extends HttpServlet {
             return;
 
         // Create or use the folder for the given file
-        String folderPath = System.getProperty("user.dir") +
-                "\\Uploaded XML Files\\";
+        String folderPath = getServletContext().getRealPath("/UploadedXMLFiles");
         String folderName = userID;
-        File folder = new File(folderPath + folderName);
+        File folder = new File(folderPath + "/" + folderName);
         folder.mkdir();
 
         System.out.println(folderPath + " - " + folderName + " - " + fileName);
-        File myFile = new File(folderPath + folderName + "\\" + fileName);
+        File myFile = new File(folderPath + "/" + folderName + "/" + fileName);
         if(!fileList.contains(myFile))
             fileList.add(myFile);
         FileOutputStream fos = new FileOutputStream(myFile);

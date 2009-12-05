@@ -1,12 +1,15 @@
 package clustercomputer;
 
+import java.rmi.NotBoundException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import rawi.common.Task;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.rmi.RemoteException;
-import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
@@ -17,43 +20,21 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import rawi.common.ClusterComputerInterface;
+import rawi.common.MainServerInterface;
+import rawi.common.Ports;
+import rawi.rmiinfrastructure.RMIClientModel;
+import rawi.rmiinfrastructure.RMIServerModel;
 
 /**
  *
  * @author andrei.arusoaie
  */
-public class ClusterComputer
+public class ClusterComputer extends RMIServerModel implements ClusterComputerInterface
 {
-
-	String thisAddress;
-	int PORT = 8000;
-	String NAME = "CLUSTER";
-	String URI = "http://localhost:8081/web/TheUploadServlet";
-	Registry registry;
-
 	public ClusterComputer() throws RemoteException
 	{
-		/*        try {
-
-		// get the address of this host.
-
-		thisAddress = (InetAddress.getLocalHost()).toString();
-
-		} catch (Exception e) {
-
-		throw new RemoteException("can't get inet address.");
-
-		}
-
-		try {
-		registry = LocateRegistry.createRegistry(PORT);
-		registry.rebind(NAME, this);
-
-		} catch (RemoteException e) {
-
-		throw e;
-
-		}*/
+		super(Ports.ClusterComputerPort);
 	}
 
 	/**
@@ -63,14 +44,43 @@ public class ClusterComputer
 	 * @param command
 	 * @throws IOException
 	 */
-	public void execute(Task task, Command command) throws IOException
+	public void execute(Task task)
 	{
-		downloadFiles(task, URI);
-		Runtime.getRuntime().exec(command.getExecString());
-		uploadFiles(task);
-		deleteCurrentDir(task);
+		try
+		{
+			//createCurrentDir(task);
+			//downloadFiles(task);
+			Runtime.getRuntime().exec(task.getCommand().getExecString(), null, new File("task" + task.getId()).getAbsoluteFile());
+			//uploadFiles(task);
+			//deleteCurrentDir(task);
+			//Notification
+
+			MainServerInterface msi;
+			try
+			{
+				msi = new RMIClientModel<MainServerInterface>(task.getMainServerAddress(),
+						Ports.MainServerPort).getInterface();
+				msi.taskCompleted(task.getId());
+			} catch (RemoteException ex)
+			{
+				Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
+			} catch (NotBoundException ex)
+			{
+				Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
+			}
+
+		} catch (IOException ex)
+		{
+			Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
+		}
+		
 	}
 
+	public void createCurrentDir(Task task)
+	{
+		File currentDir = new File("task" + task.getId());
+		currentDir.mkdir();
+	}
 
 	/**
 	 * Downloads a Task component from the repository_uri.
@@ -78,24 +88,24 @@ public class ClusterComputer
 	 * @param repository_uri
 	 * @throws IOException
 	 */
-	private void downloadFiles(Task task, String repository_uri) throws IOException
+	protected void downloadFiles(Task task) throws IOException
 	{
 		HttpClient httpclient = new DefaultHttpClient();
-		File currentDir = new File("task" + task.id);
+		File currentDir = new File("task" + task.getId());
 		currentDir.mkdir();
 
-		for (int i = 0; i < task.files.length; i++)
+		for (int i = 0; i < task.getFiles().length; i++)
 		{
-			HttpGet httpget = new HttpGet(repository_uri + "/" + task.files[i]);
+			HttpGet httpget = new HttpGet(task.getDownloadURI() + task.getFiles()[i]);
 			HttpResponse response = httpclient.execute(httpget);
 			HttpEntity entity = response.getEntity();
 			if (entity != null)
 			{
 				InputStream instream = entity.getContent();
-				OutputStream out = new FileOutputStream(currentDir + "\\" + task.files[i]);
-				int l;
+				OutputStream out = new FileOutputStream(currentDir + "\\" + task.getFiles()[i]);
+				int length;
 				byte[] tmp = new byte[2048];
-				while ((l = instream.read(tmp)) != -1)
+				while ((length = instream.read(tmp)) != -1)
 				{
 					out.write(tmp);
 				}
@@ -110,23 +120,24 @@ public class ClusterComputer
 	 * @param task
 	 * @throws IOException
 	 */
-	private void uploadFiles(Task task) throws IOException
+	protected void uploadFiles(Task task) throws IOException
 	{
-
-		File f = new File("task" + task.id);
+		File f = new File("task" + task.getId());
 		boolean found;
 		ArrayList<String> filelist = new ArrayList<String>();
 
+		System.out.println("Folder name:" + f.getName());
 		if (f.isDirectory())
 		{
 			String[] files = f.list();
 
+			System.out.println("Folder size:" + files.length);
 			for (int i = 0; i < files.length; i++)
 			{
 				found = false;
-				for (int j = 0; j < task.files.length; j++)
+				for (int j = 0; j < task.getFiles().length; j++)
 				{
-					if (files[i].equals(task.files[j]))
+					if (files[i].equals(task.getFiles()[j]))
 					{
 						found = true;
 						break;
@@ -140,14 +151,14 @@ public class ClusterComputer
 		}
 
 		org.apache.commons.httpclient.HttpClient client = new org.apache.commons.httpclient.HttpClient();
-		PostMethod post = new PostMethod(URI);
+		PostMethod post = new PostMethod(task.getUploadURI());
 
 		Part[] part = new Part[filelist.size()];
 
 		for (int i = 0; i < filelist.size(); i++)
 		{
 			System.out.println("Filename = " + filelist.get(i));
-			part[i] = new FilePart(filelist.get(i), new File("task10\\" + filelist.get(i)));
+			part[i] = new FilePart(filelist.get(i), new File("task" + task.getId() + "\\" + filelist.get(i)));
 		}
 
 		post.setRequestEntity(new MultipartRequestEntity(part, post.getParams()));
@@ -163,9 +174,20 @@ public class ClusterComputer
 	 * Delete the current task folder.
 	 * @param task
 	 */
-	private void deleteCurrentDir(Task task)
+	protected void deleteCurrentDir(Task task)
 	{
-		File f = new File("task" + task.id);
+		File f = new File("task" + task.getId());
+
+		String[] files = f.list();
+
+		for (int i = 0; i < files.length; i++)
+		{
+			new File(f.getName() + "/" + files[i]).delete();
+		}
+
 		f.delete();
 	}
+
+	
+
 }

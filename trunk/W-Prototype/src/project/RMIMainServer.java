@@ -21,5 +21,10 @@ public class RMIMainServer extends RMIServerModel
         else
             return new ValidateXMLInfo(false, "You must say hello", 1);
     }
+
+	public void taskCompleted(int id)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
 }
 

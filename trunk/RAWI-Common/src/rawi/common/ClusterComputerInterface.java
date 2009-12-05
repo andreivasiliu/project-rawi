@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package clustercomputer;
+package rawi.common;
 
 import java.rmi.*;
 
@@ -12,5 +12,5 @@ import java.rmi.*;
  */
 public interface ClusterComputerInterface extends Remote
 {
-    void execute(Task task, Command command);
+    void execute(Task task);
 }
