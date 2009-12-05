@@ -6,8 +6,11 @@
 package aprototype;
 
 import clustercomputer.ClusterComputer;
-import clustercomputer.Command;
-import clustercomputer.Task;
+import rawi.common.Command;
+import rawi.common.Task;
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.rmi.RemoteException;
 
 /**
@@ -19,13 +22,13 @@ public class Main {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) throws RemoteException {
+    public static void main(String[] args) throws RemoteException, IOException {
         // TODO code application logic here
 
-        ClusterComputer comp = new ClusterComputer();
-
-        comp.execute(new Task(12,"Grafic.java"), new Command("calc"));
+		/*
+		 ClusterComputer cc = new ClusterComputer();
+		 Notifier notifier
+		*/
 
     }
-
 }

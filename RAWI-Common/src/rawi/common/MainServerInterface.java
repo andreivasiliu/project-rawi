@@ -6,4 +6,6 @@ public interface MainServerInterface extends Remote
 {
    ValidateXMLInfo validateXML(String xml)
            throws RemoteException;
+
+	public void taskCompleted(int id);
 }
