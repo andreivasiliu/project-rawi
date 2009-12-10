@@ -1,6 +1,6 @@
-package project.Exceptions;
+package rawi.exceptions;
 
-public class DoubleSplitterException extends RuntimeException
+public class DoubleSplitterException extends RawiRuntimeException
 {
     private static final long serialVersionUID = 1L;
 

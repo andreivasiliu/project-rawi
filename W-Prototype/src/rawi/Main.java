@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package project;
+package rawi;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -17,7 +17,7 @@ import rawi.rmiinfrastructure.RMIClientModel;
 
 /**
  *
- * @author Ioana & Andrei 
+ * @author Ioana & Andrei
  */
 public class Main {
 

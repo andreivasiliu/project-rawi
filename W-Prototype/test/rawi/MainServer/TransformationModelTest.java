@@ -1,4 +1,4 @@
-package project.MainServer;
+package rawi.mainserver;
 
 import static org.junit.Assert.*;
 
@@ -9,11 +9,11 @@ import java.util.regex.Pattern;
 import org.junit.Before;
 import org.junit.Test;
 
-import project.Common.CommandList;
-import project.Common.ConsoleCommand;
-import project.Exceptions.DoubleSplitterException;
-import project.Exceptions.DuplicateNameException;
-import project.MainServer.TransformationModel.*;
+import rawi.common.CommandList;
+import rawi.common.ConsoleCommand;
+import rawi.exceptions.DoubleSplitterException;
+import rawi.exceptions.DuplicateNameException;
+import rawi.mainserver.TransformationModel.*;
 
 public class TransformationModelTest
 {

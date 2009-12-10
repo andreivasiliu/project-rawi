@@ -1,6 +1,6 @@
-package project.MainServer.XML;
+package rawi.mainserver.XML;
 
-import project.MainServer.*;
+import rawi.mainserver.*;
 import java.io.InputStream;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

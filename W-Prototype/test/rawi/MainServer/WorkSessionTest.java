@@ -1,5 +1,4 @@
-package project.MainServer;
-
+package rawi.mainserver;
 
 import static org.junit.Assert.*;
 
@@ -13,11 +12,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import project.Common.FileHandle;
-import project.Exceptions.DoubleSplitterException;
-import project.MainServer.TransformationModel.*;
-import project.MainServer.WorkSession.*;
-import project.MainServer.XML.TransformationModelParser;
+import rawi.common.FileHandle;
+import rawi.exceptions.DoubleSplitterException;
+import rawi.mainserver.TransformationModel.*;
+import rawi.mainserver.WorkSession.*;
+import rawi.mainserver.XML.TransformationModelParser;
 
 public class WorkSessionTest
 {
@@ -83,6 +82,47 @@ public class WorkSessionTest
         pack.setPattern(Pattern.compile(".*"), true);
     }
 
+    @Test
+    public void testSetTargetNode()
+    {
+        // p0--pt0--p1--pt1--p3
+        //              /
+        //          p2-/
+
+        Pack[] pack = new Pack[4];
+        PackTransformer[] packTransformer = new PackTransformer[2];
+
+        for (int i = 0; i < 4; i++)
+            pack[i] = model.addPackNode();
+
+        for (int i = 0; i < 2; i++)
+            packTransformer[i] = model.addPackTransformerNode();
+
+        model.addOutputs(pack[0], packTransformer[0], pack[1],
+                packTransformer[1], pack[3]);
+        model.addOutput(pack[2], packTransformer[1]);
+
+        assertTrue(workSession.isUsedInTransformation(pack[2]));
+
+        // By node ID
+        workSession.setTargetNode(pack[0].getId());
+        assertTrue(workSession.isUsedInTransformation(pack[0]));
+        assertFalse(workSession.isUsedInTransformation(pack[1]));
+        assertFalse(workSession.isUsedInTransformation(pack[2]));
+        assertFalse(workSession.isUsedInTransformation(pack[3]));
+
+        // By model node
+        workSession.setTargetNode((Node) packTransformer[1]);
+        assertTrue(workSession.isUsedInTransformation(pack[0]));
+        assertFalse(workSession.isUsedInTransformation(pack[1]));
+        assertFalse(workSession.isUsedInTransformation(pack[2]));
+        assertFalse(workSession.isUsedInTransformation(pack[3]));
+
+        // By session node
+        workSession.setTargetNode((workSession.nodeInstances.get(pack[3])));
+
+    }
+
     /* Use case:
      * 
      * - Create a new work session, linked to a model
@@ -114,7 +154,7 @@ public class WorkSessionTest
 
         pack.putFile(new FileHandle("input.txt"));
 
-        workSession.setDestination(3);
+        workSession.setTargetNode(3);
 
         workSession.getPackInstance("pack2");
 
