@@ -4,6 +4,8 @@
  */
 package servlets;
 
+import classes.MainBean;
+import classes.Session;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -23,15 +25,18 @@ public class TheDownloadServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        //processRequest(request, response);
         response.setContentType("application/octet-stream");
-        //response.setContentType("text/xml");
 
         OutputStream out = response.getOutputStream();
-        String path = request.getParameter("selectFiles");
-        System.out.println(request.getParameter("selectFiles"));
 
-        File requestedFile = new File(path);
+        String url = request.getPathInfo();
+        String sessionId = url.split("/")[1];
+        String fileLogicalName = url.substring(2 + sessionId.length());
+
+        MainBean theBean = MainBean.getFromContext(getServletContext());
+        Session session = theBean.getSessionById(new Long(sessionId));
+        
+        File requestedFile = session.getFileByName(fileLogicalName);
         InputStream is = new FileInputStream(requestedFile);
         
         byte[] buf = new byte[1024];
@@ -41,10 +46,5 @@ public class TheDownloadServlet extends HttpServlet {
         }
         is.close();
         out.close();
-
-        //URL url = getServletContext().getResource(file);
-
-        System.out.println("--> " + request.getParameter("myFileAttribute"));
-
     }
 }

@@ -5,6 +5,7 @@
 
 package servlets;
 
+import classes.MainBean;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.ServletException;
@@ -28,11 +29,11 @@ public class ValidateXMLServlet extends HttpServlet{
    
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException{
+            throws ServletException, IOException {
         response.setContentType("text/xml;charset=UTF-8");
         PrintWriter out = response.getWriter();
 
-        String xml = request.getParameter("xml");
+        String content = request.getParameter("xml");
         String name = request.getParameter("name");
 
         MainServerInterface msi;
@@ -43,7 +44,7 @@ public class ValidateXMLServlet extends HttpServlet{
         } catch (NotBoundException ex) {
             throw new ServerException("Not bound exception", ex);
         }
-        ValidateXMLInfo info = msi.validateXML(xml);
+        ValidateXMLInfo info = msi.validateXML(content);
 
         out.println("<validateXMLInfo>");
             out.println("<xml-name>" + name + "</xml-name>");
@@ -52,5 +53,13 @@ public class ValidateXMLServlet extends HttpServlet{
             out.println("<xml-message>" + info.message + "</xml-message>");
             out.println("<xml-nodeId>" + info.nodeID + "</xml-nodeId>");
         out.println("</validateXMLInfo>");
+
+        if(request.getParameter("savexml") != null)
+            saveXML(name, content);
+    }
+
+    private void saveXML(String name, String content) {
+        ((MainBean)getServletContext().getAttribute("mainBean"))
+                .addXMLToList(name, content);
     }
 }

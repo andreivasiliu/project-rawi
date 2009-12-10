@@ -4,6 +4,8 @@
  */
 package servlets;
 
+import classes.MainBean;
+import classes.Session;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -23,7 +25,6 @@ import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import java.util.UUID;
 
 /**
  *
@@ -32,18 +33,19 @@ import java.util.UUID;
 public class TheUploadServlet extends HttpServlet {
 
     public String filesPath;
-    // hash map with: <userAddr, userID>
-    // userID = unique - for the folder name
-    private static HashMap<String, String> users = new HashMap<String, String>();
-    private static List<File> fileList = new LinkedList<File>();
-
-
-   @Override
+    
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
- 
+
+        String url = request.getPathInfo();
+        String sessionId = url.split("/")[1];
+        String fileLogicalName = url.substring(2 + sessionId.length());
+        
         // Check that we have a file upload request
         boolean isMultipart = ServletFileUpload.isMultipartContent(request);
+
+        // TODO throw excepton if not multipart
 
         // Create a factory for disk-based file items
         FileItemFactory factory = new DiskFileItemFactory();
@@ -56,7 +58,7 @@ public class TheUploadServlet extends HttpServlet {
             // Parse the request
             items = upload.parseRequest(request); /* FileItem */
         } catch (FileUploadException ex) {
-            Logger.getLogger(TheUploadServlet.class.getName()).log(Level.SEVERE, null, ex);
+            throw new ServletException(ex);
         }
 
         // Process the uploaded items
@@ -64,64 +66,42 @@ public class TheUploadServlet extends HttpServlet {
         while (iter.hasNext()) {
             FileItem item = (FileItem) iter.next();
 
-            if (item.isFormField()) {
-                processFormField(item);
-            } else {
-                System.out.println("==> " + request.getRemoteAddr() + " <==");
-                processUploadedFile(item, request.getRemoteAddr());
+            if (!item.isFormField()) {
+                processUploadedFile(item, new Long(sessionId), fileLogicalName);
             }
         }
-        response.sendRedirect("DownUpLoad.jsp");
+        response.sendRedirect(getServletContext().getContextPath() + "/index.jsp");
     }
 
-    
-    private void processFormField(FileItem item) {
-        String name = item.getFieldName();
-        String value = item.getString();
-        System.out.println("==> Form field: name = " + name +
-                "value = " + value);
-    }
+//    @Override
+//    public void doGet(HttpServletRequest request, HttpServletResponse response)
+//            throws ServletException, IOException {
+//        doPost(request, response);
+//    }
 
-    private void processUploadedFile(FileItem item, String userAddr) throws IOException {
+    private void processUploadedFile(FileItem item, Long sessionId,
+            String fileLogicalName) throws IOException {
+
         InputStream uploadedStream = item.getInputStream();
 
-        // Generate random numbers for  the file name,
-        // and associate them to the user addr
-        String userID;
-        if (!users.containsKey(userAddr)) {
-            userID = UUID.randomUUID().toString();
-            users.put(userAddr, userID);
-        }
-        else
-            userID = users.get(userAddr);
-
-        String fileName = item.getName();
-        if(fileName.isEmpty())
-            return;
+        String fileName = fileLogicalName.replaceAll("/", "_");
+        MainBean theBean = (MainBean)getServletContext().getAttribute("mainBean");
+        Session session = theBean.getSessionById(sessionId);
 
         // Create or use the folder for the given file
-        String folderPath = getServletContext().getRealPath("/UploadedXMLFiles");
-        String folderName = userID;
-        File folder = new File(folderPath + "/" + folderName);
+        File folder = new File(session.folderName);
         folder.mkdir();
 
-        System.out.println(folderPath + " - " + folderName + " - " + fileName);
-        File myFile = new File(folderPath + "/" + folderName + "/" + fileName);
-        if(!fileList.contains(myFile))
-            fileList.add(myFile);
+        // create file
+        File myFile = new File(session.folderName + "/" + fileName);
         FileOutputStream fos = new FileOutputStream(myFile);
-        int sth;
-        while ((sth = uploadedStream.read()) != -1) {
-            fos.write(sth);
+        int bytesRead;
+        while ((bytesRead = uploadedStream.read()) != -1) {
+            fos.write(bytesRead);
         }
-        fos.write(32);
         fos.close();
         uploadedStream.close();
-
+        
+        session.addFileToList(fileLogicalName, myFile);
     }
-
-    public static List<File> getFileList() {
-        return fileList;
-    }
-
 }

@@ -18,6 +18,13 @@ public class ServletListener implements ServletContextListener {
         try {
             RMIWebServer server = new RMIWebServer();
             sc.setAttribute("server", server);
+
+            // initialize bean
+            MainBean theBean = new MainBean();
+            sc.setAttribute("mainBean", theBean);
+
+           
+            
         } catch (RemoteException ex) {
             Logger.getLogger(ServletListener.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -27,6 +34,10 @@ public class ServletListener implements ServletContextListener {
         ServletContext sc = sce.getServletContext();
         RMIWebServer server = (RMIWebServer)sc.getAttribute("server");
         sc.removeAttribute("server");
+        sc.removeAttribute("mainBean");
+
+        // TODO delete temporary files (session files)
+        
         try {
             UnicastRemoteObject.unexportObject(server.getRegistry(), true);
         } catch (NoSuchObjectException ex) {
