@@ -1,4 +1,4 @@
-package project.MainServer.XML;
+package rawi.mainserver.XML;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -14,8 +14,8 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
-import project.MainServer.TransformationModel;
-import project.MainServer.TransformationModel.*;
+import rawi.mainserver.TransformationModel;
+import rawi.mainserver.TransformationModel.*;
 
 public class TransformationModelParser extends DefaultHandler
 {

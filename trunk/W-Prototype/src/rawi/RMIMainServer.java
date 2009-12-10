@@ -1,5 +1,4 @@
-
-package project;
+package rawi;
 
 import java.rmi.RemoteException;
 import rawi.common.MainServerInterface;
@@ -34,7 +33,7 @@ public class RMIMainServer extends RMIServerModel
         webServerUploadURL = upload;
         messageLogIp = msgLog;
         this.sessionId = sessionId;
-        
+
         System.out.println("Started session: " + sessionId
                 + "\n\t Download URL = " + webServerDownloadURL
                 + "\n\t Upload URL = " + webServerUploadURL

@@ -7,13 +7,13 @@ import java.util.regex.Pattern;
 import org.junit.*;
 import static org.junit.Assert.*;
 
-import project.Common.ConsoleCommand;
-import project.Common.FileHandle;
-import project.MainServer.Task;
-import project.MainServer.TransformationModel;
-import project.MainServer.TransformationModel.*;
-import project.MainServer.WorkSession;
-import project.MainServer.WorkSession.*;
+import rawi.common.ConsoleCommand;
+import rawi.common.FileHandle;
+import rawi.mainserver.Task;
+import rawi.mainserver.TransformationModel;
+import rawi.mainserver.TransformationModel.*;
+import rawi.mainserver.WorkSession;
+import rawi.mainserver.WorkSession.*;
 
 public class RaytracerTest
 {
@@ -85,7 +85,7 @@ public class RaytracerTest
         assertNotNull(packInstance);
         assertTrue(packInstance.acceptsFileName("scene.tr"));
 
-        session.setDestination("End Node");
+        //session.setDestination("End Node");
 
         packInstance.putFile(new FileHandle("scene.tr"));
 

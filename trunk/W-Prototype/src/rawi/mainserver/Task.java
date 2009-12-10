@@ -1,4 +1,4 @@
-package project.MainServer;
+package rawi.mainserver;
 
 public abstract class Task
 {

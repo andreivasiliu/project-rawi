@@ -1,6 +1,6 @@
-package project.MainServer;
+package rawi.mainserver;
 
-import project.MainServer.TransformationModel.*;
+import rawi.mainserver.TransformationModel.*;
 
 public interface ModelChangeListener
 {
