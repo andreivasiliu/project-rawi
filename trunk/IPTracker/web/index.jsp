@@ -6,8 +6,12 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ page import="servlets.GetIPServlet" %>
+<%@ page import="classes.TrackerBean" %>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
     "http://www.w3.org/TR/html4/loose.dtd">
+
+<% TrackerBean tracker = (TrackerBean)
+        getServletContext().getAttribute("trackerBean"); %>
 
 <html>
     <head>
@@ -57,7 +61,7 @@
 
         <form method="post" action="SetMaxAgeServlet" >
             At every request, entries older than
-                <%= GetIPServlet.getExpirationTime() %>
+               <%= tracker.getExpirationTime() %>
             minutes will be deleted. <br />
             I'd like to change the expiration time to
             <input type="text" value="3" name="expTime" size="2"/>
