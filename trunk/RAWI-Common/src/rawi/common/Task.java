@@ -5,54 +5,56 @@
 
 package rawi.common;
 
+import java.io.Serializable;
+
 /**
  *
  * @author andrei.arusoaie
  */
-public class Task {
+public class Task implements Serializable{
     int id;
     String[] files;
-	Command command;
-	String uploadURI, downloadURI, mainServerAddress;
+    Command command;
+    String uploadURI, downloadURI, mainServerAddress;
 
-	public Task(int id, String[] files, Command command, String uploadURI,
-			String downloadURI, String mainServerAddress)
-	{
-		this.id = id;
-		this.files = files;
-		this.command = command;
-		this.uploadURI = uploadURI;
-		this.downloadURI = downloadURI;
-		this.mainServerAddress = mainServerAddress;
-	}
+    public Task(int id, String[] files, Command command, String uploadURI,
+            String downloadURI, String webServerAddress, String mainServerAddress)
+    {
+        this.id = id;
+        this.files = files;
+        this.command = command;
+        this.uploadURI = uploadURI;
+        this.downloadURI = downloadURI;
+        this.mainServerAddress = mainServerAddress;
+    }
 
-	public Command getCommand()
-	{
-		return command;
-	}
+    public Command getCommand()
+    {
+        return command;
+    }
 
-	public String getDownloadURI()
-	{
-		return downloadURI;
-	}
+    public String getDownloadURI()
+    {
+        return downloadURI;
+    }
 
-	public String[] getFiles()
-	{
-		return files;
-	}
+    public String[] getFiles()
+    {
+        return files;
+    }
 
-	public int getId()
-	{
-		return id;
-	}
+    public int getId()
+    {
+        return id;
+    }
 
-	public String getUploadURI()
-	{
-		return uploadURI;
-	}
+    public String getUploadURI()
+    {
+        return uploadURI;
+    }
 
-	public String getMainServerAddress()
-	{
-		return mainServerAddress;
-	}
+    public String getMainServerAddress()
+    {
+        return mainServerAddress;
+    }
 }

@@ -12,5 +12,5 @@ import java.rmi.*;
  */
 public interface ClusterComputerInterface extends Remote
 {
-    void execute(Task task);
+    void execute(Task task) throws RemoteException;
 }

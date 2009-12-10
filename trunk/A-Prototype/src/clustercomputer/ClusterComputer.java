@@ -30,164 +30,149 @@ import rawi.rmiinfrastructure.RMIServerModel;
  *
  * @author andrei.arusoaie
  */
-public class ClusterComputer extends RMIServerModel implements ClusterComputerInterface
-{
-	public ClusterComputer() throws RemoteException
-	{
-		super(Ports.ClusterComputerPort);
-	}
+public class ClusterComputer extends RMIServerModel implements ClusterComputerInterface {
 
-	/**
-	 * This function will be called by a RMI Client.
-	 * It executes the command, having the task arguments.
-	 * @param task
-	 * @param command
-	 * @throws IOException
-	 */
-	public void execute(Task task)
-	{
-		try
-		{
-			//createCurrentDir(task);
-			//downloadFiles(task);
-			Runtime.getRuntime().exec(task.getCommand().getExecString(), null, new File("task" + task.getId()).getAbsoluteFile());
-			//uploadFiles(task);
-			//deleteCurrentDir(task);
-			//Notification
+    public ClusterComputer() throws RemoteException {
+        super(Ports.ClusterComputerPort);
+    }
 
-			MainServerInterface msi;
-			try
-			{
-				msi = new RMIClientModel<MainServerInterface>(task.getMainServerAddress(),
-						Ports.MainServerPort).getInterface();
-				msi.taskCompleted(task.getId());
-			} catch (RemoteException ex)
-			{
-				Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (NotBoundException ex)
-			{
-				Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
-			}
+    /**
+     * This function will be called by a RMI Client.
+     * It executes the command, having the task arguments.
+     * @param task
+     * @param command
+     * @throws IOException
+     */
+    public void execute(Task task) throws RemoteException {
+        try {
+            createCurrentDir(task);
+            downloadFiles(task);
+            String execString = task.getCommand().getExecString();
+            System.out.println("--------------------ExecString:" + execString);
+            String[] envp = new String[]{"PATH=" + (new File("task" + task.getId()).getAbsolutePath())};
+            System.out.println("--------------------envp:" + envp[0]);
+            File file = new File("task" + task.getId()).getAbsoluteFile();
+            System.out.println("--------------------File:" + file.getAbsolutePath());
+            Runtime.getRuntime().exec(execString, null, file);
+            //uploadFiles(task);
+            //deleteCurrentDir(task);
+            //Notification
 
-		} catch (IOException ex)
-		{
-			Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
-		}
-		
-	}
+            MainServerInterface msi;
+            try {
+                msi = new RMIClientModel<MainServerInterface>(task.getMainServerAddress(),
+                        Ports.MainServerPort).getInterface();
+                msi.taskCompleted(task.getId());
+            } catch (RemoteException ex) {
+                Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (NotBoundException ex) {
+                Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
+            }
 
-	public void createCurrentDir(Task task)
-	{
-		File currentDir = new File("task" + task.getId());
-		currentDir.mkdir();
-	}
+        } catch (IOException ex) {
+            Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
-	/**
-	 * Downloads a Task component from the repository_uri.
-	 * @param task
-	 * @param repository_uri
-	 * @throws IOException
-	 */
-	protected void downloadFiles(Task task) throws IOException
-	{
-		HttpClient httpclient = new DefaultHttpClient();
-		File currentDir = new File("task" + task.getId());
-		currentDir.mkdir();
+    }
 
-		for (int i = 0; i < task.getFiles().length; i++)
-		{
-			HttpGet httpget = new HttpGet(task.getDownloadURI() + task.getFiles()[i]);
-			HttpResponse response = httpclient.execute(httpget);
-			HttpEntity entity = response.getEntity();
-			if (entity != null)
-			{
-				InputStream instream = entity.getContent();
-				OutputStream out = new FileOutputStream(currentDir + "\\" + task.getFiles()[i]);
-				int length;
-				byte[] tmp = new byte[2048];
-				while ((length = instream.read(tmp)) != -1)
-				{
-					out.write(tmp);
-				}
-			}
-		}
+    public void createCurrentDir(Task task) {
+        File currentDir = new File("task" + task.getId());
+        currentDir.mkdir();
+    }
 
-	}
+    /**
+     * Downloads a Task component from the repository_uri.
+     * @param task
+     * @param repository_uri
+     * @throws IOException
+     */
+    protected void downloadFiles(Task task) throws IOException {
+        HttpClient httpclient = new DefaultHttpClient();
+        File currentDir = new File("task" + task.getId());
+        currentDir.mkdir();
+        System.out.println("+++++++++++++++++++++++++++++Download URI: " + task.getDownloadURI());
 
-	/**
-	 * Uploads modified or created files after the execution,
-	 * a given task.
-	 * @param task
-	 * @throws IOException
-	 */
-	protected void uploadFiles(Task task) throws IOException
-	{
-		File f = new File("task" + task.getId());
-		boolean found;
-		ArrayList<String> filelist = new ArrayList<String>();
+        for (int i = 0; i < task.getFiles().length; i++) {
+            System.out.println("+++++++++++++++++++++++++++++Downloading: " + task.getDownloadURI() + task.getFiles()[i]);
+            HttpGet httpget = new HttpGet(task.getDownloadURI() + task.getFiles()[i]);
+            HttpResponse response = httpclient.execute(httpget);
+            HttpEntity entity = response.getEntity();
+            if (entity != null) {
+                InputStream instream = entity.getContent();
+                OutputStream out = new FileOutputStream(currentDir + "\\" + task.getFiles()[i]);
+                int length;
+                byte[] tmp = new byte[2048];
+                while ((length = instream.read(tmp)) != -1) {
+                    out.write(tmp, 0, length);
+                }
+                out.close();
+            }
+        }
 
-		System.out.println("Folder name:" + f.getName());
-		if (f.isDirectory())
-		{
-			String[] files = f.list();
+    }
 
-			System.out.println("Folder size:" + files.length);
-			for (int i = 0; i < files.length; i++)
-			{
-				found = false;
-				for (int j = 0; j < task.getFiles().length; j++)
-				{
-					if (files[i].equals(task.getFiles()[j]))
-					{
-						found = true;
-						break;
-					}
-				}
-				if (!found)
-				{
-					filelist.add(files[i]);
-				}
-			}
-		}
+    /**
+     * Uploads modified or created files after the execution,
+     * a given task.
+     * @param task
+     * @throws IOException
+     */
+    protected void uploadFiles(Task task) throws IOException {
+        File f = new File("task" + task.getId());
+        boolean found;
+        ArrayList<String> filelist = new ArrayList<String>();
 
-		org.apache.commons.httpclient.HttpClient client = new org.apache.commons.httpclient.HttpClient();
-		PostMethod post = new PostMethod(task.getUploadURI());
+        System.out.println("Folder name:" + f.getName());
+        if (f.isDirectory()) {
+            String[] files = f.list();
 
-		Part[] part = new Part[filelist.size()];
+            System.out.println("Folder size:" + files.length);
+            for (int i = 0; i < files.length; i++) {
+                found = false;
+                for (int j = 0; j < task.getFiles().length; j++) {
+                    if (files[i].equals(task.getFiles()[j])) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    filelist.add(files[i]);
+                }
+            }
+        }
 
-		for (int i = 0; i < filelist.size(); i++)
-		{
-			System.out.println("Filename = " + filelist.get(i));
-			part[i] = new FilePart(filelist.get(i), new File("task" + task.getId() + "\\" + filelist.get(i)));
-		}
+        org.apache.commons.httpclient.HttpClient client = new org.apache.commons.httpclient.HttpClient();
+        PostMethod post = new PostMethod(task.getUploadURI());
 
-		post.setRequestEntity(new MultipartRequestEntity(part, post.getParams()));
+        Part[] part = new Part[filelist.size()];
 
-		// Execute the upload
-		int response = client.executeMethod(post);
+        for (int i = 0; i < filelist.size(); i++) {
+            System.out.println("Filename = " + filelist.get(i));
+            part[i] = new FilePart(filelist.get(i), new File("task" + task.getId() + "\\" + filelist.get(i)));
+        }
 
-		System.out.println("Code " + response);
+        post.setRequestEntity(new MultipartRequestEntity(part, post.getParams()));
 
-	}
+        // Execute the upload
+        int response = client.executeMethod(post);
 
-	/**
-	 * Delete the current task folder.
-	 * @param task
-	 */
-	protected void deleteCurrentDir(Task task)
-	{
-		File f = new File("task" + task.getId());
+        System.out.println("Code " + response);
 
-		String[] files = f.list();
+    }
 
-		for (int i = 0; i < files.length; i++)
-		{
-			new File(f.getName() + "/" + files[i]).delete();
-		}
+    /**
+     * Delete the current task folder.
+     * @param task
+     */
+    protected void deleteCurrentDir(Task task) {
+        File f = new File("task" + task.getId());
 
-		f.delete();
-	}
+        String[] files = f.list();
 
-	
+        for (int i = 0; i < files.length; i++) {
+            new File(f.getName() + "/" + files[i]).delete();
+        }
 
+        f.delete();
+    }
 }

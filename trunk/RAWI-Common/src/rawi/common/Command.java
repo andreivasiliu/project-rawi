@@ -5,11 +5,13 @@
 
 package rawi.common;
 
+import java.io.Serializable;
+
 /**
  *
  * @author andrei.arusoaie
  */
-public class Command {
+public class Command implements Serializable{
     String command;
 
     public Command(String command)
