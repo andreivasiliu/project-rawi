@@ -9,7 +9,13 @@ import rawi.rmiinfrastructure.RMIServerModel;
 
 public class RMIMainServer extends RMIServerModel
         implements MainServerInterface {
-    
+
+    String  webServerDownloadURL,
+            webServerUploadURL,
+            messageLogIp;
+    long sessionId;
+
+
     public RMIMainServer() throws RemoteException {
         super(Ports.MainServerPort);
     }
@@ -22,9 +28,21 @@ public class RMIMainServer extends RMIServerModel
             return new ValidateXMLInfo(false, "You must say hello", 1);
     }
 
-	public void taskCompleted(int id) throws RemoteException
-	{
-		//throw new UnsupportedOperationException("Not supported yet.");
-	}
+    public void startSession(String download, String upload, String msgLog,
+            long sessionId) throws RemoteException {
+        webServerDownloadURL = download;
+        webServerUploadURL = upload;
+        messageLogIp = msgLog;
+        this.sessionId = sessionId;
+        
+        System.out.println("Started session: " + sessionId
+                + "\n\t Download URL = " + webServerDownloadURL
+                + "\n\t Upload URL = " + webServerUploadURL
+                + "\n\t Message log ip = " + messageLogIp);
+    }
+
+    public void taskCompleted(int id) throws RemoteException {
+            throw new UnsupportedOperationException("Not supported yet.");
+    }
 }
 
