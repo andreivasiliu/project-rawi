@@ -6,11 +6,7 @@
 package aprototype;
 
 import clustercomputer.ClusterComputer;
-import rawi.common.Command;
-import rawi.common.Task;
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.rmi.RemoteException;
 
 /**
@@ -25,10 +21,6 @@ public class Main {
     public static void main(String[] args) throws RemoteException, IOException {
         // TODO code application logic here
 
-		/*
-		 ClusterComputer cc = new ClusterComputer();
-		 Notifier notifier
-		*/
-
+        ClusterComputer cc = new ClusterComputer();
     }
 }

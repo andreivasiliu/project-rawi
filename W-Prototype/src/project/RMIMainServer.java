@@ -22,9 +22,9 @@ public class RMIMainServer extends RMIServerModel
             return new ValidateXMLInfo(false, "You must say hello", 1);
     }
 
-	public void taskCompleted(int id)
+	public void taskCompleted(int id) throws RemoteException
 	{
-		throw new UnsupportedOperationException("Not supported yet.");
+		//throw new UnsupportedOperationException("Not supported yet.");
 	}
 }
 
