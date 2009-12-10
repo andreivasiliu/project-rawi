@@ -20,10 +20,14 @@
         <servlet-name>ValidateXMLServlet</servlet-name>
         <servlet-class>servlets.ValidateXMLServlet</servlet-class>
     </servlet>
-    <servlet-mapping>
-        <servlet-name>TheUploadServlet</servlet-name>
-        <url-pattern>/TheUploadServlet</url-pattern>
-    </servlet-mapping>
+    <servlet>
+        <servlet-name>GetLists</servlet-name>
+        <servlet-class>servlets.GetLists</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>StartSession</servlet-name>
+        <servlet-class>servlets.StartSession</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>TheDownloadServlet</servlet-name>
         <url-pattern>/TheDownloadServlet/*</url-pattern>
@@ -35,6 +39,18 @@
     <servlet-mapping>
         <servlet-name>ValidateXMLServlet</servlet-name>
         <url-pattern>/ValidateXMLServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>GetLists</servlet-name>
+        <url-pattern>/GetLists</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>StartSession</servlet-name>
+        <url-pattern>/StartSession</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>TheUploadServlet</servlet-name>
+        <url-pattern>/TheUploadServlet/*</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>
