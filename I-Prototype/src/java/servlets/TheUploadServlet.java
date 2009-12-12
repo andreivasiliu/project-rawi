@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package servlets;
 
 import classes.MainBean;
@@ -10,12 +6,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -26,10 +18,6 @@ import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
-/**
- *
- * @author Ioana
- */
 public class TheUploadServlet extends HttpServlet {
 
     public String filesPath;
@@ -44,8 +32,9 @@ public class TheUploadServlet extends HttpServlet {
         
         // Check that we have a file upload request
         boolean isMultipart = ServletFileUpload.isMultipartContent(request);
-
-        // TODO throw excepton if not multipart
+        if(!isMultipart) {
+            throw new ServletException("No file upload request.");
+        }
 
         // Create a factory for disk-based file items
         FileItemFactory factory = new DiskFileItemFactory();
@@ -101,7 +90,8 @@ public class TheUploadServlet extends HttpServlet {
         }
         fos.close();
         uploadedStream.close();
-        
+
+        // add file to session's file list
         session.addFileToList(fileLogicalName, myFile);
     }
 }

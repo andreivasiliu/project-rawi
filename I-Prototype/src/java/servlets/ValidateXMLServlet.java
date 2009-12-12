@@ -2,7 +2,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package servlets;
 
 import classes.MainBean;
@@ -14,52 +13,100 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.rmi.ServerException;
 import rawi.common.MainServerInterface;
 import rawi.common.Ports;
 import rawi.common.ValidateXMLInfo;
 import rawi.rmiinfrastructure.RMIClientModel;
 
-
 /**
  *
  * @author Ioana
  */
-public class ValidateXMLServlet extends HttpServlet{
-   
+public class ValidateXMLServlet extends HttpServlet {
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/xml;charset=UTF-8");
         PrintWriter out = response.getWriter();
 
-        String content = request.getParameter("xml");
-        String name = request.getParameter("name");
+        String xmlContent = request.getParameter("xml");
+        String xmlName = request.getParameter("name");
 
-        MainServerInterface msi;
-        try {
-            msi = new RMIClientModel<MainServerInterface>(Ports.MainServerPort).getInterface();
-        } catch (RemoteException ex) {
-            throw new ServerException("Remote exception", ex);
-        } catch (NotBoundException ex) {
-            throw new ServerException("Not bound exception", ex);
+        if (request.getParameter("delete") != null) {
+            
+            String tmToDelete = request.getParameter("delete");
+            System.out.println("===> 0. deleting " + tmToDelete);
+            deleteTM(tmToDelete);
+            response.sendRedirect("index.jsp");
+        } else {
+            boolean validTM = validateTM(out, xmlName, xmlContent);
+            if (request.getParameter("savexml") != null && validTM) {
+                saveTM(xmlName, xmlContent);
+            }
         }
-        ValidateXMLInfo info = msi.validateXML(content);
-
-        out.println("<validateXMLInfo>");
-            out.println("<xml-name>" + name + "</xml-name>");
-            out.println("<xml-success>" + info.success +
-                    "</xml-success>");
-            out.println("<xml-message>" + info.message + "</xml-message>");
-            out.println("<xml-nodeId>" + info.nodeID + "</xml-nodeId>");
-        out.println("</validateXMLInfo>");
-
-        if(request.getParameter("savexml") != null)
-            saveXML(name, content);
     }
 
-    private void saveXML(String name, String content) {
-        ((MainBean)getServletContext().getAttribute("mainBean"))
-                .addXMLToList(name, content);
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        doPost(request, response);
+    }
+
+    private void saveTM(String xmlName, String content) {
+        // save to file?
+        
+//        String folderName = getServletContext().getRealPath("FileRepository") + "/TransformationModels";
+//        // Create or use the folder for the given file
+//        File folder = new File(folderName);
+//        folder.mkdir();
+//
+//        // create file
+//        BufferedWriter writer = null;
+//        try {
+//            writer = new BufferedWriter(new FileWriter(folderName + "/" + xmlName));
+//            writer.write(content);
+//            // ?
+//            writer.close(); // ? should have been written in a finally block?
+//            // ?
+//        } catch (IOException ex) {
+//            Logger.getLogger(ValidateXMLServlet.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+
+        // add xml to list of xmls
+        MainBean.getFromContext(getServletContext()).addXmlToList(xmlName, content);
+    }
+
+    private boolean validateTM(PrintWriter out, String xmlName, String xmlContent)
+            throws ServletException {
+        MainServerInterface msi;
+
+        ValidateXMLInfo info = null;
+        try {
+            msi = new RMIClientModel<MainServerInterface>(Ports.MainServerPort).getInterface();
+            info = msi.validateXML(xmlContent);
+
+            out.println("<validateXMLInfo>");
+                out.println("<xml-name>" + xmlName + "</xml-name>");
+                out.println("<xml-success>" + info.success +
+                        "</xml-success>");
+                out.println("<xml-message>" + info.message + "</xml-message>");
+                out.println("<xml-nodeId>" + info.nodeID + "</xml-nodeId>");
+            out.println("</validateXMLInfo>");
+        } catch (RemoteException ex) {
+            throw new ServletException("Remote exception", ex);
+        } catch (NotBoundException ex) {
+            throw new ServletException("Not bound exception", ex);
+        } finally {
+            out.close();
+        }
+
+        return info.success;
+    }
+
+    private void deleteTM(String name) {
+        // delete file?
+        System.out.println("===> 1. deleting " + name);
+        MainBean.getFromContext(getServletContext()).deleteXmlByName(name);
     }
 }
