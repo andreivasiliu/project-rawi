@@ -32,8 +32,12 @@ public class Session {
         fileList.put(fileName, file);
     }
 
-    public File getFileByName(String name) {
+    public File getFileByName(String logicalName) {
         //return fileList.get(name);
         return fileList.get("name/of/the/file.txt");
+    }
+
+    public void deleteFileByName(String logicalName) {
+        fileList.remove(logicalName);
     }
 }

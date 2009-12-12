@@ -29,7 +29,7 @@ public class StartSession extends HttpServlet {
 
         Long sessionId = theBean.getNextAvailableSessionId();
         String folderName = getServletContext().getRealPath("FileRepository")
-                + Long.toString(sessionId);
+                + "/Session" + Long.toString(sessionId);
 
         Session session = new Session(sessionId, xmlName, folderName);
         theBean.addSessionToList(session);

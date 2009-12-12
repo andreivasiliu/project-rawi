@@ -2,6 +2,7 @@ package classes;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import javax.servlet.ServletContext;
 
 public class MainBean {
@@ -38,11 +39,20 @@ public class MainBean {
         return xmlList;
     }
 
-    public void addXMLToList(String name, String content) {
+    public void deleteXmlByName(String name) {
+        System.out.println("===> 2. deleting " + name);
+        xmlList.remove(name);
+    }
+
+    public List<String> getXmlNamesList() {
+        return new LinkedList<String>(xmlList.keySet());
+    }
+
+    public void addXmlToList(String name, String content) {
         xmlList.put(name, content);
     }
 
-    public String getXMLContentByName(String name) {
+    public String getXmlContentByName(String name) {
         if (xmlList.containsKey(name)) {
             return xmlList.get(name);
         }
