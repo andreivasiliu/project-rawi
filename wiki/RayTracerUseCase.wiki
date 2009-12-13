@@ -56,6 +56,23 @@ Setup involves running a RAWI-MainServer.jar on a computer, running RAWI-Cluster
        * If the model was stored in a well-known location, no servlet is needed for this
      * The web client downloads http://.../rawi/models/Model%20Name.xml, and displays it as a graph
 
-== Working with Work Sessions ==
-
-_Under Construction_
+== Working with Work Sessions (client's perspective) ==
+ * The user decides to create a work session, by choosing a model from a list; the user may also choose a mainserver to process it, or let the webserver decide
+   * This implies that the user can ask for a list of models, and a list of mainservers
+     * (more info needed)
+ * The user clicks 'CreateSession'
+   * This sends a CreateSession request with the name of the XML to the webserver
+   * A servlet is needed for this
+     * It must make sure that the XML actually exists; otherwise it will respond with a 404 error
+     * If no mainserver was explicitly specified, try each one until one responds
+     * If the XML exists and mainserver is found, it will send a CreateSession call to a mainserver
+       * If the mainserver replies with a success message, register the new session
+     * On failure, send a message back to the client with the reason why
+     * On success, send the needed IDs and URLs to the client
+       * The client needs to have a way to refer to sessions; the session ID is needed
+       * The client needs to be able to upload/download files, URLs are needed
+       * (probably more)
+ * The client must be able to ask for the status of a session, such as what files exist in pack nodes, the status of pack/transformation nodes, the status of the session itself (started/stopped), etc
+   * This information is provided directly by the mainserver; the webserver must simply relay it
+ * The user wants to upload a file to a pack in the session, by selecting a pack, a file, and clicking 'upload'.
+   * (more info after Igno decides how this is done)
