@@ -47,4 +47,12 @@ public class TrackerBean {
         }
         return items;
     }
+
+    public List<String> getList(String type) {
+        List<String> items = new LinkedList<String>();
+        for (IPEntry elt : ipList)
+            if (elt.type.equals(type))
+                items.add(elt.name);
+        return items;
+    }
 }
