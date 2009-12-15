@@ -49,9 +49,9 @@
         <form method="get" action="GetIPServlet">
             What is the name of all the
             <select name="type">
-                <option>WebServers</option>
-                <option>MainServers</option>
-                <option selected>ClusterComputers</option>
+                <option>WebServer</option>
+                <option>MainServer</option>
+                <option selected>ClusterComputer</option>
             </select>
             who told you "Hello"... lately?
             <br /> <br />

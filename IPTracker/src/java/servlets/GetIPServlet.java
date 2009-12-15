@@ -26,26 +26,13 @@ public class GetIPServlet extends HttpServlet {
         response.setContentType("text/html;charset=UTF-8");
         PrintWriter out = response.getWriter();
         Calendar rightNow = Calendar.getInstance();
-
         String type = request.getParameter("type");
-        type = type.substring(0, type.length() - 1); // remove the "s"
 
         tracker.updateList(rightNow);
 
-        List<String> items = tracker.getStringList(type, rightNow);
-
-        if (items.isEmpty()) {
-            out.println("Sorry, no " + type + " said 'Hello' in the last " +
-                tracker.getExpirationTime() + " minutes.");
-            out.println("<a href=\"index.jsp\"> Back </a>");
-            
-        } else {
-            out.println("These are the " + type + "s that said 'Hello' " +
-                "in the last " + tracker.getExpirationTime() + " minutes: <br />");
-            out.println("<ul>");
+        List<String> items = tracker.getList(type);
+        if (!items.isEmpty())
             for(String elt: items)
-                out.println("<li>" + elt + "</li>");
-            out.println("</ul>");
-        }
+                out.println(elt);
     }
 }

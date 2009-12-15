@@ -29,6 +29,10 @@ public class PutIPServlet extends HttpServlet {
         Calendar rightNow = Calendar.getInstance();
         String name = request.getParameter("name");
         String type = request.getParameter("type");
+
+        if(name == null || name.isEmpty() || type == null || type.isEmpty())
+            response.sendError(404, "Bad request");
+
         long time = rightNow.getTimeInMillis();
         
         IPEntry newEntry = new IPEntry(name, type, time);
