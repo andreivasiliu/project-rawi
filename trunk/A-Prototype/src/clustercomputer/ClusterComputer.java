@@ -3,6 +3,7 @@ package clustercomputer;
 import java.rmi.NotBoundException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import rawi.common.ClusterComputerStatus;
 import rawi.common.Task;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -11,6 +12,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.UUID;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
@@ -31,6 +33,7 @@ import rawi.rmiinfrastructure.RMIServerModel;
  * @author andrei.arusoaie
  */
 public class ClusterComputer extends RMIServerModel implements ClusterComputerInterface {
+    String uuid = UUID.randomUUID().toString();
 
     public ClusterComputer() throws RemoteException {
         super(Ports.ClusterComputerPort);
@@ -174,5 +177,15 @@ public class ClusterComputer extends RMIServerModel implements ClusterComputerIn
         }
 
         f.delete();
+    }
+
+    public ClusterComputerStatus getStatus()
+    {
+        ClusterComputerStatus status = new ClusterComputerStatus();
+        status.id = uuid;
+        status.processors = Runtime.getRuntime().availableProcessors();
+        status.used_processors = 0; // TODO: change this
+
+        return status;
     }
 }

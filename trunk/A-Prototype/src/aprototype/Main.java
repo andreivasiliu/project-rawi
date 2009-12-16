@@ -6,8 +6,12 @@
 package aprototype;
 
 import clustercomputer.ClusterComputer;
+import rawi.common.Notifier;
 import java.io.IOException;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.util.Collection;
+import java.util.LinkedList;
 
 /**
  *
@@ -18,9 +22,16 @@ public class Main {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) throws RemoteException, IOException {
-        // TODO code application logic here
-
+    public static void main(String[] args) throws RemoteException, IOException,
+            NotBoundException {
         ClusterComputer cc = new ClusterComputer();
+
+        //MainServerInterface msi = new RMIClientModel<MainServerInterface>(
+        //        Ports.MainServerPort).getInterface();
+        Collection<String> IPs = new LinkedList<String>();
+        IPs.add("127.0.0.1");
+        //msi.notifyPresence(IPs);
+
+        new Notifier("ClusterComputer").start();
     }
 }

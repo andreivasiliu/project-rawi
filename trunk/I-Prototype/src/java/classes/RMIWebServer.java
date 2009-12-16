@@ -1,6 +1,5 @@
 package classes;
 
-import rawi.common.RMIMessage;
 import rawi.common.WebServerInterface;
 import java.rmi.*;
 import java.util.ArrayList;

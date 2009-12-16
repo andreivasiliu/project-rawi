@@ -5,10 +5,10 @@ import java.util.Stack;
 import java.util.regex.Pattern;
 
 import org.junit.*;
+import rawi.common.Command;
 import static org.junit.Assert.*;
 
-import rawi.common.ConsoleCommand;
-import rawi.common.FileHandle;
+import rawi.mainserver.FileHandle;
 import rawi.mainserver.Task;
 import rawi.mainserver.TransformationModel;
 import rawi.mainserver.TransformationModel.*;
@@ -56,18 +56,18 @@ public class RaytracerTest
         pack[3].setPattern(Pattern.compile(".*\\.(bmp|png)"));
 
         packTransformer[0] = model.addPackTransformerNode();
-        packTransformer[0].setCommand(new ConsoleCommand("split scene.tr"));
+        packTransformer[0].setCommand(new Command("split scene.tr"));
         model.addOutput(pack[0], packTransformer[0]);
         model.addOutput(packTransformer[0], pack[1]);
 
         packTransformer[1] = model.addPackTransformerNode();
-        packTransformer[1].setCommand(new ConsoleCommand("render $input"));
+        packTransformer[1].setCommand(new Command("render $input"));
         model.addOutput(pack[0], packTransformer[1]);
         model.addOutput(pack[1], packTransformer[1]);
         model.addOutput(packTransformer[1], pack[2]);
 
         packTransformer[2] = model.addPackTransformerNode();
-        packTransformer[2].setCommand(new ConsoleCommand("join *.rd"));
+        packTransformer[2].setCommand(new Command("join *.rd"));
         packTransformer[2].setIsJoiner(true);
         model.addOutput(pack[1], packTransformer[2]);
         model.addOutput(pack[2], packTransformer[2]);

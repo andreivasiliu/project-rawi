@@ -12,7 +12,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import rawi.common.FileHandle;
 import rawi.exceptions.DoubleSplitterException;
 import rawi.mainserver.TransformationModel.*;
 import rawi.mainserver.WorkSession.*;
