@@ -7,12 +7,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import javax.servlet.ServletContext;
 import rawi.common.MainServerInterface;
 import rawi.common.MainServerStatus;
+import rawi.common.NetworkUtils;
 import rawi.common.Ports;
 import rawi.rmiinfrastructure.RMIClientModel;
 
@@ -75,44 +77,36 @@ public class MainBean {
         List<String> mainServersIps = new LinkedList<String>();
         List<String> mainServersIds = new LinkedList<String>();
 
-        try {
-            // get list of main servers from the ip tracker
-            URL servletURL = new URL
-                    ("http://testbot73.appspot.com/GetIPServlet?type=MainServer");
+        // get list of main servers from the ip tracker
+        Collection<String> IPs = NetworkUtils.getIPsFromTracker("MainServer");
 
-            BufferedReader in = new BufferedReader
-                    (new InputStreamReader(servletURL.openStream()));
-            String line; // main server's id
-            while ((line = in.readLine()) != null) {
-
+        System.out.println("Checking IPs...");
+        for (String ip : IPs)
+        {
+            try {
+                System.out.println("Checking IP: " + ip);
                 // request status to each main server
                 MainServerInterface msi = new RMIClientModel
-                        <MainServerInterface>(line, Ports.MainServerPort)
+                        <MainServerInterface>(ip, Ports.MainServerPort)
                         .getInterface();
                 MainServerStatus msStatus = msi.requestStatus();
 
                 // if the main server is already added in the list,
                 // with a different ip (but same id), don't add it again
                 if(!mainServersIds.contains(msStatus.id)) {
-                    mainServersList.put(line, msStatus);
-                    mainServersIps.add(line);
+                    mainServersList.put(ip, msStatus);
+                    mainServersIps.add(ip);
                     mainServersIds.add(msStatus.id);
                 }
+            } catch (RemoteException ex) {
+                System.err.println("Remote exception - get list of main servers status");
+                ex.printStackTrace();
+            } catch (NotBoundException ex) {
+                System.err.println("Not bound - get list of main servers status");
+                ex.printStackTrace();
             }
-
-        } catch (RemoteException ex) {
-            System.err.println("Remote exception - get list of main servers status");
-            ex.printStackTrace();
-        } catch (NotBoundException ex) {
-            System.err.println("Not bound - get list of main servers status");
-            ex.printStackTrace();
-        } catch (MalformedURLException e) {
-            System.err.println("Eroare la citirea url-ului");
-            e.printStackTrace();
-        } catch (IOException e) {
-            System.err.println("Eroare in-out la citirea de pe site.");
-            e.printStackTrace();
         }
+        System.out.println("Done checking IPs.");
 
         return mainServersIps;
     }
