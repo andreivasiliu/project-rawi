@@ -32,9 +32,6 @@
 					propsContainer.subStates.addChild(line);
 				}
 			}
-			private function clickHandlerr():void
-			{
-			}
 			private function mouseMoveEventHandler():void
 			{
 				if (dragging)
@@ -46,10 +43,10 @@
 					GraphCanvas(this.parent).activeNode = this;
 				else									// start dragging
 				{
-					targetContainer.removeAllChildren();
-					targetContainer.addChild(propsContainer);
 					startDrag();
 					dragging = true;
+					targetContainer.removeAllChildren();
+					targetContainer.addChild(propsContainer);
 				}
 			}
 			private function mouseUpEventHandler(e:MouseEvent):void
