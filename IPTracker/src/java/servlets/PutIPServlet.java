@@ -17,7 +17,7 @@ public class PutIPServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         super.init();
-        tracker = (TrackerBean)getServletContext().getAttribute("trackerBean");
+        tracker = (TrackerBean) getServletContext().getAttribute("trackerBean");
     }
 
     @Override
@@ -27,18 +27,24 @@ public class PutIPServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
 
         Calendar rightNow = Calendar.getInstance();
-        String name = request.getParameter("name");
+        String[] names = request.getParameter("name").split(",");
         String type = request.getParameter("type");
 
-        if(name == null || name.isEmpty() || type == null || type.isEmpty())
+        if (names == null || names.length == 0 || type == null || type.isEmpty()) {
             response.sendError(404, "Bad request");
+            return;
+        }
 
         long time = rightNow.getTimeInMillis();
-        
-        IPEntry newEntry = new IPEntry(name, type, time);
-        tracker.addIpToList(newEntry);
 
-        out.println("<p>" + name + " - " + type +
+        out.println("<p>");
+        for (String name : names) {
+            name = name.trim(); // exclude spaces
+            IPEntry newEntry = new IPEntry(name, type, time);
+            tracker.addIpToList(newEntry);
+            out.println(name + "<br />");
+        }
+        out.println(" - " + type +
                 "<br /> Successfully added. </p>");
         out.println("<a href=\"index.jsp\"> Back </a>");
     }
@@ -48,5 +54,4 @@ public class PutIPServlet extends HttpServlet {
             throws ServletException, IOException {
         doGet(request, response);
     }
-
 }

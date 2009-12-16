@@ -18,27 +18,31 @@ public class GetLists extends HttpServlet {
 
         try {
             if (request.getParameter("type").equals("xml")) {
-                getListOfXMLNames(out);
+                printListOfXMLNames(out);
             } else if (request.getParameter("type").equals("mainServer")) {
-                getListOfMainServers(out);
+                printListOfMainServers(out);
             }
         } finally {
             out.close();
         }
     }
 
-    public void getListOfXMLNames(PrintWriter out) {
-        List<String> xmlNames = MainBean.getFromContext(getServletContext()).getXmlNamesList();
+    public void printListOfXMLNames(PrintWriter out) {
+        List<String> xmlNames = MainBean.getFromContext(getServletContext())
+                .getXmlNamesList();
         out.println("<xmlList>");
-        for (String xmlName : xmlNames) {
+        for (String xmlName : xmlNames)
             out.println("<xml>" + xmlName + "</xml>");
-        }
         out.println("</xmlList>");
 
     }
 
-    public void getListOfMainServers(PrintWriter out) {
+    public void printListOfMainServers(PrintWriter out) {
+        List<String> mainServersIp = MainBean.getFromContext(getServletContext())
+                .getListOfMainServers();
         out.println("<mainServers>");
+        for(String serverIp: mainServersIp)
+            out.println("<mainServerIp>" + serverIp + "</mainServerIp>");
         out.println("</mainServers>");
     }
 
