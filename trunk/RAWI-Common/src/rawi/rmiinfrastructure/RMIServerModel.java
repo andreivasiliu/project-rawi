@@ -31,4 +31,5 @@ public abstract class RMIServerModel extends java.rmi.server.UnicastRemoteObject
             throw e;
         }
     }
+    
 }
