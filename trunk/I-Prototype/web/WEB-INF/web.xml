@@ -28,6 +28,10 @@
         <servlet-name>StartSession</servlet-name>
         <servlet-class>servlets.StartSession</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>CreateSession</servlet-name>
+        <servlet-class>servlets.CreateSession</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>TheDownloadServlet</servlet-name>
         <url-pattern>/TheDownloadServlet/*</url-pattern>
@@ -51,6 +55,10 @@
     <servlet-mapping>
         <servlet-name>TheUploadServlet</servlet-name>
         <url-pattern>/TheUploadServlet/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>CreateSession</servlet-name>
+        <url-pattern>/CreateSession</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>
