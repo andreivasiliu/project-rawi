@@ -37,20 +37,14 @@ public class CreateSession extends HttpServlet {
         String modelName = request.getParameter("modelName");
         String mainServerIp = request.getParameter("mainServerIp");
 
-        System.out.println("===> It gets here 1.");
-
         if (modelName == null || !existsModel(modelName)) {
             response.sendError(404, "Xml doesn't exist.");
             return;
         }
 
-        System.out.println("===> It gets here 2.");
-
         if (mainServerIp == null || mainServerIp.isEmpty()) {
             mainServerIp = getMainServerIp();
         }
-
-        System.out.println("===> It gets here 3.");
 
         // no main server found
         if (mainServerIp.isEmpty()) {
@@ -58,16 +52,12 @@ public class CreateSession extends HttpServlet {
             return;
         }
 
-        System.out.println("===> It gets here 4.");
-
         // xml exists, main server found => create session
         Long sessionId = theBean.getNextAvailableSessionId();
         String folderName = getServletContext().getRealPath("FileRepository")
                 + "/Session" + Long.toString(sessionId);
 
         Session session = new Session(sessionId, modelName, folderName);
-
-        System.out.println("===> It gets here 5.");
 
         SessionInfo sessionInfo =
                 createSessionOnMainServer(session, mainServerIp, request, response);
@@ -81,8 +71,6 @@ public class CreateSession extends HttpServlet {
             out.println("<messageLogIp>" + sessionInfo.msgLogIp + "</messageLogIp>");
             out.println("</sessionInfo>");
         }
-
-        System.out.println("===> It gets here 6. sessionInfo = " + sessionInfo);
 
     }
 
@@ -167,12 +155,15 @@ public class CreateSession extends HttpServlet {
 
         } catch (UnknownHostException ex) {
             response.sendError(500, "Unknown host exception in CreateSession.");
+            ex.printStackTrace();
             return null;
         } catch (RemoteException ex) {
             response.sendError(500, "Remote exception in CreateSession.");
+            ex.printStackTrace();
             return null;
         } catch (NotBoundException ex) {
             response.sendError(500, "Not bound exception in CreateSession.");
+            ex.printStackTrace();
             return null;
         }
     }

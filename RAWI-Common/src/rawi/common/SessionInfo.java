@@ -1,6 +1,8 @@
 package rawi.common;
 
-public class SessionInfo {
+import java.io.Serializable;
+
+public class SessionInfo implements Serializable {
 
     public String downloadUrl,
                   uploadUrl,
