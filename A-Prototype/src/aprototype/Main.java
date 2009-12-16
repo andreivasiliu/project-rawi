@@ -12,6 +12,11 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
+import rawi.common.MainServerInterface;
+import rawi.common.NetworkUtils;
+import rawi.common.Ports;
+import rawi.rmiinfrastructure.RMIClientModel;
 
 /**
  *
@@ -26,11 +31,11 @@ public class Main {
             NotBoundException {
         ClusterComputer cc = new ClusterComputer();
 
-        //MainServerInterface msi = new RMIClientModel<MainServerInterface>(
-        //        Ports.MainServerPort).getInterface();
-        Collection<String> IPs = new LinkedList<String>();
-        IPs.add("127.0.0.1");
-        //msi.notifyPresence(IPs);
+        List<String> mainServerIpList = NetworkUtils.getIPsFromTracker("MainServer");
+        MainServerInterface msi = new RMIClientModel<MainServerInterface>(
+                "10.1.1.12",
+                Ports.MainServerPort).getInterface();
+        msi.notifyPresence(NetworkUtils.getIPList());
 
         new Notifier("ClusterComputer").start();
     }
