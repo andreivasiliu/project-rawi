@@ -11,20 +11,39 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import rawi.common.ClusterComputerInterface;
 import rawi.common.Command;
+import rawi.common.Notifier;
 import rawi.common.Ports;
 import rawi.common.Task;
+import rawi.mainserver.ClusterManager;
 import rawi.rmiinfrastructure.RMIClientModel;
 
 /**
  *
- * @author Ioana & Andrei
+ * @author Ioana & Andrei & Whyte
  */
-public class Main {
+public class Main
+{
+    public static void main(String[] args) throws RemoteException
+    {
+        ClusterManager clusterManager = new ClusterManager();
+        Thread t = new Thread(clusterManager, "Cluster-Manager-Thread");
+        t.start();
+        System.out.println("Started cluster manager.");
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
+        new Notifier("MainServer").start();
+        System.out.println("Started IP notifier.");
+
+        RMIMainServer s = new RMIMainServer(clusterManager);
+        System.out.println("Started RMI server.");
+
+        if (false)
+        {
+            testExecuteTask(s);
+            return;
+        }
+    }
+
+    private static void testExecuteTask(RMIMainServer s) {
         try {
             Command command = new Command("mycp.exe DecorateMessageInterface.java dec.txt");
             String uploadURI = null;
@@ -32,7 +51,6 @@ public class Main {
             String webServerAddress = "";
             String mainServerAddress = "";
 
-            RMIMainServer s = new RMIMainServer();
             RMIClientModel<ClusterComputerInterface> client = new RMIClientModel<ClusterComputerInterface>("10.1.1.8", Ports.ClusterComputerPort);
             ClusterComputerInterface clustercomputer = client.getInterface();
 
@@ -46,5 +64,4 @@ public class Main {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
 }

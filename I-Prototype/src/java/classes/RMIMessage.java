@@ -1,4 +1,4 @@
-package rawi.common;
+package classes;
 
 public class RMIMessage {
     private String source, severity, message;

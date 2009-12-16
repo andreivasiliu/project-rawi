@@ -1,12 +1,14 @@
 package rawi;
 
 import java.rmi.RemoteException;
+import java.util.Collection;
 import java.util.UUID;
 import rawi.common.MainServerInterface;
 import rawi.common.MainServerStatus;
 import rawi.common.Ports;
 import rawi.common.SessionInfo;
 import rawi.common.ValidateXMLInfo;
+import rawi.mainserver.ClusterManager;
 import rawi.rmiinfrastructure.RMIServerModel;
 
 public class RMIMainServer extends RMIServerModel
@@ -15,9 +17,11 @@ public class RMIMainServer extends RMIServerModel
     SessionInfo sessionInfo;
     private String id = UUID.randomUUID().toString();
 
+    private ClusterManager clusterManager;
 
-    public RMIMainServer() throws RemoteException {
+    public RMIMainServer(ClusterManager clusterManager) throws RemoteException {
         super(Ports.MainServerPort);
+        this.clusterManager = clusterManager;
     }
 
     public ValidateXMLInfo validateXML(String xml) throws RemoteException {
@@ -40,11 +44,20 @@ public class RMIMainServer extends RMIServerModel
     public void taskCompleted(int id) throws RemoteException {
             throw new UnsupportedOperationException("Not supported yet.");
     }
+
+    public void notifyPresence(Collection<String> IPs) throws RemoteException
+    {
+        clusterManager.addIpsToScan(IPs);
+    }
     
     public MainServerStatus requestStatus() throws RemoteException {
         MainServerStatus status = new MainServerStatus();
         System.out.println("Received status request.");
         status.id = id;
+        status.numberOfClusterComputers = clusterManager
+                .getNumberOfClusterComputers();
+        status.totalNumberOfProcessors = clusterManager
+                .getTotalNumberOfProcessors();
 
         return status;
     }

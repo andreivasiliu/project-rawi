@@ -12,7 +12,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import rawi.common.FileHandle;
 import rawi.exceptions.InvalidOperationException;
 
 
@@ -21,12 +20,15 @@ import rawi.exceptions.InvalidOperationException;
  */
 public class WorkSession implements ModelChangeListener
 {
+    public enum SessionStatus { STARTED, STOPPING, STOPPED };
+
     TransformationModel model;
     Map<Node, NodeInstance> nodeInstances;
     Map<Pack, PackInstance> packInstances;
     Map<PackTransformer, PackTransformerInstance> packTransformerInstances;
     Set<Integer> targettedNodes;
-    
+    SessionStatus status = SessionStatus.STOPPED;
+
     public WorkSession(TransformationModel model)
     {
         if (model == null)
@@ -54,6 +56,21 @@ public class WorkSession implements ModelChangeListener
         model.addListener(this);
     }
     
+    public SessionStatus getSessionStatus()
+    {
+        return SessionStatus.STARTED;
+    }
+
+    public void startSession()
+    {
+        //this.started = started;
+    }
+
+    public void stopSession()
+    {
+
+    }
+
     /** Returns a pending task whose dependencies are met.
      */
     public Task getPendingTask()
