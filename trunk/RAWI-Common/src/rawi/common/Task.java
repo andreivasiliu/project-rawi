@@ -12,20 +12,24 @@ import java.io.Serializable;
  * @author andrei.arusoaie
  */
 public class Task implements Serializable{
-    int id;
+    String UUID;
     String[] files;
     Command command;
     String uploadURI, downloadURI, mainServerAddress;
 
-    public Task(int id, String[] files, Command command, String uploadURI,
-            String downloadURI, String webServerAddress, String mainServerAddress)
+    public Task(String UUID, String[] files, Command command, String uploadURI, String downloadURI, String mainServerAddress)
     {
-        this.id = id;
+        this.UUID = UUID;
         this.files = files;
         this.command = command;
         this.uploadURI = uploadURI;
         this.downloadURI = downloadURI;
         this.mainServerAddress = mainServerAddress;
+    }
+
+    public String getUUID()
+    {
+        return UUID;
     }
 
     public Command getCommand()
@@ -43,18 +47,13 @@ public class Task implements Serializable{
         return files;
     }
 
-    public int getId()
+    public String getMainServerAddress()
     {
-        return id;
+        return mainServerAddress;
     }
 
     public String getUploadURI()
     {
         return uploadURI;
-    }
-
-    public String getMainServerAddress()
-    {
-        return mainServerAddress;
     }
 }
