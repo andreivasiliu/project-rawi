@@ -76,3 +76,32 @@ Setup involves running a RAWI-MainServer.jar on a computer, running RAWI-Cluster
    * This information is provided directly by the mainserver; the webserver must simply relay it
  * The user wants to upload a file to a pack in the session, by selecting a pack, a file, and clicking 'upload'.
    * (more info after Igno decides how this is done)
+
+== Working with Work Sessions (cluster computer's perspective) ==
+
+Notes:
+ * The mainserver has a list of tasks which will be distributed to cluster computers. This list is dynamic; some of its contents will depend on the results of other tasks, and as such, the list is incomplete at the beginning. This means tasks will be sent one by one, not all at once in the beginning. However...
+ * The entire process needs to be fast. In the most naive case, a cluster computer will download files, execute a task, upload files, and repeat... this means that when downloading/uploading, CPU is not used, and when executing a task, network bandwidth is not used. To use both resources continuously, the mainserver may send another task before the previous one is completed; the cluster computer must queue it, and make sure it uses both CPU and network at the same time, whenever possible.
+ * One of the most important aspects of a distributed system is failover (fault tolerance), meaning "What happens if one of the cluster computers crashes, or a main server crashes, or the network temporarily goes down?" The ideal answer is, of course, "The system quickly recovers and finds another way to finish the process as fast as possible."
+
+Analysis:
+ * Due to the zero-configuration requirement, as soon as the clustercomputer process is started, it must retrieve a list of mainservers and notify each one of its presence
+   * Each RMI call should be done in a new thread, because a RMI call to an unresponsive IP blocks the current thread for a time; checking 50 unresponsive IPs in the same thread is a recipe for failure
+   * When notifying its presence to the mainserver, some state information must also be sent, such as its IP and its number of CPUs or CPU cores; this information will be sent in a structure
+ * A mainserver may be started (or restarted) after a clustercomputer; the discovery must be immediate, and as such, the clustercomputer must be able to receive notifications itself; a clustercomputer may receive a RMI call that asks if it is alive, to which it must respond with its state information (same as above)
+ * The clustercomputer should allow pings from a mainserver, and should be able to ping a mainserver (when this is used is detailed further down)
+   * A ping will be done through a RMI function, which simply receives an integer value and returns the same value.
+ * With the above implemented, the mainserver will always know when a clustercomputer is alive; the clustercomputer must now await requests from a mainserver
+ * When a mainserver wants a clustercomputer to execute a task, it will send a RMI call with details about the task
+   * These details will include at least a task ID, an IP to send the result to, a list of files to be downloaded, an URL to use for downloads, an URL to use for uploads, and a command to execute.
+     * (in the future it may also contain information about the executable, environment variables, etc)
+     * It might happen that a mainserver is restarted while a task is being executed, which means that a clustercomputer may sometimes send a task result to the wrong mainserver; to prevent a session from being irrevocably disrupted (due to the mainserver receiving wrong files), the task ID (or a separate session ID) must be unique... specifically, it must be an UUID string
+   * The RMI call must return immediately (before it begins processing the task)
+   * The clustercomputer must, in another thread, queue the task to be executed
+ * Executing tasks will be done in two (or three) permanent threads: one (or two) that handles downloading and uploading, and one that handles executables; the threads are started as soon as the clustercomputer itself is started
+   * Each thread will wait for semi-tasks, and start working on them as soon as one arrives. This will be done with locks, concurrent queues, wait/notify, or any other mechanism.
+   * A finished download semi-task will trigger an execute semi-task, and a finished execute semi-task will trigger an upload-semi task; basically, a pipeline
+ * Once a task is finished, the clustercomputer will try to send the results (in a structure) to the mainserver; since all RMI calls might block the thread for a long time, this will be done in a new and temporary thread
+   * If the RMI call times out, the cluster computer must keep trying for at least three minutes, with at least five seconds between each try
+   * The task result structure will contain at least the task ID, and a list of new files
+ * (to be continued)
