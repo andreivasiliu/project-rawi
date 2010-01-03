@@ -2,6 +2,7 @@ package rawi.common;
 
 import java.rmi.*;
 import java.util.Collection;
+import java.util.List;
 
 public interface MainServerInterface extends Remote
 {
@@ -12,7 +13,7 @@ public interface MainServerInterface extends Remote
     void createSession(SessionInfo sessionInfo) throws RemoteException;
 
     /** Used by a ClusterComputer to mark a task as finished. */
-    void taskCompleted(int id) throws RemoteException;
+    void taskCompleted(String UUID, List<FileHandle> files) throws RemoteException;
 
     /** Used by a ClusterComputer to make its presence known to the MainServer. */
     void notifyPresence(Collection<String> IPs) throws RemoteException;
