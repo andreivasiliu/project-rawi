@@ -54,7 +54,7 @@ Setup involves running a RAWI-MainServer.jar on a computer, running RAWI-Cluster
    * The user may want to see or modify a stored model
      * The web client must be able to retrieve a model XML from the webserver
        * If the model was stored in a well-known location, no servlet is needed for this
-     * The web client downloads http://.../rawi/models/Model%20Name.xml, and displays it as a graph
+     * The web client downloads http://example.com/rawi/models/Model%20Name.xml, and displays it as a graph
 
 == Working with Work Sessions (client's perspective) ==
  * The user decides to create a work session, by choosing a model from a list; the user may also choose a mainserver to process it, or let the webserver decide
@@ -75,7 +75,28 @@ Setup involves running a RAWI-MainServer.jar on a computer, running RAWI-Cluster
  * The client must be able to ask for the status of a session, such as what files exist in pack nodes, the status of pack/transformation nodes, the status of the session itself (started/stopped), etc
    * This information is provided directly by the mainserver; the webserver must simply relay it
  * The user wants to upload a file to a pack in the session, by selecting a pack, a file, and clicking 'upload'.
-   * (more info after Igno decides how this is done)
+   * The client will send a multi-part upload request to the webserver of the form http://example.com/rawi/upload/[SessionID]/path/to/file.txt
+     * The same mechanism will also be used by clustercomputers; also, note that the pack is not specified here, but a session is... this means that all files belonging to a session must be deleted when the session is destroyed
+     * Since more files of the same name can exist (although each with a potentially different content), the associated download path must contain, besides the logical file name (path/to/file.txt), a unique identifier, such as an auto-incremented integer
+       * This means that the uploader must be notified of this ID; if the upload is successfully finished, the webserver will respond with a string of the form: "File ID: 2\n", which means that the uploaded file can be downloaded with the URL http://example.com/rawi/download/[SessionID]/2/path/to/file.txt
+   * Once the upload is complete, the client will ask the server to associate the file with a pack, by sending a request to the URL http://example.com/rawi/put/[SessionID]/[FileID]/path/to/file.txt?inPack=[PackID]
+     * Note that the same file may be associated with zero, one, or even more packs; however, the webserver does not have to be aware of these associations
+     * The webserver will relay this command to a mainserver through a RMI call; the parameters of the call will be at least the session ID, a FileHandle object (part of RAWI-Common), and the pack ID.
+       * The mainserver will either accept the command, or return a descriptive error; the error will most likely be in the form of a string
+     * The webserver will respond to the client either with a confirmation message, or with the error and an http status different from 200
+ * The user then wants to download the same file, by selecting a pack, and a file the pack's list of files
+   * The client must form the download URL; it has the address of the webserver, the session ID, the pack ID, and the file ID and logical name
+   * The download URL will then be: http://example.com/rawi/download/[SessionID]/[FileID]/[LogicalName] - note that the pack ID is not actually used
+     * Once a request is sent to this address, the webserver simply must find and return the contents of this file
+ * Since all files related to a session are deleted when the session is destroyed, the user will want to have a permanent space on the webserver, to avoid uploading the same file over and over again; this permanent space will be the FileBox™.
+   * To upload to the FileBox, the client must send a multi-part upload request to a URL of the form http://example.com/rawi/upload/filebox/path/to/file.txt
+     * If a file by that name already exists, it will be overwritten
+     * Where and how the file is stored is irrelevant... however, the user will almost always want to copy the file to a session, and as such, the ideal way to store it (which is not necessarily required) would be one that does not involve any actual copying on the disk; for example, the file might be stored on disk with a UUID filename, and simply be associated with one or more usual files (which have either a FileBox logical name, or a session ID, file ID, and logical name)
+   * To download a file from the FileBox, the client will use a URL of the form http://example.com/rawi/download/filebox/path/to/file.txt
+   * There must be a way to copy a file from the FileBox to a session, and from a session to the FileBox
+     * (not yet sure how the URLs will look like)
+   * Optionally, the webserver could support extracting an archive in the FileBox, with the resulting files also being in the FileBox
+ * (to be continued)
 
 == Working with Work Sessions (cluster computer's perspective) ==
 
