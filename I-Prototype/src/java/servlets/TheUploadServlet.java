@@ -2,10 +2,12 @@ package servlets;
 
 import classes.MainBean;
 import classes.Session;
+import classes.UploadedFile;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.List;
 import javax.servlet.ServletException;
@@ -21,18 +23,21 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 public class TheUploadServlet extends HttpServlet {
 
     public String filesPath;
-    
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        response.setContentType("text/html;charset=UTF-8");
+        PrintWriter out = response.getWriter();
+
         String url = request.getPathInfo();
         String sessionId = url.split("/")[1];
         String fileLogicalName = url.substring(2 + sessionId.length());
-        
+
         // Check that we have a file upload request
         boolean isMultipart = ServletFileUpload.isMultipartContent(request);
-        if(!isMultipart) {
+        if (!isMultipart) {
             throw new ServletException("No file upload request.");
         }
 
@@ -56,10 +61,12 @@ public class TheUploadServlet extends HttpServlet {
             FileItem item = (FileItem) iter.next();
 
             if (!item.isFormField()) {
-                processUploadedFile(item, new Long(sessionId), fileLogicalName);
+                long fileId = processUploadedFile(item, new Long(sessionId),
+                        fileLogicalName);
+                out.println("File ID: " + fileId + "\n");
             }
         }
-        response.sendRedirect(getServletContext().getContextPath() + "/index.jsp");
+
     }
 
 //    @Override
@@ -67,22 +74,24 @@ public class TheUploadServlet extends HttpServlet {
 //            throws ServletException, IOException {
 //        doPost(request, response);
 //    }
-
-    private void processUploadedFile(FileItem item, Long sessionId,
+    private long processUploadedFile(FileItem item, Long sessionId,
             String fileLogicalName) throws IOException {
 
         InputStream uploadedStream = item.getInputStream();
 
         String fileName = fileLogicalName.replaceAll("/", "_");
-        MainBean theBean = (MainBean)getServletContext().getAttribute("mainBean");
+        MainBean theBean = (MainBean) getServletContext().getAttribute("mainBean");
         Session session = theBean.getSessionById(sessionId);
 
         // Create or use the folder for the given file
         File folder = new File(session.folderName);
         folder.mkdir();
 
-        // create file
-        File myFile = new File(session.folderName + "/" + fileName);
+        // Create the file. It's name will be id-logicalFileName
+        long fileId = session.getNextAvailableFileId();
+        String fullFileName = fileId + "-" + fileName;
+        File myFile = new File(session.folderName + "/" + fullFileName);
+
         FileOutputStream fos = new FileOutputStream(myFile);
         int bytesRead;
         while ((bytesRead = uploadedStream.read()) != -1) {
@@ -92,6 +101,8 @@ public class TheUploadServlet extends HttpServlet {
         uploadedStream.close();
 
         // add file to session's file list
-        session.addFileToList(fileLogicalName, myFile);
+        session.addFileToList(new UploadedFile(fileId, fileLogicalName, myFile));
+
+        return fileId;
     }
 }

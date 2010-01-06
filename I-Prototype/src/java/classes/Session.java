@@ -9,8 +9,9 @@ public class Session {
     Long id;
     public String xmlName;
     public String folderName;
-    HashMap<String, File> fileList = new HashMap<String, File>();
-    
+    HashMap<Long, UploadedFile> fileList = new HashMap<Long, UploadedFile>();
+    long lastUsedFileId = 0;
+
     public Session() {
     }
 
@@ -24,20 +25,28 @@ public class Session {
         return id;
     }
 
-    public List<String> getFileNames() {
-        return new LinkedList<String>(fileList.keySet());
+    public long getNextAvailableFileId() {
+        return lastUsedFileId++;
     }
 
-    public void addFileToList(String fileName, File file) {
-        fileList.put(fileName, file);
+    // returns a list of strings like: "Id = 3, FileName = name"
+    public HashMap<Long, String> getFileIdsAndNames() {
+        HashMap<Long, String> namesList = new HashMap<Long, String>();
+        for(long fileId : fileList.keySet())
+            namesList.put(fileId, fileList.get(fileId).logicalName);
+        return namesList;
     }
 
-    public File getFileByName(String logicalName) {
-        //return fileList.get(name);
-        return fileList.get("name/of/the/file.txt");
+    public void addFileToList(UploadedFile file) {
+        fileList.put(file.id, file);
     }
 
-    public void deleteFileByName(String logicalName) {
-        fileList.remove(logicalName);
+    public File getFileById(long id) {
+        return fileList.get(id).theFile;
+        //return fileList.get("name/of/the/file.txt");
+    }
+
+    public void deleteFileById(long id) {
+        fileList.remove(id);
     }
 }

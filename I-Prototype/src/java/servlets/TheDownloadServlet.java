@@ -20,8 +20,14 @@ public class TheDownloadServlet extends HttpServlet {
         
         // get session id and file logical name
         String url = request.getPathInfo();
-        String sessionId = url.split("/")[1];
-        String fileLogicalName = url.substring(2 + sessionId.length());
+        String[] splittedUrl = url.split("/");
+
+        String sessionId = splittedUrl[1];
+        String fileId = splittedUrl[2];
+        
+        // file logical name: never used?
+        String fileLogicalName = url.substring(3
+                + sessionId.length() + fileId.length());
 
         // get session by id
         MainBean theBean = MainBean.getFromContext(getServletContext());
@@ -29,28 +35,28 @@ public class TheDownloadServlet extends HttpServlet {
 
         // delete or download file
         if(request.getParameter("delete") != null)
-            deleteFile(session, fileLogicalName, response);
+            deleteFile(session, new Long(fileId), response);
         else
-            downloadFile(session, fileLogicalName, response);
+            downloadFile(session, new Long(fileId), response);
     }
 
-    private void deleteFile(Session session, String fileLogicalName,
+    private void deleteFile(Session session, long fileId,
             HttpServletResponse response) throws IOException {
-        File fileToDelete = session.getFileByName(fileLogicalName);
+        File fileToDelete = session.getFileById(fileId);
         fileToDelete.delete();
-        session.deleteFileByName(fileLogicalName);
+        session.deleteFileById(fileId);
 
         response.sendRedirect(getServletContext().getContextPath() + "/index.jsp");
     }
 
-    private void downloadFile(Session session, String fileLogicalName,
+    private void downloadFile(Session session, long fileId,
             HttpServletResponse response)
             throws ServletException, IOException {
 
         response.setContentType("application/octet-stream");
 
         OutputStream out = response.getOutputStream();
-        File requestedFile = session.getFileByName(fileLogicalName);
+        File requestedFile = session.getFileById(fileId);
         InputStream is = new FileInputStream(requestedFile);
 
         byte[] buf = new byte[1024];

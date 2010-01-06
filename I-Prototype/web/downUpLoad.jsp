@@ -33,20 +33,20 @@
             <li> <%=s.getId()%> <br />
                 <ul>
                     <%
-                    List<String> fileNames = s.getFileNames();
+                    HashMap<Long, String> fileNames = s.getFileIdsAndNames();
                     if (!fileNames.isEmpty()) {
                         out.println("Files: <br />");
 
-                        for (String fileName : fileNames) {
-
+                        for (Long fileId : fileNames.keySet()) {
+                            String fileName = fileNames.get(fileId);
                     %>
                     <li>
-                        <a href="TheDownloadServlet/<%=s.getId()%>/<%= fileName%>">
-                            <%= fileName%>
+                        <a href="TheDownloadServlet/<%=s.getId()%>/<%= fileId%>/<%= fileName%>">
+                            <%= fileId%>/<%= fileName%>
                         </a>
 
-                        <a href="TheDownloadServlet/<%=s.getId()%>/<%= fileName%>?delete=true">
-                            <br />(Delete <%= fileName%>)
+                        <a href="TheDownloadServlet/<%=s.getId()%>/<%= fileId%>/<%= fileName%>?delete=true">
+                            <br />(Delete <%= fileId%>/<%= fileName%>)
                         </a>
                     </li>
                     <% }
