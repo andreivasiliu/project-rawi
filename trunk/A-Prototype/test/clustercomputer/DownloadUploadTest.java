@@ -16,7 +16,8 @@ import static org.junit.Assert.*;
  *
  * @author Andrei
  */
-public class DownloadUploadTest
+/*
+ public class DownloadUploadTest
 {
     @Test
     public void downloadtest() throws RemoteException, IOException
@@ -37,3 +38,4 @@ public class DownloadUploadTest
         cc.uploadFiles(task);
     }
 }
+*/

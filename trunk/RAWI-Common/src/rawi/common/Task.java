@@ -6,6 +6,7 @@
 package rawi.common;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  *
@@ -13,11 +14,11 @@ import java.io.Serializable;
  */
 public class Task implements Serializable{
     String UUID;
-    String[] files;
+    List<FileHandle> files;
     Command command;
     String uploadURI, downloadURI, mainServerAddress;
 
-    public Task(String UUID, String[] files, Command command, String uploadURI, String downloadURI, String mainServerAddress)
+    public Task(String UUID, List<FileHandle> files, Command command, String uploadURI, String downloadURI, String mainServerAddress)
     {
         this.UUID = UUID;
         this.files = files;
@@ -32,9 +33,19 @@ public class Task implements Serializable{
         return UUID;
     }
 
+    public void setUUID(String UUID)
+    {
+        this.UUID = UUID;
+    }
+
     public Command getCommand()
     {
         return command;
+    }
+
+    public void setCommand(Command command)
+    {
+        this.command = command;
     }
 
     public String getDownloadURI()
@@ -42,9 +53,19 @@ public class Task implements Serializable{
         return downloadURI;
     }
 
-    public String[] getFiles()
+    public void setDownloadURI(String downloadURI)
+    {
+        this.downloadURI = downloadURI;
+    }
+
+    public List<FileHandle> getFiles()
     {
         return files;
+    }
+
+    public void setFiles(List<FileHandle> files)
+    {
+        this.files = files;
     }
 
     public String getMainServerAddress()
@@ -52,8 +73,18 @@ public class Task implements Serializable{
         return mainServerAddress;
     }
 
+    public void setMainServerAddress(String mainServerAddress)
+    {
+        this.mainServerAddress = mainServerAddress;
+    }
+
     public String getUploadURI()
     {
         return uploadURI;
+    }
+
+    public void setUploadURI(String uploadURI)
+    {
+        this.uploadURI = uploadURI;
     }
 }
