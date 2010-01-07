@@ -2,7 +2,9 @@ package rawi;
 
 import java.rmi.RemoteException;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
+import rawi.common.FileHandle;
 import rawi.common.MainServerInterface;
 import rawi.common.MainServerStatus;
 import rawi.common.Ports;
@@ -60,6 +62,15 @@ public class RMIMainServer extends RMIServerModel
                 .getTotalNumberOfProcessors();
 
         return status;
+    }
+
+    public void taskCompleted(String UUID, List<FileHandle> files) throws RemoteException
+    {
+        System.out.println("Task " + UUID + " completed.");
+        System.out.println("Files :");
+        for (FileHandle f:files)
+            System.out.println(" ---> " + f.getFileURL());
+        System.out.println("uploaded.");
     }
 }
 

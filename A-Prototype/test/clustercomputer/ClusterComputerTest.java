@@ -17,6 +17,7 @@ import static org.junit.Assert.*;
  *
  * @author Andrei
  */
+/*
 public class ClusterComputerTest {
 
 	
@@ -53,3 +54,5 @@ public class ClusterComputerTest {
 	}
 
 }
+ *
+ */

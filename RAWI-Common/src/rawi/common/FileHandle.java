@@ -5,11 +5,13 @@
 
 package rawi.common;
 
+import java.io.Serializable;
+
 /**
  *
  * @author Andrey
  */
-public class FileHandle
+public class FileHandle implements Serializable
 {
     String baseURL;
     String id;
@@ -31,5 +33,30 @@ public class FileHandle
     {
         //return baseURL + "/" + id + "/" + logicalName;
         return logicalName;
+    }
+
+    public String getId()
+    {
+        return id;
+    }
+
+    public String getLogicalName()
+    {
+        return logicalName;
+    }
+
+    public void setBaseURL(String baseURL)
+    {
+        this.baseURL = baseURL;
+    }
+
+    public void setId(String id)
+    {
+        this.id = id;
+    }
+
+    public void setLogicalName(String logicalName)
+    {
+        this.logicalName = logicalName;
     }
 }

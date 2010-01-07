@@ -4,7 +4,7 @@
  */
 package clustercomputer;
 
-import java.rmi.NotBoundException;
+import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import rawi.common.Task;
@@ -14,7 +14,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -41,11 +43,11 @@ public class TaskThread extends Thread
 {
 
     Task task;
-    HashMap<String, Integer> map;
+    HashMap<String, byte[]> map;
 
     public TaskThread(Task task)
     {
-        map = new HashMap<String, Integer>();
+        map = new HashMap<String, byte[]>();
         this.task = task;
     }
 
@@ -66,26 +68,26 @@ public class TaskThread extends Thread
         HttpClient httpclient = new DefaultHttpClient();
 
         File currentDir = new File("task" + task.getUUID());
-        currentDir.mkdir();
-        //System.out.println("+++++++++++++++++++++++++++++Download URI: " + task.getDownloadURI());
 
-        for (int i = 0; i < task.getFiles().length; i++) {
-            //System.out.println("+++++++++++++++++++++++++++++Downloading: " + task.getDownloadURI() + task.getFiles()[i]);
-            HttpGet httpget = new HttpGet(task.getDownloadURI() + task.getFiles()[i]);
+        List<FileHandle> files = task.getFiles();
+        for (FileHandle f : files)
+        {
+            HttpGet httpget = new HttpGet(task.getDownloadURI() + f.getFileURL());
             HttpResponse response = httpclient.execute(httpget);
             HttpEntity entity = response.getEntity();
-            if (entity != null) {
+            if (entity != null)
+            {
                 InputStream instream = entity.getContent();
-                OutputStream out = new FileOutputStream(currentDir + "\\" + task.getFiles()[i]);
+                OutputStream out = new FileOutputStream(currentDir + "/" + f.getFileURL());
                 int length;
                 byte[] tmp = new byte[2048];
-                while ((length = instream.read(tmp)) != -1) {
+                while ((length = instream.read(tmp)) != -1)
+                {
                     out.write(tmp, 0, length);
                 }
                 out.close();
             }
         }
-
     }
 
     /**
@@ -94,29 +96,50 @@ public class TaskThread extends Thread
      * @param task
      * @throws IOException
      */
-    protected void uploadFiles(Task task) throws IOException
+    protected List<FileHandle> uploadFiles(Task task) throws IOException, NoSuchAlgorithmException
     {
-        File f = new File("task" + task.getUUID());
-
         ArrayList<FileHandle> filelist = new ArrayList<FileHandle>(getChangedOrNewFiles());
 
-        org.apache.commons.httpclient.HttpClient client = new org.apache.commons.httpclient.HttpClient();
-        PostMethod post = new PostMethod(task.getUploadURI());
-
-        Part[] part = new Part[filelist.size()];
-
-        for (int i = 0; i < filelist.size(); i++) {
-            System.out.println("Filename = " + filelist.get(i));
-            part[i] = new FilePart(filelist.get(i).getFileURL(), new File("task" + task.getUUID() + "\\" + filelist.get(i).getFileURL()));
+        for (FileHandle fileHandle:filelist)
+        {
+            System.out.println("UPLOADING Filename = " + fileHandle.getFileURL());
+            int id = uploadOnlyOneFile(new FilePart(fileHandle.getFileURL(), new File("task" + task.getUUID() + "/" + fileHandle.getFileURL())));
+            if (id != -1)
+                fileHandle.setId(Integer.toString(id));
         }
 
+        return filelist;
+    }
+
+    /* done because UploadServlet accepts only one part...*/
+    private int uploadOnlyOneFile(FilePart filepart) throws IOException
+    {
+        org.apache.commons.httpclient.HttpClient client = new org.apache.commons.httpclient.HttpClient();
+        PostMethod post = new PostMethod(task.getUploadURI());
+        Part[] part = new Part[]
+        {
+            filepart
+        };
         post.setRequestEntity(new MultipartRequestEntity(part, post.getParams()));
-
-        // Execute the upload
         int response = client.executeMethod(post);
-
-        System.out.println("Code " + response);
-
+        System.out.println("Upload status = " + response);
+        //System.out.println("Post response:" + post.getResponseBodyAsString());
+        String resp = post.getResponseBodyAsString();
+        System.out.println("Post response:" + resp);
+        if (resp.substring(0, "File ID:".length() - 1).equals("File ID:"))
+        {
+            try
+            {
+                return Integer.parseInt(resp.substring("File ID:".length() - 1, resp.length() - 1));
+            } catch (NumberFormatException e)
+            {
+                return -1;
+            }
+        }
+        else
+        {
+            return -1;
+        }
     }
 
     /**
@@ -129,7 +152,8 @@ public class TaskThread extends Thread
 
         String[] files = f.list();
 
-        for (int i = 0; i < files.length; i++) {
+        for (int i = 0; i < files.length; i++)
+        {
             new File(f.getName() + "/" + files[i]).delete();
         }
 
@@ -137,18 +161,21 @@ public class TaskThread extends Thread
     }
 
     //map(filename, file_hashcode)
-    //
-    public void mapFiles()
+    public void mapFiles() throws NoSuchAlgorithmException
     {
         File f = new File("task" + task.getUUID());
-        
-        String[] files = f.list();
 
-        for (int i = 0; i < files.length; i++) {
+        String[] files = f.list();
+        MessageDigest m = MessageDigest.getInstance("MD5");
+
+        for (int i = 0; i < files.length; i++)
+        {
             File file = new File(f.getName() + "/" + files[i]);
-            try {
-                map.put(files[i], getBytesFromFile(file).hashCode());
-            } catch (IOException ex) {
+            try
+            {
+                map.put(files[i], m.digest(getBytesFromFile(file)));
+            } catch (IOException ex)
+            {
                 Logger.getLogger(TaskThread.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
@@ -156,27 +183,55 @@ public class TaskThread extends Thread
 
     // return all new files created
     // needs to be changed in future....
-    public List<FileHandle> getChangedOrNewFiles()
+    public List<FileHandle> getChangedOrNewFiles() throws NoSuchAlgorithmException
     {
         List<FileHandle> list = new LinkedList<FileHandle>();
-        
+
         File f = new File("task" + task.getUUID());
-        
+
         String[] files = f.list();
-        
+
         for (int i = 0; i < files.length; i++)
         {
-            try {
-                int new_file_code = getBytesFromFile(new File(f.getName() + "/" + files[i])).hashCode();
-                int old_file_code = map.get(files[i]);
-                if (old_file_code != new_file_code)
+            try
+            {
+                MessageDigest m = MessageDigest.getInstance("MD5");
+                byte[] new_file_code = m.digest(getBytesFromFile(new File(f.getName() + "/" + files[i])));
+                byte[] old_file_code = map.get(files[i]);
+                if (!equals(new_file_code, old_file_code))
+                {
                     list.add(new FileHandle(task.getUploadURI(), null, files[i]));
-            } catch (IOException ex) {
+                }
+            } catch (IOException ex)
+            {
                 Logger.getLogger(TaskThread.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        
+
         return list;
+    }
+
+    // compares two byte arrays contents
+    private boolean equals(byte[] a, byte[] b)
+    {
+        if (null == a || null == b)
+        {
+            return false;
+        }
+
+        if (a.length != b.length)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < a.length; i++)
+        {
+            if (a[i] != b[i])
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     // return a byte array coresponding to a given file
@@ -184,18 +239,19 @@ public class TaskThread extends Thread
     {
 
         InputStream is = new FileInputStream(file);
-        System.out.println("\nDEBUG: FileInputStream is " + file);
+        //System.out.println("\nDEBUG: FileInputStream is " + file);
 
         // Get the size of the file
         long length = file.length();
-        System.out.println("DEBUG: Length of " + file + " is " + length + "\n");
+        //System.out.println("DEBUG: Length of " + file + " is " + length + "\n");
 
         /*
          * You cannot create an array using a long type. It needs to be an int
          * type. Before converting to an int type, check to ensure that file is
          * not loarger than Integer.MAX_VALUE;
          */
-        if (length > Integer.MAX_VALUE) {
+        if (length > Integer.MAX_VALUE)
+        {
             System.out.println("File is too large to process");
             return null;
         }
@@ -207,14 +263,16 @@ public class TaskThread extends Thread
         int offset = 0;
         int numRead = 0;
         while ((offset < bytes.length)
-                && ((numRead = is.read(bytes, offset, bytes.length - offset)) >= 0)) {
+                && ((numRead = is.read(bytes, offset, bytes.length - offset)) >= 0))
+        {
 
             offset += numRead;
 
         }
 
         // Ensure all the bytes have been read in
-        if (offset < bytes.length) {
+        if (offset < bytes.length)
+        {
             throw new IOException("Could not completely read file " + file.getName());
         }
 
@@ -226,43 +284,51 @@ public class TaskThread extends Thread
     @Override
     public void run()
     {
-        try {
+        try
+        {
             // create current working folder
             createCurrentDir(task);
-            
+
             //download files
             downloadFiles(task);
 
             //mapping file names and their hashcode
             mapFiles();
 
+            //Execution
             String execString = task.getCommand().getExecString();
-            //System.out.println("--------------------ExecString:" + execString);
-            String[] envp = new String[]{"PATH=" + (new File("task" + task.getUUID()).getAbsolutePath())};
-            //System.out.println("--------------------envp:" + envp[0]);
             File file = new File("task" + task.getUUID()).getAbsoluteFile();
-            //System.out.println("--------------------File:" + file.getAbsolutePath());
-            Runtime.getRuntime().exec(execString, null, file);
-            
+            Runtime.getRuntime().exec(file.getAbsolutePath() + "/" + execString, null, file).waitFor();
+
             //Uploading files
-            uploadFiles(task);
+            List<FileHandle> uploaded = uploadFiles(task);
 
             //delete current folder
             deleteCurrentDir(task);
 
             //Notification
             MainServerInterface msi;
-            try {
+            try
+            {
                 msi = new RMIClientModel<MainServerInterface>(task.getMainServerAddress(),
                         Ports.MainServerPort).getInterface();
-                msi.taskCompleted(task.getUUID(), getChangedOrNewFiles());
-            } catch (RemoteException ex) {
+                msi.taskCompleted(task.getUUID(), uploaded);
+            } catch (RemoteException ex)
+            {
                 Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (NotBoundException ex) {
+            } catch (NotBoundException ex)
+            {
                 Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-        } catch (IOException ex) {
+        } catch (InterruptedException ex)
+        {
+            Logger.getLogger(TaskThread.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NoSuchAlgorithmException ex)
+        {
+            Logger.getLogger(TaskThread.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex)
+        {
             Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

@@ -18,6 +18,7 @@ public class ClusterComputer extends RMIServerModel implements ClusterComputerIn
 
     public ClusterComputer() throws RemoteException {
         super(Ports.ClusterComputerPort);
+
     }
 
     /**
