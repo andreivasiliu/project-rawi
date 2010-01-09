@@ -13,7 +13,8 @@ public interface MainServerInterface extends Remote
     void createSession(SessionInfo sessionInfo) throws RemoteException;
 
     /** Used by a ClusterComputer to mark a task as finished. */
-    void taskCompleted(String UUID, List<FileHandle> files) throws RemoteException;
+    void taskCompleted(String id, String clusterComputerId,
+            List<FileHandle> files) throws RemoteException;
 
     /** Used by a ClusterComputer to make its presence known to the MainServer. */
     void notifyPresence(Collection<String> IPs) throws RemoteException;

@@ -1,4 +1,4 @@
-package rawi.mainserver;
+package rawi.MainServer2;
 
 import static org.junit.Assert.*;
 
@@ -11,9 +11,12 @@ import java.util.regex.Pattern;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import rawi.common.FileHandle;
 
 import rawi.exceptions.DoubleSplitterException;
+import rawi.mainserver.TransformationModel;
 import rawi.mainserver.TransformationModel.*;
+import rawi.mainserver.WorkSession;
 import rawi.mainserver.WorkSession.*;
 import rawi.mainserver.XML.TransformationModelParser;
 
@@ -30,7 +33,7 @@ public class WorkSessionTest
         Reader reader = new InputStreamReader(stream);
         model = TransformationModelParser.parseFromXML(reader);
         
-        workSession = new WorkSession(model);
+        workSession = new WorkSession("test-session", model);
     }
 
     @After
@@ -118,7 +121,7 @@ public class WorkSessionTest
         assertFalse(workSession.isUsedInTransformation(pack[3]));
 
         // By session node
-        workSession.setTargetNode((workSession.nodeInstances.get(pack[3])));
+        workSession.setTargetNode(workSession.getPackInstance(pack[3].getId()));
 
     }
 

@@ -36,18 +36,13 @@ public class Notifier extends Thread {
     }
 
     @Override
-    public void run() {
+    public synchronized void run() {
         try {
             //get IPTracker's URL
-            URL url = new URL("http://testbot73.appspot.com/PutIPServlet");
+            URL url = new URL(NetworkUtils.IPTRACKER_URL + "PutIPServlet");
             //URL url = new URL("http://localhost:3333/PutIPServlet");
             while (true) {
                 try {
-                    if (shutdown) {
-                        //stop thread
-                        break;
-                    }
-
                     //connect and send parameters
                     URLConnection conn = url.openConnection();
 
@@ -66,8 +61,13 @@ public class Notifier extends Thread {
                         continue;
                     reader.close();
 
+                    if (shutdown) {
+                        //stop thread
+                        break;
+                    }
+
                     //wait
-                    Thread.sleep(60000);
+                    this.wait(60000);
                 } catch (InterruptedException ex) {
                 }
             }
@@ -76,7 +76,7 @@ public class Notifier extends Thread {
         }
     }
 
-    public String getIPList() throws SocketException {
+    private String getIPList() throws SocketException {
         String list = "";
 
         Enumeration e = NetworkInterface.getNetworkInterfaces();
@@ -95,5 +95,11 @@ public class Notifier extends Thread {
             }
         }
         return list;
+    }
+
+    public synchronized void shutdown()
+    {
+        shutdown = true;
+        this.notifyAll();
     }
 }

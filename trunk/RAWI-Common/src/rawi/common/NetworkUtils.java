@@ -25,6 +25,8 @@ import java.util.Set;
  */
 public class NetworkUtils {
 
+    final static public String IPTRACKER_URL = "http://testbot73.appspot.com/";
+
     public static List<String> getIPList() throws SocketException {
         List<String> list = new LinkedList<String>();
 
@@ -50,7 +52,7 @@ public class NetworkUtils {
 
         try {
             URL servletURL = new URL
-                    ("http://testbot73.appspot.com/GetIPServlet?type=" + type);
+                    (IPTRACKER_URL + "GetIPServlet?type=" + type);
 
             BufferedReader in = new BufferedReader
                     (new InputStreamReader(servletURL.openStream()));

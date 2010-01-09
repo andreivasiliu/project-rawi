@@ -11,7 +11,15 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import rawi.common.Command;
+import rawi.common.FileHandle;
+import rawi.common.SessionInfo;
+import rawi.common.Task;
+import rawi.common.TaskResult;
 import rawi.exceptions.InvalidOperationException;
 
 
@@ -22,24 +30,26 @@ public class WorkSession implements ModelChangeListener
 {
     public enum SessionStatus { STARTED, STOPPING, STOPPED };
 
+    SessionInfo sessionInfo;
+    private String sessionId;
     TransformationModel model;
-    Map<Node, NodeInstance> nodeInstances;
-    Map<Pack, PackInstance> packInstances;
-    Map<PackTransformer, PackTransformerInstance> packTransformerInstances;
-    Set<Integer> targettedNodes;
+    Map<Node, NodeInstance> nodeInstances = new HashMap<Node, NodeInstance>();
+    Map<Pack, PackInstance> packInstances = new HashMap<Pack, PackInstance>();
+    Map<PackTransformer, PackTransformerInstance> packTransformerInstances
+             = new HashMap<PackTransformer, PackTransformerInstance>();
+    Set<Integer> targettedNodes = new HashSet<Integer>();
     SessionStatus status = SessionStatus.STOPPED;
 
-    public WorkSession(TransformationModel model)
+    Queue<Task> pendingTasks = new ConcurrentLinkedQueue<Task>();
+    Queue<Task> activeTasks = new ConcurrentLinkedQueue<Task>();
+
+    public WorkSession(String sessionId, TransformationModel model)
     {
         if (model == null)
             throw new NullPointerException();
-        
+
+        this.sessionId = sessionId;
         this.model = model;
-        nodeInstances = new HashMap<Node, NodeInstance>();
-        packInstances = new HashMap<Pack, PackInstance>();
-        packTransformerInstances = new HashMap<PackTransformer,
-            PackTransformerInstance>();
-        targettedNodes = new HashSet<Integer>();
         
         for (Node node: model.getNodeList())
             createInstance(node);
@@ -56,35 +66,105 @@ public class WorkSession implements ModelChangeListener
         model.addListener(this);
     }
     
+    public String getSessionId()
+    {
+        return sessionId;
+    }
+
     public SessionStatus getSessionStatus()
     {
-        return SessionStatus.STARTED;
+        return status;
     }
 
-    public void startSession()
+    // TODO: Need to figure out a better thread-safe way of doing these.
+    public synchronized void startSession()
     {
-        //this.started = started;
+        this.status = SessionStatus.STARTED;
+
+        for (PackTransformerInstance packTransformerInstance :
+            packTransformerInstances.values())
+        {
+            for (int i = 0; i < packTransformerInstance.subPackTransformers(); i++)
+            {
+                if (packTransformerInstance.getState(i) != SubPackTransformerState.PENDING)
+                    continue;
+
+                makeTask(packTransformerInstance, i);
+            }
+        }
     }
 
-    public void stopSession()
+    private void makeTask(PackTransformerInstance packTransformerInstance,
+            int subPackTransformer)
     {
+        Command command = packTransformerInstance.origin.getCommand();
+        Set<FileHandle> files = new HashSet<FileHandle>();
+        Task task = new Task(UUID.randomUUID().toString(),
+                new LinkedList<FileHandle>(files), command);
 
+        if (sessionInfo != null)
+        {
+            task.setDownloadURI(sessionInfo.downloadUrl);
+            task.setUploadURI(sessionInfo.uploadUrl);
+        }
+
+        // TODO: Change! *******************************************************   !!!
+        task.setMainServerAddress("127.0.0.1"); // !!!
+
+        pendingTasks.add(task);
+    }
+
+    public synchronized void stopSession()
+    {
+        if (this.status == SessionStatus.STARTED)
+        {
+            this.status = SessionStatus.STOPPING;
+
+            if (activeTasks.size() == 0)
+                this.status = SessionStatus.STOPPED;
+        }
     }
 
     /** Returns a pending task whose dependencies are met.
+     * This method is thread-safe.
      */
-    public Task getPendingTask()
+    public synchronized Task getPendingTask()
     {
-        // TODO
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (status != SessionStatus.STARTED)
+            return null;
+
+        Task task = pendingTasks.poll();
+
+        if (task != null)
+            activeTasks.add(task);
+
+        return task;
+    }
+
+    /** Returns an uncompleted task; this task can be retrieved again with a
+     * call to {@link getPendingTask()}.
+     * This method is thread-safe.
+     * @param task The uncompleted task to be returned.
+     */
+    public synchronized void returnTask(Task task)
+    {
+        activeTasks.remove(task);
+        pendingTasks.add(task);
+
+        if (status == SessionStatus.STOPPING && activeTasks.isEmpty())
+            status = SessionStatus.STOPPED;
     }
     
     // TODO: Find out how to do that link.
     /** Marks a task as done, to allow other tasks that depend on it to be
      * returned by {@link getPendingTask()}.
+     * This method is thread-safe.
      */
-    public void markTaskAsFinished(Task task)
+    public synchronized void markTaskAsFinished(Task task, TaskResult taskResult)
     {
+        if (status == SessionStatus.STOPPING && activeTasks.isEmpty())
+            status = SessionStatus.STOPPED;
+
         // TODO
         throw new UnsupportedOperationException("Not supported yet.");
     }
@@ -167,7 +247,7 @@ public class WorkSession implements ModelChangeListener
         nodeInstances.get(node).prepareStates();
     }
 
-    void setTargetNode(int id)
+    public void setTargetNode(int id)
     {
         if (model.getPack(id) == null && model.getPackTransformer(id) == null)
             throw new InvalidIdException("A node with the ID " + id + " was " +
@@ -178,12 +258,12 @@ public class WorkSession implements ModelChangeListener
         // TODO: finish this
     }
 
-    void setTargetNode(Node node)
+    public void setTargetNode(Node node)
     {
         setTargetNode(node.getId());
     }
 
-    void setTargetNode(NodeInstance nodeInstance)
+    public void setTargetNode(NodeInstance nodeInstance)
     {
         setTargetNode(nodeInstance.getOrigin().getId());
     }
@@ -222,7 +302,7 @@ public class WorkSession implements ModelChangeListener
     }
     
     public enum SubPackState { IS_EMPTY, HAS_FILES };
-    public enum SubPackTransformerState { PENDING, WORKING, DONE };
+    public enum SubPackTransformerState { DEPENDENCIES_NOT_MET, PENDING, WORKING, DONE };
 
     public class PackInstance extends NodeInstance
     {
@@ -463,7 +543,7 @@ public class WorkSession implements ModelChangeListener
             state = new ArrayList<SubPackTransformerState>(1);
 
             for (int i = 0; i < nrOfStates; i++)
-                state.add(SubPackTransformerState.PENDING);
+                addState();
 
 //            for (Pack output: origin.getOutputs())
 //                packInstances.get(output).prepareStates();
@@ -472,12 +552,59 @@ public class WorkSession implements ModelChangeListener
         @Override
         protected int addState()
         {
-            state.add(SubPackTransformerState.PENDING);
+            state.add(SubPackTransformerState.DEPENDENCIES_NOT_MET);
+            updateState(state.size() - 1);
 
             return state.size() - 1;
         }
 
+        protected void updateState(int subPackTransformer)
+        {
+            //SubPackTransformerState state = SubPackTransformerState.PENDING;
 
+            for (Pack input : origin.getInputs())
+            {
+                PackInstance packInstance = packInstances.get(input);
+
+                if (origin.isJoiner())
+                {
+                    for (int i = 0; i < packInstance.subPacks(); i++)
+                        if (packInstance.getState(subPackTransformer) !=
+                                SubPackState.HAS_FILES)
+                        {
+                            state.set(subPackTransformer,
+                                    SubPackTransformerState.DEPENDENCIES_NOT_MET);
+                            return;
+                        }
+                }
+                else
+                {
+                    if (packInstance.getState(subPackTransformer) !=
+                            SubPackState.HAS_FILES)
+                    {
+                        state.set(subPackTransformer,
+                                SubPackTransformerState.DEPENDENCIES_NOT_MET);
+                        return;
+                    }
+                }
+            }
+
+            if (state.get(subPackTransformer) == SubPackTransformerState.DEPENDENCIES_NOT_MET)
+                state.set(subPackTransformer, SubPackTransformerState.PENDING);
+
+            // TODO: If a state can ever be downgraded from "pending" back to
+            // "dependencies not met", then more code needs to be added.
+        }
+
+        private SubPackTransformerState getState(int subPackTransformer)
+        {
+            return state.get(subPackTransformer);
+        }
+
+        private int subPackTransformers()
+        {
+            return state.size();
+        }
     }
     
     public class PackFileWriter extends FileWriter

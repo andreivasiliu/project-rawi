@@ -1,9 +1,13 @@
 package rawi.rmiinfrastructure;
 
 import java.net.InetAddress;
+import java.rmi.NoSuchObjectException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public abstract class RMIServerModel extends java.rmi.server.UnicastRemoteObject {
@@ -31,5 +35,16 @@ public abstract class RMIServerModel extends java.rmi.server.UnicastRemoteObject
             throw e;
         }
     }
-    
+
+    public void shutdownRMI()
+    {
+        try
+        {
+            UnicastRemoteObject.unexportObject(this.getRegistry(), true);
+        }
+        catch (NoSuchObjectException ex)
+        {
+            Logger.getLogger(RMIServerModel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 }
