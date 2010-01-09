@@ -9,6 +9,7 @@ import rawi.common.MainServerInterface;
 import rawi.common.MainServerStatus;
 import rawi.common.Ports;
 import rawi.common.SessionInfo;
+import rawi.common.TaskResult;
 import rawi.common.ValidateXMLInfo;
 import rawi.mainserver.ClusterManager;
 import rawi.rmiinfrastructure.RMIServerModel;
@@ -64,13 +65,17 @@ public class RMIMainServer extends RMIServerModel
         return status;
     }
 
-    public void taskCompleted(String UUID, List<FileHandle> files) throws RemoteException
+    public void taskCompleted(String id, String clusterComputerId, List<FileHandle> files) throws RemoteException
     {
-        System.out.println("Task " + UUID + " completed.");
+        System.out.println("Task " + id + " completed.");
         System.out.println("Files :");
         for (FileHandle f:files)
-            System.out.println(" ---> " + f.getFileURL());
+            System.out.println(" ---> " + f.getLogicalName());
         System.out.println("uploaded.");
+
+        TaskResult taskResult = new TaskResult(id, clusterComputerId, files);
+
+        clusterManager.taskCompleted(taskResult);
     }
 }
 

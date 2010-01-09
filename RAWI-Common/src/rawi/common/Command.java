@@ -1,26 +1,27 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package rawi.common;
 
 import java.io.Serializable;
 
-/**
- *
- * @author andrei.arusoaie
- */
-public class Command implements Serializable{
+public class Command implements Serializable
+{
     String command;
+    boolean systemCommand = false;
 
     public Command(String command)
     {
         this.command = command;
     }
 
-    public String getExecString()
+    public void setSystemCommand(boolean systemCommand)
     {
-        return command;
+        this.systemCommand = systemCommand;
+    }
+
+    public String getExecString(String rootPath)
+    {
+        if (systemCommand)
+            return command;
+
+        return rootPath + "/" + command;
     }
 }

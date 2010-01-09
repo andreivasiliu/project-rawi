@@ -4,48 +4,76 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import rawi.common.ClusterComputerInterface;
 import rawi.common.ClusterComputerStatus;
 import rawi.common.Ports;
+import rawi.common.Task;
+import rawi.common.TaskResult;
+import rawi.common.exceptions.InvalidIdException;
 import rawi.rmiinfrastructure.RMIClientModel;
 
 /** A manager that keeps and updates a list of working sessions.
  */
 public class ClusterManager implements Runnable
 {
-    List<WorkSession> sessionList = new LinkedList<WorkSession>();
-    List<ClusterComputer> computerList = new LinkedList<ClusterComputer>();
-    Map<String, ClusterComputer> computerById = new HashMap<String, ClusterComputer>();
+    final List<WorkSession> sessionList = new LinkedList<WorkSession>();
+    final Map<String, WorkSession> sessionById = new HashMap<String, WorkSession>();
+    final List<ClusterComputer> computerList = new LinkedList<ClusterComputer>();
+    final Map<String, ClusterComputer> computerById = new HashMap<String, ClusterComputer>();
 
     final Queue<String> ipsToScan = new ConcurrentLinkedQueue<String>();
-    final Object semaphore = new Object();
+    final Map<Task, WorkSession> taskOwner = new ConcurrentHashMap<Task, WorkSession>();
+    final Map<String, Task> taskById = new ConcurrentHashMap<String, Task>();
+    final ExecutorService threadPool = Executors.newCachedThreadPool();
+    final Object clusterManagerLock = new Object();
+    boolean shutdown = false;
 
     public synchronized void run()
     {
         mainLoop();
     }
 
+
+    public void shutdown()
+    {
+        synchronized (clusterManagerLock)
+        {
+            if (shutdown == true)
+                return;
+
+            shutdown = true;
+            threadPool.shutdown();
+            clusterManagerLock.notifyAll();
+        }
+    }
+
     private void mainLoop()
     {
         while (true)
         {
-            if (!ipsToScan.isEmpty())
-                scanForComputers(ipsToScan);
-            
-            // check finished/failed tasks
-
-
-            assignTaskToComputer();
-
-            synchronized (semaphore)
+            synchronized (clusterManagerLock)
             {
+                if (shutdown)
+                    return;
+
+                if (!ipsToScan.isEmpty())
+                    scanForComputers(ipsToScan);
+
+                if (assignTaskToComputer())
+                    continue;
+
                 try {
-                    semaphore.wait(200);
+                    clusterManagerLock.wait(200);
                 } catch (InterruptedException ex) {
                     // Silently ignore
                 }
@@ -70,21 +98,121 @@ public class ClusterManager implements Runnable
     }
 
     /** Finds a pending task from any of the managed working sessions.
+     * This method is thread-safe.
      */
     private Task getPendingTask()
     {
+        Task task;
+
         for (WorkSession workSession : sessionList)
         {
-            if (workSession.getSessionStatus() != WorkSession.SessionStatus.STARTED)
+            if ((task = workSession.getPendingTask()) == null)
                 continue;
 
-            Task task = workSession.getPendingTask();
-
-            if (task != null)
-                return task;
+            taskOwner.put(task, workSession);
+            taskById.put(task.getId(), task);
+            return task;
         }
 
         return null;
+    }
+
+    /**
+     * Called when an attempt to give a task to a computer was not successful. A
+     * call to getPendingTask will eventually return this task again.
+     * This method is thread-safe.
+     *
+     * @param task The task to be put back into the "Pending Tasks" queue.
+     */
+    private void retryTask(Task task)
+    {
+        WorkSession workSession = taskOwner.remove(task);
+
+        if (workSession == null)
+        {
+            System.err.println("Warning: A task did not have an associated " +
+                    "work session.");
+            return;
+        }
+
+        workSession.returnTask(task);
+
+        // Must do something
+    }
+
+    public void taskCompleted(TaskResult taskResult)
+    {
+        Task task = taskById.remove(taskResult.id);
+
+        if (task == null)
+        {
+            System.err.println("Warning: Received results to an unknown task.");
+            return;
+        }
+
+        ClusterComputer computer = computerById.get(taskResult.clusterComputerId);
+        if (computer != null)
+            computer.takeTask(task);
+
+        WorkSession workSession = taskOwner.remove(task);
+
+        if (workSession == null)
+        {
+            System.err.println("Warning: A task did not have an associated " +
+                    "work session.");
+            return;
+        }
+
+        workSession.markTaskAsFinished(task, taskResult);
+
+        wakeUp();
+    }
+
+    public void addWorkSession(WorkSession workSession)
+    {
+        sessionList.add(workSession);
+        sessionById.put(workSession.getSessionId(), workSession);
+        wakeUp();
+    }
+
+    public void startWorkSession(String sessionId)
+    {
+        WorkSession session = getSessionById(sessionId);
+
+        session.startSession();
+        wakeUp();
+    }
+
+    public void waitUntilStopped(String sessionId)
+    {
+        WorkSession workSession = getSessionById(sessionId);
+
+        synchronized (clusterManagerLock)
+        {
+            while (true)
+            {
+                try
+                {
+                    if (workSession.getSessionStatus() ==
+                            WorkSession.SessionStatus.STOPPED)
+                        return;
+
+                    clusterManagerLock.wait();
+                }
+                catch (InterruptedException ex)
+                {
+                    // Silently ignore.
+                }
+            }
+        }
+    }
+
+    public void wakeUp()
+    {
+        synchronized (clusterManagerLock)
+        {
+            clusterManagerLock.notifyAll();
+        }
     }
 
     private ClusterComputer getAvailableClusterComputer()
@@ -95,29 +223,31 @@ public class ClusterManager implements Runnable
         {
             ClusterComputerStatus status = clusterComputer.status;
 
-            if (status.used_processors >= status.processors)
+            if (clusterComputer.taskCount() >= status.processors ||
+                    clusterComputer.unresponsive)
                 continue;
 
-            if (bestClusterComputer == null || status.used_processors <
-                    bestClusterComputer.status.used_processors)
+            if (bestClusterComputer == null || clusterComputer.taskCount() <
+                    bestClusterComputer.taskCount())
                 bestClusterComputer = clusterComputer;
         }
 
         return bestClusterComputer;
     }
 
-    private void assignTaskToComputer()
+    private boolean assignTaskToComputer()
     {
         ClusterComputer clusterComputer;
         Task task;
 
         if ((clusterComputer = getAvailableClusterComputer()) == null)
-            return;
+            return false;
 
         if ((task = getPendingTask()) == null)
-            return;
+            return false;
 
-        clusterComputer.assignTask(task);
+        clusterComputer.giveTask(task);
+        return true;
     }
 
     /**
@@ -131,8 +261,19 @@ public class ClusterManager implements Runnable
     {
         ipsToScan.addAll(IPs);
 
-        synchronized (semaphore) {
-            semaphore.notify();
+        synchronized (clusterManagerLock)
+        {
+            clusterManagerLock.notify();
+        }
+    }
+
+    public void addIpToScan(String IP)
+    {
+        ipsToScan.add(IP);
+
+        synchronized (clusterManagerLock)
+        {
+            clusterManagerLock.notify();
         }
     }
 
@@ -186,16 +327,84 @@ public class ClusterManager implements Runnable
         return clusterComputer;
     }
 
+    private WorkSession getSessionById(String sessionId)
+    {
+        WorkSession session = sessionById.get(sessionId);
+
+        if (session == null)
+            throw new InvalidIdException("No work session with id '" +
+                    sessionId + "' is known.");
+
+        return session;
+    }
+
     private class ClusterComputer
     {
         String id;
         ClusterComputerStatus status;
         String ipAddress;
+        boolean unresponsive = false;
 
-        private void assignTask(Task task)
+        private Set<Task> activeTasks = new HashSet<Task>();
+
+        synchronized void giveTask(Task task)
         {
-            System.out.println("Assigning task to computer.");
-            throw new UnsupportedOperationException("Not yet implemented");
+            activeTasks.add(task);
+            task.setMainServerAddress(status.mainServerAddr);
+            TaskGiver taskGiver = new TaskGiver(task, this);
+            threadPool.execute(taskGiver);
+        }
+
+        synchronized boolean takeTask(Task task)
+        {
+            return activeTasks.remove(task);
+        }
+
+        synchronized int taskCount()
+        {
+            return activeTasks.size();
+        }
+    }
+
+    private class TaskGiver implements Runnable
+    {
+        private final Task task;
+        private final ClusterManager.ClusterComputer clusterComputer;
+
+        public TaskGiver(Task task, ClusterManager.ClusterComputer clusterComputer)
+        {
+            this.task = task;
+            this.clusterComputer = clusterComputer;
+        }
+
+        public void run()
+        {
+            giveTaskToComputer();
+        }
+
+        private void giveTaskToComputer()
+        {
+            try
+            {
+                ClusterComputerInterface cci =
+                        new RMIClientModel<ClusterComputerInterface>(
+                        clusterComputer.ipAddress, Ports.ClusterComputerPort)
+                        .getInterface();
+
+                cci.execute(task);
+            }
+            catch (RemoteException ex)
+            {
+                clusterComputer.unresponsive = true;
+                clusterComputer.takeTask(task);
+                retryTask(task);
+            }
+            catch (NotBoundException ex)
+            {
+                clusterComputer.unresponsive = true;
+                clusterComputer.takeTask(task);
+                retryTask(task);
+            }
         }
     }
 

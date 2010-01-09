@@ -1,9 +1,11 @@
 package clustercomputer;
 
+import java.rmi.server.ServerNotActiveException;
 import rawi.common.ClusterComputerStatus;
 import rawi.common.Task;
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.rmi.server.RemoteServer;
 import java.util.UUID;
 import rawi.common.ClusterComputerInterface;
 import rawi.common.Ports;
@@ -29,18 +31,23 @@ public class ClusterComputer extends RMIServerModel implements ClusterComputerIn
      * @throws IOException
      */
     public void execute(Task task) throws RemoteException {
-        TaskThread tt = new TaskThread(task);
+        TaskThread tt = new TaskThread(this, task);
         tt.start();
     }
 
-
-    public ClusterComputerStatus getStatus()
+    public ClusterComputerStatus getStatus() throws RemoteException
     {
-        ClusterComputerStatus status = new ClusterComputerStatus();
-        status.id = uuid;
-        status.processors = Runtime.getRuntime().availableProcessors();
-        status.used_processors = 0; // TODO: change this
-
-        return status;
+        try
+        {
+            ClusterComputerStatus status = new ClusterComputerStatus();
+            status.id = uuid;
+            status.processors = Runtime.getRuntime().availableProcessors();
+            status.mainServerAddr = RemoteServer.getClientHost();
+            return status;
+        }
+        catch (ServerNotActiveException ex)
+        {
+            throw new RuntimeException("Cannot get the client's host address", ex);
+        }
     }
 }

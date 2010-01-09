@@ -6,10 +6,10 @@ import java.util.regex.Pattern;
 
 import org.junit.*;
 import rawi.common.Command;
+import rawi.common.FileHandle;
+import rawi.common.Task;
 import static org.junit.Assert.*;
 
-import rawi.mainserver.FileHandle;
-import rawi.mainserver.Task;
 import rawi.mainserver.TransformationModel;
 import rawi.mainserver.TransformationModel.*;
 import rawi.mainserver.WorkSession;
@@ -79,7 +79,7 @@ public class RaytracerTest
     {
         PackInstance packInstance;
 
-        session = new WorkSession(model);
+        session = new WorkSession("raytracer-test-session", model);
 
         packInstance = session.getPackInstance("Start Node");
         assertNotNull(packInstance);
@@ -103,7 +103,7 @@ public class RaytracerTest
             else
             {
                 System.out.println("Marking task as finished.");
-                taskStack.pop().markAsFinished();
+                session.markTaskAsFinished(task, null);
             }
         }
     }

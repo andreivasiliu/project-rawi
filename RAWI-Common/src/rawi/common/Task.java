@@ -13,14 +13,14 @@ import java.util.List;
  * @author andrei.arusoaie
  */
 public class Task implements Serializable{
-    String UUID;
+    String id;
     List<FileHandle> files;
     Command command;
     String uploadURI, downloadURI, mainServerAddress;
 
-    public Task(String UUID, List<FileHandle> files, Command command, String uploadURI, String downloadURI, String mainServerAddress)
+    public Task(String id, List<FileHandle> files, Command command, String uploadURI, String downloadURI, String mainServerAddress)
     {
-        this.UUID = UUID;
+        this.id = id;
         this.files = files;
         this.command = command;
         this.uploadURI = uploadURI;
@@ -28,14 +28,21 @@ public class Task implements Serializable{
         this.mainServerAddress = mainServerAddress;
     }
 
-    public String getUUID()
+    public Task(String id, List<FileHandle> files, Command command)
     {
-        return UUID;
+        this.id = id;
+        this.files = files;
+        this.command = command;
     }
 
-    public void setUUID(String UUID)
+    public String getId()
     {
-        this.UUID = UUID;
+        return id;
+    }
+
+    public void setId(String id)
+    {
+        this.id = id;
     }
 
     public Command getCommand()

@@ -31,8 +31,10 @@ public class FileHandle implements Serializable
 
     public String getFileURL()
     {
-        //return baseURL + "/" + id + "/" + logicalName;
-        return logicalName;
+        if (id == null)
+            return baseURL + "/" + logicalName;
+        else
+            return baseURL + "/" + id + "/" + logicalName;
     }
 
     public String getId()

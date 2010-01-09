@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package clustercomputer;
 
 import java.security.NoSuchAlgorithmException;
@@ -14,8 +10,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,19 +35,20 @@ import rawi.rmiinfrastructure.RMIClientModel;
  */
 public class TaskThread extends Thread
 {
-
+    ClusterComputer clusterComputer;
     Task task;
     HashMap<String, byte[]> map;
 
-    public TaskThread(Task task)
+    public TaskThread(ClusterComputer clusterComputer, Task task)
     {
         map = new HashMap<String, byte[]>();
+        this.clusterComputer = clusterComputer;
         this.task = task;
     }
 
     public void createCurrentDir(Task task)
     {
-        File currentDir = new File("task" + task.getUUID());
+        File currentDir = new File("task" + task.getId());
         currentDir.mkdir();
     }
 
@@ -67,18 +62,18 @@ public class TaskThread extends Thread
     {
         HttpClient httpclient = new DefaultHttpClient();
 
-        File currentDir = new File("task" + task.getUUID());
+        File currentDir = new File("task" + task.getId());
 
         List<FileHandle> files = task.getFiles();
         for (FileHandle f : files)
         {
-            HttpGet httpget = new HttpGet(task.getDownloadURI() + f.getFileURL());
+            HttpGet httpget = new HttpGet(f.getFileURL());
             HttpResponse response = httpclient.execute(httpget);
             HttpEntity entity = response.getEntity();
             if (entity != null)
             {
                 InputStream instream = entity.getContent();
-                OutputStream out = new FileOutputStream(currentDir + "/" + f.getFileURL());
+                OutputStream out = new FileOutputStream(currentDir + "/" + f.getLogicalName());
                 int length;
                 byte[] tmp = new byte[2048];
                 while ((length = instream.read(tmp)) != -1)
@@ -102,8 +97,8 @@ public class TaskThread extends Thread
 
         for (FileHandle fileHandle:filelist)
         {
-            System.out.println("UPLOADING Filename = " + fileHandle.getFileURL());
-            int id = uploadOnlyOneFile(new FilePart(fileHandle.getFileURL(), new File("task" + task.getUUID() + "/" + fileHandle.getFileURL())));
+            System.out.println("UPLOADING Filename = " + fileHandle.getLogicalName());
+            int id = uploadOnlyOneFile(new FilePart(fileHandle.getLogicalName(), new File("task" + task.getId() + "/" + fileHandle.getLogicalName())));
             if (id != -1)
                 fileHandle.setId(Integer.toString(id));
         }
@@ -148,7 +143,7 @@ public class TaskThread extends Thread
      */
     protected void deleteCurrentDir(Task task)
     {
-        File f = new File("task" + task.getUUID());
+        File f = new File("task" + task.getId());
 
         String[] files = f.list();
 
@@ -163,7 +158,7 @@ public class TaskThread extends Thread
     //map(filename, file_hashcode)
     public void mapFiles() throws NoSuchAlgorithmException
     {
-        File f = new File("task" + task.getUUID());
+        File f = new File("task" + task.getId());
 
         String[] files = f.list();
         MessageDigest m = MessageDigest.getInstance("MD5");
@@ -187,7 +182,7 @@ public class TaskThread extends Thread
     {
         List<FileHandle> list = new LinkedList<FileHandle>();
 
-        File f = new File("task" + task.getUUID());
+        File f = new File("task" + task.getId());
 
         String[] files = f.list();
 
@@ -286,6 +281,7 @@ public class TaskThread extends Thread
     {
         try
         {
+            System.out.println("Received task with ID " + task.getId());
             // create current working folder
             createCurrentDir(task);
 
@@ -296,9 +292,9 @@ public class TaskThread extends Thread
             mapFiles();
 
             //Execution
-            String execString = task.getCommand().getExecString();
-            File file = new File("task" + task.getUUID()).getAbsoluteFile();
-            Runtime.getRuntime().exec(file.getAbsolutePath() + "/" + execString, null, file).waitFor();
+            File file = new File("task" + task.getId()).getAbsoluteFile();
+            String execString = task.getCommand().getExecString(file.getAbsolutePath());
+            Runtime.getRuntime().exec("\"" + execString + "\"", null, file).waitFor();
 
             //Uploading files
             List<FileHandle> uploaded = uploadFiles(task);
@@ -308,29 +304,15 @@ public class TaskThread extends Thread
 
             //Notification
             MainServerInterface msi;
-            try
-            {
-                msi = new RMIClientModel<MainServerInterface>(task.getMainServerAddress(),
-                        Ports.MainServerPort).getInterface();
-                msi.taskCompleted(task.getUUID(), uploaded);
-            } catch (RemoteException ex)
-            {
-                Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (NotBoundException ex)
-            {
-                Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
-            }
 
-        } catch (InterruptedException ex)
-        {
-            Logger.getLogger(TaskThread.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (NoSuchAlgorithmException ex)
-        {
-            Logger.getLogger(TaskThread.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex)
+            msi = new RMIClientModel<MainServerInterface>(task.getMainServerAddress(),
+                        Ports.MainServerPort).getInterface();
+                System.out.println("Finished. Sending results to " + task.getMainServerAddress());
+                msi.taskCompleted(task.getId(), clusterComputer.uuid, uploaded);
+        }
+        catch (Exception ex)
         {
             Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
 }

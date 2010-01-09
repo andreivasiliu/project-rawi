@@ -1,4 +1,4 @@
-package rawi.mainserver;
+package rawi.MainServer2;
 
 import static org.junit.Assert.*;
 
@@ -9,10 +9,10 @@ import java.util.regex.Pattern;
 import org.junit.Before;
 import org.junit.Test;
 
-import rawi.common.CommandList;
-import rawi.common.ConsoleCommand;
+import rawi.common.Command;
 import rawi.exceptions.DoubleSplitterException;
 import rawi.exceptions.DuplicateNameException;
+import rawi.mainserver.TransformationModel;
 import rawi.mainserver.TransformationModel.*;
 
 public class TransformationModelTest
@@ -114,9 +114,7 @@ public class TransformationModelTest
     public void testSetCommand()
     {
         PackTransformer packTransformer = model.addPackTransformerNode();
-        CommandList command = new CommandList();
-        command.addCommand(new ConsoleCommand("cp a.txt b.txt\n"));
-        command.addCommand(new ConsoleCommand("cp b.txt c.txt\n"));
+        Command command = new Command("cp a.txt b.txt");
 
         packTransformer.setCommand(command);
     }
