@@ -223,7 +223,7 @@ public class ClusterManager implements Runnable
         {
             ClusterComputerStatus status = clusterComputer.status;
 
-            if (clusterComputer.taskCount() >= status.processors ||
+            if (clusterComputer.taskCount() >= status.processors + 4 ||
                     clusterComputer.unresponsive)
                 continue;
 

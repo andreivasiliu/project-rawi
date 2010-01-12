@@ -1,12 +1,11 @@
 package rawi.MainServer2;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import rawi.RMIMainServer;
@@ -24,6 +23,7 @@ import rawi.rmiinfrastructure.RMIClientModel;
 
 public class ClusterManagerTest
 {
+
     ClusterManager clusterManager;
     Thread managerThread;
 
@@ -69,13 +69,13 @@ public class ClusterManagerTest
 
         if (!checkConnection(clusterComputerIP))
         {
-            System.out.println("Skipping ClusterComputer test, there wasn't " +
-                    "one running at " + clusterComputerIP);
+            System.out.println("Skipping ClusterComputer test, there wasn't "
+                    + "one running at " + clusterComputerIP);
             return;
         }
-        
-        System.out.println("Found a ClusterComputer at " + clusterComputerIP +
-                ", using it for a test.");
+
+        System.out.println("Found a ClusterComputer at " + clusterComputerIP
+                + ", using it for a test.");
 
         Notifier notifier = new Notifier("MainServer");
         notifier.start();
@@ -102,6 +102,7 @@ public class ClusterManagerTest
     // <editor-fold defaultstate="collapsed" desc="Dummy Work Session private class">
     private class DummyWorkSession extends WorkSession
     {
+
         Queue<Task> dummyTasks = new ConcurrentLinkedQueue<Task>();
         Queue<Task> activeTasks = new ConcurrentLinkedQueue<Task>();
 
@@ -111,13 +112,26 @@ public class ClusterManagerTest
 
             for (int i = 0; i < tasks; i++)
             {
-                List l = new LinkedList<FileHandle>();
+                /*                List l = new LinkedList<FileHandle>();
                 Command c = new Command("calc.exe");
                 c.setSystemCommand(true);
                 Task t = new Task("dummy-task-" + i, l, c);
                 t.setDownloadURI("");
                 t.setUploadURI("");
                 dummyTasks.add(t);
+
+                 */
+                Command command = new Command(new String[] {"mycp.exe", "DecorateMessageInterface.java", "dec.txt"});
+                String uploadURI = "http://localhost:8084/I-Prototype/TheUploadServlet/0/";
+                String downloadURI = "http://students.info.uaic.ro/~andrei.arusoaie/rawi_workspace/";
+
+                ArrayList<FileHandle> fhl = new ArrayList<FileHandle>();
+                fhl.add(new FileHandle(downloadURI, null, "mycp.exe"));
+                fhl.add(new FileHandle(downloadURI, null, "DecorateMessageInterface.java"));
+                Task task1 = new Task("dummy-task-" + i, fhl, command, uploadURI, downloadURI, null);
+
+                dummyTasks.add(task1);
+
             }
         }
 
@@ -148,17 +162,22 @@ public class ClusterManagerTest
             System.out.println("DummyWorkSession: Finished a task!");
             activeTasks.remove(task);
             if (activeTasks.isEmpty() && dummyTasks.isEmpty())
+            {
                 stopSession();
+            }
         }
 
         @Override
         public synchronized void startSession()
         {
             if (dummyTasks.isEmpty())
+            {
                 return;
+            }
 
             super.startSession();
         }
+
     }// </editor-fold>
 
     private boolean checkConnection(String IP)
@@ -172,13 +191,15 @@ public class ClusterManagerTest
             ClusterComputerStatus ccs = cci.getStatus();
 
             if (ccs.processors > 0)
+            {
                 return true;
+            }
 
             return false;
-        }
-        catch (Exception ex)
+        } catch (Exception ex)
         {
             return false;
         }
     }
+
 }
