@@ -33,20 +33,21 @@ import rawi.rmiinfrastructure.RMIClientModel;
  *
  * @author Andrey
  */
-public class TaskThread extends Thread
+public class ClusterTask
 {
+
     ClusterComputer clusterComputer;
     Task task;
     HashMap<String, byte[]> map;
 
-    public TaskThread(ClusterComputer clusterComputer, Task task)
+    public ClusterTask(ClusterComputer clusterComputer, Task task)
     {
         map = new HashMap<String, byte[]>();
         this.clusterComputer = clusterComputer;
         this.task = task;
     }
 
-    public void createCurrentDir(Task task)
+    public void createCurrentDir()
     {
         File currentDir = new File("task" + task.getId());
         currentDir.mkdir();
@@ -58,7 +59,7 @@ public class TaskThread extends Thread
      * @param repository_uri
      * @throws IOException
      */
-    protected void downloadFiles(Task task) throws IOException
+    protected void downloadFiles() throws IOException
     {
         HttpClient httpclient = new DefaultHttpClient();
 
@@ -91,16 +92,18 @@ public class TaskThread extends Thread
      * @param task
      * @throws IOException
      */
-    protected List<FileHandle> uploadFiles(Task task) throws IOException, NoSuchAlgorithmException
+    protected List<FileHandle> uploadFiles() throws IOException, NoSuchAlgorithmException
     {
         ArrayList<FileHandle> filelist = new ArrayList<FileHandle>(getChangedOrNewFiles());
 
-        for (FileHandle fileHandle:filelist)
+        for (FileHandle fileHandle : filelist)
         {
             System.out.println("UPLOADING Filename = " + fileHandle.getLogicalName());
             int id = uploadOnlyOneFile(new FilePart(fileHandle.getLogicalName(), new File("task" + task.getId() + "/" + fileHandle.getLogicalName())));
             if (id != -1)
+            {
                 fileHandle.setId(Integer.toString(id));
+            }
         }
 
         return filelist;
@@ -141,7 +144,7 @@ public class TaskThread extends Thread
      * Delete the current task folder.
      * @param task
      */
-    protected void deleteCurrentDir(Task task)
+    protected void deleteCurrentDir()
     {
         File f = new File("task" + task.getId());
 
@@ -171,7 +174,7 @@ public class TaskThread extends Thread
                 map.put(files[i], m.digest(getBytesFromFile(file)));
             } catch (IOException ex)
             {
-                Logger.getLogger(TaskThread.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(ClusterTask.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -199,7 +202,7 @@ public class TaskThread extends Thread
                 }
             } catch (IOException ex)
             {
-                Logger.getLogger(TaskThread.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(ClusterTask.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
 
@@ -276,43 +279,49 @@ public class TaskThread extends Thread
 
     }
 
-    @Override
+    public void exec() throws IOException, InterruptedException
+    {
+        //Execution
+        File file = new File("task" + task.getId()).getAbsoluteFile();
+        String[] execString = task.getCommand().getExecString(file.getAbsolutePath());
+        Runtime.getRuntime().exec(execString, null, file).waitFor();
+    }
+
+    //Unused
     public void run()
     {
         try
         {
             System.out.println("Received task with ID " + task.getId());
             // create current working folder
-            createCurrentDir(task);
+            createCurrentDir();
 
             //download files
-            downloadFiles(task);
+            downloadFiles();
 
             //mapping file names and their hashcode
             mapFiles();
 
             //Execution
-            File file = new File("task" + task.getId()).getAbsoluteFile();
-            String execString = task.getCommand().getExecString(file.getAbsolutePath());
-            Runtime.getRuntime().exec("\"" + execString + "\"", null, file).waitFor();
-
+            exec();
+            
             //Uploading files
-            List<FileHandle> uploaded = uploadFiles(task);
+            List<FileHandle> uploaded = uploadFiles();
 
             //delete current folder
-            deleteCurrentDir(task);
+            deleteCurrentDir();
 
             //Notification
             MainServerInterface msi;
 
             msi = new RMIClientModel<MainServerInterface>(task.getMainServerAddress(),
-                        Ports.MainServerPort).getInterface();
-                System.out.println("Finished. Sending results to " + task.getMainServerAddress());
-                msi.taskCompleted(task.getId(), clusterComputer.uuid, uploaded);
-        }
-        catch (Exception ex)
+                    Ports.MainServerPort).getInterface();
+            System.out.println("Finished. Sending results to " + task.getMainServerAddress());
+            msi.taskCompleted(task.getId(), clusterComputer.uuid, uploaded);
+        } catch (Exception ex)
         {
             Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
 }

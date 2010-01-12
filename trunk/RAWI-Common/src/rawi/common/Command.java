@@ -4,12 +4,13 @@ import java.io.Serializable;
 
 public class Command implements Serializable
 {
-    String command;
+
+    String[] commandArray;
     boolean systemCommand = false;
 
-    public Command(String command)
+    public Command(String... command)
     {
-        this.command = command;
+        this.commandArray = command;
     }
 
     public void setSystemCommand(boolean systemCommand)
@@ -17,11 +18,30 @@ public class Command implements Serializable
         this.systemCommand = systemCommand;
     }
 
-    public String getExecString(String rootPath)
+    /*    public String getExecString(String rootPath)
+    {
+    if (systemCommand)
+    return command;
+
+    return rootPath + "/" + command;
+    }
+     */
+    public String[] getExecString(String rootPath)
     {
         if (systemCommand)
-            return command;
+        {
+            return commandArray;
+        }
 
-        return rootPath + "/" + command;
+        String[] execS = new String[commandArray.length];
+
+        execS[0] = rootPath + "/" + commandArray[0];
+        for (int i = 1; i < execS.length; i++)
+        {
+            execS[i] = commandArray[i];
+        }
+
+        return execS;
     }
+
 }
