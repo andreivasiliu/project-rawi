@@ -18,6 +18,7 @@
         <a href="transformationModels.jsp">Add/Validate/Delete TM</a> <br />
         <a href="sessions.jsp">Sessions section :)</a> <br />
         <a href="downUpLoad.jsp">Download/Upload files/TMs</a> <br />
+        <a href="putFileInPackPage.jsp">Associate a file with a pack</a> <br />
         <a href="msgService.jsp">Central Message Service</a> <br />
         <br /><hr width="500" align="left"/><br />
         

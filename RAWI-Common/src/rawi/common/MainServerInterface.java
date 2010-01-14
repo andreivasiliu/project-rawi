@@ -12,7 +12,13 @@ public interface MainServerInterface extends Remote
     /** Used by a WebServer to create a WorkSession. */
     void createSession(SessionInfo sessionInfo) throws RemoteException;
 
-    /** Used by a ClusterComputer to mark a task as finished. */
+    /** Used by a WebServer to start a WorkSession. */
+    void startSession(String sessionId) throws RemoteException;
+
+    /** Used by a WebServer to stop a WorkSession. */
+    void stopSession(String sessionId) throws RemoteException;
+
+   /** Used by a ClusterComputer to mark a task as finished. */
     void taskCompleted(String id, String clusterComputerId,
             List<FileHandle> files) throws RemoteException;
 
@@ -23,5 +29,5 @@ public interface MainServerInterface extends Remote
 
     /** Used by a WebServer to associate an uploaded file with a pack. */
     public boolean putFileInPack(String sessionId, FileHandle file, String packId)
-            throws RemoteException;
+            throws RemoteException; 
 }

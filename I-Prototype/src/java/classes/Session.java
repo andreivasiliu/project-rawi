@@ -2,23 +2,23 @@ package classes;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 
 public class Session {
     Long id;
     public String xmlName;
     public String folderName;
+    public String mainServerIp;
     HashMap<Long, UploadedFile> fileList = new HashMap<Long, UploadedFile>();
     long lastUsedFileId = 0;
 
     public Session() {
     }
 
-    public Session(Long id, String xmlName, String folderName) {
+    public Session(Long id, String xmlName, String folderName, String mainServerIp) {
         this.id = id;
         this.xmlName = xmlName;
         this.folderName = folderName;
+        this.mainServerIp = mainServerIp;
     }
 
     public Long getId() {

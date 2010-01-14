@@ -21,7 +21,7 @@
             <textarea rows="10" cols="20" name="xml">
                 <hello></hello>
             </textarea> <br /><br />
-            <input type="checkbox" name="savexml" value="SaveXML" /> Save TM
+            <input type="checkbox" name="savexml" value="SaveXML" checked="true"/> Save TM
             <br /><br />
             <input type="submit" value="Validate TM" />
         </form>

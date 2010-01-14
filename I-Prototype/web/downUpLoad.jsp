@@ -30,7 +30,10 @@
                 for (Session s : sessionList) {
 
             %>
-            <li> <%=s.getId()%> <br />
+            <li> <%=s.getId()%> -
+                <a href="StartStopSession?sessionId=<%=s.getId()%>&action=start">Start Session</a> -
+                <a href="StartStopSession?sessionId=<%=s.getId()%>&action=stop">Stop Session</a>
+                <br />
                 <ul>
                     <%
                     HashMap<Long, String> fileNames = s.getFileIdsAndNames();
