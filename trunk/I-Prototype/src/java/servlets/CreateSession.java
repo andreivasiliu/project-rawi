@@ -57,10 +57,10 @@ public class CreateSession extends HttpServlet {
         String folderName = getServletContext().getRealPath("FileRepository")
                 + "/Session" + Long.toString(sessionId);
 
-        Session session = new Session(sessionId, modelName, folderName);
+        Session session = new Session(sessionId, modelName, folderName, mainServerIp);
 
         SessionInfo sessionInfo =
-                createSessionOnMainServer(session, mainServerIp, request, response);
+                createSessionOnMainServer(session, request, response);
         if (sessionInfo != null) {
             theBean.addSessionToList(session);
 
@@ -132,12 +132,12 @@ public class CreateSession extends HttpServlet {
         return false;
     }
 
-    private SessionInfo createSessionOnMainServer(Session session, String mainServerIp,
+    private SessionInfo createSessionOnMainServer(Session session, 
             HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         MainServerInterface msi;
         try {
-            msi = new RMIClientModel<MainServerInterface>(mainServerIp,
+            msi = new RMIClientModel<MainServerInterface>(session.mainServerIp,
                     Ports.MainServerPort).getInterface();
             String pageURL = request.getRequestURL().toString();
             String servletPath = request.getServletPath();

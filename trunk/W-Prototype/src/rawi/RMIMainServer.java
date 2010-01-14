@@ -107,16 +107,22 @@ public class RMIMainServer extends RMIServerModel
     public boolean putFileInPack(String sessionId, FileHandle file, String packId)
             throws RemoteException
     {
+        System.out.println("Put File in Pack request received: "
+                + "\t sessionId = " + sessionId
+                + "\t fileName = " + file.getLogicalName() 
+                + "\t packId = " + packId);
         return clusterManager.putFileInPack(sessionId, file, packId);
     }
 
     public void startSession(String sessionId) throws RemoteException
     {
+        System.out.println("Start session request. Session id = " + sessionId);
         clusterManager.startWorkSession(sessionId);
     }
 
     public void stopSession(String sessionId) throws RemoteException
     {
+        System.out.println("Stop session request. Session id = " + sessionId);
         clusterManager.stopWorkSession(sessionId);
     }
 }
