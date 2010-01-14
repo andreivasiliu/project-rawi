@@ -6,6 +6,7 @@ import rawi.mainserver.TransformationModel.*;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -28,6 +29,12 @@ import rawi.exceptions.InvalidOperationException;
  */
 public class WorkSession implements ModelChangeListener
 {
+    // Don't worry, just temporary.
+    private Map<Task, PackTransformerInstance> uglyHack_packTransformerOfTask =
+            new HashMap<Task, PackTransformerInstance>();
+    private Map<Task, Integer> uglyHack_subStateOfTask =
+            new HashMap<Task, Integer>();
+
     public enum SessionStatus { STARTED, STOPPING, STOPPED };
 
     SessionInfo sessionInfo;
@@ -76,7 +83,6 @@ public class WorkSession implements ModelChangeListener
         return status;
     }
 
-    // TODO: Need to figure out a better thread-safe way of doing these.
     public synchronized void startSession()
     {
         this.status = SessionStatus.STARTED;
@@ -97,10 +103,29 @@ public class WorkSession implements ModelChangeListener
     private void makeTask(PackTransformerInstance packTransformerInstance,
             int subPackTransformer)
     {
-        Command command = packTransformerInstance.origin.getCommand();
-        Set<FileHandle> files = new HashSet<FileHandle>();
-        Task task = new Task(UUID.randomUUID().toString(),
-                new LinkedList<FileHandle>(files), command);
+        // Gather all files from input packs
+        List<FileHandle> files = packTransformerInstance
+                .getInputFiles(packTransformerInstance, subPackTransformer);
+
+        // Get the command that will process those files
+        Command command = packTransformerInstance.getCommand(subPackTransformer);
+
+        Task task = new Task(UUID.randomUUID().toString(), files, command);
+
+        // TODO: Ugly hack follows:
+        for (Task task2 : pendingTasks)
+        {
+            if (uglyHack_packTransformerOfTask.get(task2) == packTransformerInstance &&
+                    uglyHack_subStateOfTask.get(task2) == subPackTransformer)
+            {
+                System.out.println("Warning: ugly hack used.");
+                pendingTasks.remove(task2);
+                task = task2;
+                task.setFiles(files);
+                task.setCommand(command);
+                break;
+            }
+        }
 
         if (sessionInfo != null)
         {
@@ -108,10 +133,13 @@ public class WorkSession implements ModelChangeListener
             task.setUploadURI(sessionInfo.uploadUrl);
         }
 
-        // TODO: Change! *******************************************************   !!!
-        task.setMainServerAddress("127.0.0.1"); // !!!
-
         pendingTasks.add(task);
+        packTransformerInstance.state.set(subPackTransformer,
+                SubPackTransformerState.WORKING);
+
+        // TODO: Temporary ugly hack. Fix it.
+        uglyHack_packTransformerOfTask.put(task, packTransformerInstance);
+        uglyHack_subStateOfTask.put(task, subPackTransformer);
     }
 
     public synchronized void stopSession()
@@ -155,18 +183,28 @@ public class WorkSession implements ModelChangeListener
             status = SessionStatus.STOPPED;
     }
     
-    // TODO: Find out how to do that link.
     /** Marks a task as done, to allow other tasks that depend on it to be
      * returned by {@link getPendingTask()}.
      * This method is thread-safe.
      */
     public synchronized void markTaskAsFinished(Task task, TaskResult taskResult)
     {
+        activeTasks.remove(task);
+
         if (status == SessionStatus.STOPPING && activeTasks.isEmpty())
             status = SessionStatus.STOPPED;
 
-        // TODO
-        throw new UnsupportedOperationException("Not supported yet.");
+        Collection<FileHandle> resultFiles = taskResult.files;
+
+        // TODO: Ugly hack. Fix it.
+        PackTransformerInstance packTransformerInstance =
+                uglyHack_packTransformerOfTask.get(task);
+        int subState = uglyHack_subStateOfTask.get(task);
+
+        // This will put files in the packs that accept them, update the status
+        // of those packs, and if the work session is started, it will make
+        // some new tasks.
+        packTransformerInstance.distributeFilesToOutputs(subState, resultFiles);
     }
 
     public PackInstance getPackInstance(int id)
@@ -465,6 +503,17 @@ public class WorkSession implements ModelChangeListener
 
         public boolean acceptsFileName(String fileName)
         {
+            if (!origin.isSplitter() && getState(0) == SubPackState.HAS_FILES)
+                return false;
+
+            return origin.acceptsFileName(fileName);
+        }
+
+        public boolean acceptsFileName(int subState, String fileName)
+        {
+            if (getState(subState) == SubPackState.HAS_FILES)
+                return false;
+
             return origin.acceptsFileName(fileName);
         }
 
@@ -485,6 +534,14 @@ public class WorkSession implements ModelChangeListener
         {
             stateInfo.get(subPack).files.add(file);
             state.set(subPack, SubPackState.HAS_FILES);
+
+            for (PackTransformer output : origin.getOutputs())
+            {
+                PackTransformerInstance packTransformerInstance =
+                        packTransformerInstances.get(output);
+
+                packTransformerInstance.updateState(subPack);
+            }
         }
 
         protected int addState()
@@ -506,6 +563,11 @@ public class WorkSession implements ModelChangeListener
             }
 
             return subPacks - 1;
+        }
+
+        public Collection<FileHandle> getFiles(int subPack)
+        {
+            return stateInfo.get(subPack).files;
         }
     }
     
@@ -592,6 +654,9 @@ public class WorkSession implements ModelChangeListener
             if (state.get(subPackTransformer) == SubPackTransformerState.DEPENDENCIES_NOT_MET)
                 state.set(subPackTransformer, SubPackTransformerState.PENDING);
 
+            if (status == SessionStatus.STARTED)
+                makeTask(this, subPackTransformer);
+
             // TODO: If a state can ever be downgraded from "pending" back to
             // "dependencies not met", then more code needs to be added.
         }
@@ -604,6 +669,157 @@ public class WorkSession implements ModelChangeListener
         private int subPackTransformers()
         {
             return state.size();
+        }
+
+        List<FileHandle> getInputFiles(PackTransformerInstance packTransformerInstance,
+                int subPackTransformer)
+        {
+            Set<FileHandle> files = new HashSet<FileHandle>();
+
+            for (Pack pack : packTransformerInstance.origin.getInputs())
+            {
+                PackInstance packInstance = packInstances.get(pack);
+
+                if (packTransformerInstance.origin.isJoiner())
+                {
+                    for (int subState = 0; subState < packInstance.subPacks(); subState++)
+                    {
+                        files.addAll(packInstance.getFiles(subState));
+                    }
+                }
+                else
+                    files.addAll(packInstance.getFiles(subPackTransformer));
+            }
+
+            return new LinkedList<FileHandle>(files);
+        }
+
+        private void distributeFilesToOutputs(int subState,
+                Collection<FileHandle> resultFiles)
+        {
+//            Set<PackInstance> packsToUpdate = new HashSet<PackInstance>();
+
+            for (FileHandle file : resultFiles)
+            {
+                boolean foundPack = false;
+
+                // Non-splitters first.
+                for (Pack output : origin.getOutputs())
+                {
+                    if (output.isSplitter())
+                        continue;
+                    
+                    PackInstance packInstance = packInstances.get(output);
+
+                    if (packInstance.acceptsFileName(subState, file.getLogicalName()))
+                    {
+                        packInstance.putFile(subState, file);
+//                        packsToUpdate.add(packInstance);
+                        foundPack = true;
+                        break;
+                    }
+                }
+
+                if (foundPack)
+                    continue;
+
+                // Splitters now.
+                for (Pack output : origin.getOutputs())
+                {
+                    if (!output.isSplitter())
+                        continue;
+
+                    PackInstance packInstance = packInstances.get(output);
+
+                    if (packInstance.acceptsFileName(file.getLogicalName()))
+                    {
+                        packInstance.putFile(file);
+//                        packsToUpdate.add(packInstance);
+                        foundPack = true;
+                        break;
+                    }
+                }
+
+                if (foundPack)
+                    continue;
+
+                // TODO: Put it in some kind of Lost Files section.
+            }
+
+//            Set<PackTransformer> packTransformersToUpdate =
+//                    new HashSet<PackTransformer>();
+//
+//            for (PackInstance packInstance : packsToUpdate)
+//                packTransformersToUpdate.addAll(packInstance.origin.getOutputs());
+//
+//            for (PackTransformer packTransformer : packTransformersToUpdate)
+//            {
+//                PackTransformerInstance packTransformerInstance =
+//                        packTransformerInstances.get(packTransformer);
+//
+//                packTransformerInstance.updateState(subState);
+//            }
+        }
+
+        // TODO: This uses yet another ugly hack.
+        Command getCommand(int subPackTransformer)
+        {
+            Command commandTemplate = origin.getCommand();
+            String[] cmdArray = commandTemplate.getCommandArray().clone();
+
+            StringBuilder uglyFinalCommand = new StringBuilder();
+
+            uglyFinalCommand.append(cmdArray[0]);
+
+            for (int i = 1; i < cmdArray.length; i++)
+            {
+                if (cmdArray[i].startsWith("$$"))
+                {
+                    cmdArray[i] = cmdArray[i].replaceFirst("$$", "$");
+                    uglyFinalCommand.append(" " + cmdArray[i]);
+                }
+                else if (cmdArray[i].startsWith("$"))
+                {
+                    String inputPackName = cmdArray[i].substring(1);
+
+                    PackInstance packInstance = getPackInstance(inputPackName);
+                    if (packInstance == null)
+                        continue;
+
+                    // TODO: Check if it is indeed one of its inputs.
+
+                    if (origin.isJoiner())
+                    {
+                        for (int subPack = 0; subPack < packInstance.subPacks; subPack++)
+                        {
+                            Collection<FileHandle> files = packInstance.getFiles(subPack);
+                            for (FileHandle file : files)
+                            {
+                                // ?
+                                uglyFinalCommand.append(" " + file.getLogicalName());
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Collection<FileHandle> files = packInstance.getFiles(subPackTransformer);
+                        for (FileHandle file : files)
+                        {
+                            // ?
+                            uglyFinalCommand.append(" " + file.getLogicalName());
+                        }
+                    }
+                }
+                else
+                {
+                    uglyFinalCommand.append(" " + cmdArray[i]);
+                }
+            }
+
+            //Command command = new Command(cmdArray);
+            Command command = new Command(uglyFinalCommand.toString().split(" "));
+            command.setSystemCommand(commandTemplate.isSystemCommand());
+            return command;
         }
     }
     

@@ -20,4 +20,8 @@ public interface MainServerInterface extends Remote
     void notifyPresence(Collection<String> IPs) throws RemoteException;
 
     MainServerStatus requestStatus() throws RemoteException;
+
+    /** Used by a WebServer to associate an uploaded file with a pack. */
+    public boolean putFileInPack(String sessionId, FileHandle file, String packId)
+            throws RemoteException;
 }

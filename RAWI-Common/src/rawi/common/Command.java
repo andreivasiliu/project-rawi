@@ -18,14 +18,11 @@ public class Command implements Serializable
         this.systemCommand = systemCommand;
     }
 
-    /*    public String getExecString(String rootPath)
+    public boolean isSystemCommand()
     {
-    if (systemCommand)
-    return command;
-
-    return rootPath + "/" + command;
+        return systemCommand;
     }
-     */
+
     public String[] getExecString(String rootPath)
     {
         if (systemCommand)
@@ -42,6 +39,11 @@ public class Command implements Serializable
         }
 
         return execS;
+    }
+
+    public String[] getCommandArray()
+    {
+        return commandArray;
     }
 
 }

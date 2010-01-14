@@ -147,8 +147,9 @@ public class CreateSession extends HttpServlet {
             String uploadURL = pageURL + "/TheUploadServlet/" + session.getId() + "/";
             String messageCenterIp = java.net.InetAddress.getLocalHost().getHostAddress();
 
-            SessionInfo sessionInfo = new SessionInfo(downloadURL, uploadURL,
-                    messageCenterIp, session.getId());
+            SessionInfo sessionInfo = new SessionInfo(session.getId().toString(),
+                    downloadURL, uploadURL, messageCenterIp,
+                    theBean.getXmlContentByName(session.xmlName));
 
             msi.createSession(sessionInfo);
             return sessionInfo;

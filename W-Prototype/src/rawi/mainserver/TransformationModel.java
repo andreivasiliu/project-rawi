@@ -11,6 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import rawi.common.Command;
+import rawi.common.FileHandle;
 import rawi.exceptions.DoubleSplitterException;
 import rawi.exceptions.DuplicateNameException;
 

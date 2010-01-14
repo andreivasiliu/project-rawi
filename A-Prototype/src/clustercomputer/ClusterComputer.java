@@ -72,10 +72,12 @@ public class ClusterComputer extends RMIServerModel implements ClusterComputerIn
     {
         try
         {
+            System.out.println("Received a getStatus request...");
             ClusterComputerStatus status = new ClusterComputerStatus();
             status.id = uuid;
             status.processors = Runtime.getRuntime().availableProcessors();
             status.mainServerAddr = RemoteServer.getClientHost();
+            System.out.println("Probably from " + RemoteServer.getClientHost());
             return status;
         } catch (ServerNotActiveException ex)
         {
