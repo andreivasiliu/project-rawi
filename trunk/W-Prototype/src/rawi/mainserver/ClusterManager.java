@@ -16,10 +16,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import rawi.common.ClusterComputerInterface;
 import rawi.common.ClusterComputerStatus;
+import rawi.common.FileHandle;
 import rawi.common.Ports;
 import rawi.common.Task;
 import rawi.common.TaskResult;
 import rawi.common.exceptions.InvalidIdException;
+import rawi.mainserver.WorkSession.PackInstance;
 import rawi.rmiinfrastructure.RMIClientModel;
 
 /** A manager that keeps and updates a list of working sessions.
@@ -207,6 +209,26 @@ public class ClusterManager implements Runnable
         }
     }
 
+    public void stopWorkSession(String sessionId)
+    {
+        WorkSession workSession = getSessionById(sessionId);
+
+        workSession.stopSession();
+    }
+
+    public boolean putFileInPack(String sessionId, FileHandle file, String packId)
+    {
+        WorkSession session = getSessionById(sessionId);
+
+        PackInstance packInstance = session.getPackInstance(Integer.parseInt(packId));
+
+        if (!packInstance.acceptsFileName(file.getLogicalName()))
+            return false;
+
+        packInstance.putFile(file);
+        return true;
+    }
+
     public void wakeUp()
     {
         synchronized (clusterManagerLock)
@@ -223,7 +245,7 @@ public class ClusterManager implements Runnable
         {
             ClusterComputerStatus status = clusterComputer.status;
 
-            if (clusterComputer.taskCount() >= status.processors + 4 ||
+            if (clusterComputer.taskCount() >= status.processors + 2 ||
                     clusterComputer.unresponsive)
                 continue;
 
@@ -280,6 +302,11 @@ public class ClusterManager implements Runnable
     private void scanForComputers(Queue<String> IPs)
     {
         System.out.println("Scanning for computers...");
+        for (String ip : IPs)
+        {
+            System.out.println(" - " + ip);
+        }
+
         String ip;
 
         while ((ip = IPs.poll()) != null)

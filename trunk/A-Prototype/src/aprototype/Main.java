@@ -20,6 +20,7 @@ public class Main
     public static void main(String[] args) throws RemoteException, IOException,
             NotBoundException
     {
+        //System.setProperty("java.rmi.server.hostname", "andrei.no-ip.biz");
         ClusterComputer cc = new ClusterComputer();
 
         Collection<String> mainServerIpList = NetworkUtils.getIPsFromTracker("MainServer");

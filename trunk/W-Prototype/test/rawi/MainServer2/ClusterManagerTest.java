@@ -8,6 +8,8 @@ import org.junit.Test;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import rawi.RMIMainServer;
 import rawi.common.ClusterComputerInterface;
 import rawi.common.ClusterComputerStatus;
@@ -65,7 +67,8 @@ public class ClusterManagerTest
     public void testManagerWithRealClusterComputer()
             throws RemoteException, InterruptedException
     {
-        final String clusterComputerIP = "127.0.0.1";
+        final String clusterComputerIP = "127.1";
+        //System.setProperty("java.rmi.server.hostname", "5.146.43.252");
 
         if (!checkConnection(clusterComputerIP))
         {
@@ -184,11 +187,14 @@ public class ClusterManagerTest
     {
         try
         {
+            System.out.println("Step 1");
             ClusterComputerInterface cci =
                     new RMIClientModel<ClusterComputerInterface>(IP,
                     Ports.ClusterComputerPort).getInterface();
 
+            System.out.println("Step 2");
             ClusterComputerStatus ccs = cci.getStatus();
+            System.out.println("Step 3");
 
             if (ccs.processors > 0)
             {
@@ -198,6 +204,7 @@ public class ClusterManagerTest
             return false;
         } catch (Exception ex)
         {
+            Logger.getLogger(ClusterManagerTest.class.getName()).log(Level.SEVERE, null, ex);
             return false;
         }
     }

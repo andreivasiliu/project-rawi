@@ -6,12 +6,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 import java.util.regex.Pattern;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import rawi.common.Command;
 import rawi.common.FileHandle;
+import rawi.common.Task;
+import rawi.common.TaskResult;
 
 import rawi.exceptions.DoubleSplitterException;
 import rawi.mainserver.TransformationModel;
@@ -82,6 +88,53 @@ public class WorkSessionTest
 
         pack = model.getPack("pack1");
         pack.setPattern(Pattern.compile(".*"), true);
+    }
+
+    @Test
+    public void testCommands()
+    {
+        PackInstance packInstance = workSession.getPackInstance("pack1");
+        packInstance.getOrigin().setIsSplitter(true);
+        packInstance.putFile(new FileHandle("hello.txt"));
+        packInstance.putFile(new FileHandle("bye.txt"));
+
+        PackTransformer packTransformer = model.getPackTransformer("transformer1");
+        packTransformer.setCommand(new Command("say", "$pack1"));
+        packTransformer.setIsJoiner(true);
+
+        workSession.startSession();
+        Task task = workSession.getPendingTask();
+        String[] cmdArray = task.getCommand().getCommandArray();
+        
+        assertEquals(cmdArray[1], "hello.txt");
+        assertTrue(cmdArray.length == 3);
+        assertEquals(cmdArray[2], "bye.txt");
+    }
+
+    @Test
+    public void testTaskResult()
+    {
+        PackInstance packInstance = workSession.getPackInstance("pack1");
+        packInstance.putFile(new FileHandle("hello.txt"));
+
+        PackTransformer packTransformer = model.getPackTransformer("transformer1");
+        packTransformer.setCommand(new Command("say", "$pack1"));
+
+        workSession.startSession();
+        Task task = workSession.getPendingTask();
+
+        assertEquals(task.getCommand().getCommandArray()[1], "hello.txt");
+
+        List<FileHandle> resultFiles = new LinkedList<FileHandle>();
+        resultFiles.add(new FileHandle("result.txt"));
+        TaskResult taskResult = new TaskResult(task.getId(), "test", resultFiles);
+
+        workSession.markTaskAsFinished(task, taskResult);
+
+        packInstance = workSession.getPackInstance("pack2");
+        Collection<FileHandle> files = packInstance.getFiles(0);
+        assertEquals(files.size(), 1);
+        assertTrue(files.contains(resultFiles.get(0)));
     }
 
     @Test
