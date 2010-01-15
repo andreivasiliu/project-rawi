@@ -16,7 +16,7 @@ public class TrackerBean {
     public void addIpToList(IPEntry newIp) {
         IPEntry temp = null;
         for(IPEntry ip : ipList)
-            if(ip.name.equals(newIp.name))
+            if(ip.name.equals(newIp.name) && ip.type.equals(newIp.type))
                 temp = ip;
         if(temp != null)
             ipList.remove(temp);
