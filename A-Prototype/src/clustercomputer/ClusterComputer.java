@@ -62,6 +62,19 @@ public class ClusterComputer extends RMIServerModel implements ClusterComputerIn
     public void execute(Task task) throws RemoteException
     {
         System.out.println("Received task: " + task.getId());
+        System.out.println("Upload URL: " + task.getUploadURI());
+        System.out.print("Command:");
+        String[] cmdArray = task.getCommand().getCommandArray();
+        for (int i = 0; i < cmdArray.length; i++)
+        {
+            System.out.print(" " + cmdArray[i]);
+        }
+        System.out.println();
+
+        System.out.println("Files to download:");
+        for (FileHandle file : task.getFiles())
+            System.out.println(" - " + file.getLogicalName() + " (" + file.getFileURL() + ")");
+        
         ClusterTask ctask = new ClusterTask(this, task);
         stage1Queue.add(ctask);
         //tt.start();
@@ -72,12 +85,12 @@ public class ClusterComputer extends RMIServerModel implements ClusterComputerIn
     {
         try
         {
-            System.out.println("Received a getStatus request...");
+            System.out.println("Received a getStatus request from " +
+                    RemoteServer.getClientHost());
             ClusterComputerStatus status = new ClusterComputerStatus();
             status.id = uuid;
             status.processors = Runtime.getRuntime().availableProcessors();
             status.mainServerAddr = RemoteServer.getClientHost();
-            System.out.println("Probably from " + RemoteServer.getClientHost());
             return status;
         } catch (ServerNotActiveException ex)
         {

@@ -72,6 +72,55 @@ public class WorkSession implements ModelChangeListener
 
         model.addListener(this);
     }
+
+    public void setSessionInfo(SessionInfo sessionInfo)
+    {
+        this.sessionInfo = sessionInfo;
+    }
+
+    public void printStatus()
+    {
+        System.out.println("Session " + sessionId + " status:");
+        for (PackInstance packInstance : packInstances.values())
+        {
+            String packName = packInstance.origin.getName();
+
+            System.out.println("  * Pack: " + packInstance.origin.getId() +
+                    ((packName != null) ? (" (" + packName + ")") : ""));
+
+            if (packInstance.origin.isSplitter())
+                System.out.println("     Is splitter.");
+
+            for (int i = 0; i < packInstance.subPacks; i++)
+            {
+                System.out.println("     Substate " + i + ": " +
+                        packInstance.getState(i).toString());
+            }
+
+            System.out.println();
+        }
+
+        for (PackTransformerInstance packTransformerInstance : packTransformerInstances.values())
+        {
+            String packTransformerName = packTransformerInstance.origin.getName();
+
+            System.out.println("  * PackTransformer: " +
+                    packTransformerInstance.origin.getId() +
+                    ((packTransformerName != null) ?
+                        (" (" + packTransformerName + ")") : ""));
+
+            if (packTransformerInstance.origin.isJoiner())
+                System.out.println("     Is joiner.");
+
+            for (int i = 0; i < packTransformerInstance.subPackTransformers(); i++)
+            {
+                System.out.println("     Substate " + i + ": " +
+                        packTransformerInstance.getState(i).toString());
+            }
+
+            System.out.println();
+        }
+    }
     
     public String getSessionId()
     {
@@ -540,7 +589,10 @@ public class WorkSession implements ModelChangeListener
                 PackTransformerInstance packTransformerInstance =
                         packTransformerInstances.get(output);
 
-                packTransformerInstance.updateState(subPack);
+                if (output.isJoiner())
+                    packTransformerInstance.updateState(0);
+                else
+                    packTransformerInstance.updateState(subPack);
             }
         }
 
@@ -605,7 +657,7 @@ public class WorkSession implements ModelChangeListener
             state = new ArrayList<SubPackTransformerState>(1);
 
             for (int i = 0; i < nrOfStates; i++)
-                addState();
+                state.add(SubPackTransformerState.DEPENDENCIES_NOT_MET);
 
 //            for (Pack output: origin.getOutputs())
 //                packInstances.get(output).prepareStates();
@@ -638,6 +690,16 @@ public class WorkSession implements ModelChangeListener
                                     SubPackTransformerState.DEPENDENCIES_NOT_MET);
                             return;
                         }
+                }
+                else if (origin.splitterPack != null && input.splitterPack == null)
+                {
+                    if (packInstance.getState(0) !=
+                            SubPackState.HAS_FILES)
+                    {
+                        state.set(subPackTransformer,
+                                SubPackTransformerState.DEPENDENCIES_NOT_MET);
+                        return;
+                    }
                 }
                 else
                 {
@@ -687,6 +749,9 @@ public class WorkSession implements ModelChangeListener
                         files.addAll(packInstance.getFiles(subState));
                     }
                 }
+                else if (packTransformerInstance.origin.splitterPack != null &&
+                        pack.splitterPack == null)
+                    files.addAll(packInstance.getFiles(0));
                 else
                     files.addAll(packInstance.getFiles(subPackTransformer));
             }
@@ -800,6 +865,19 @@ public class WorkSession implements ModelChangeListener
                             }
                         }
                     }
+                    else if (origin.splitterPack != null &&
+                            packInstance.origin.splitterPack == null)
+                    {
+                        // TODO: delete this; is this branch ever used?
+                        System.out.println("Rule 31 used.");
+
+                        Collection<FileHandle> files = packInstance.getFiles(0);
+                        for (FileHandle file : files)
+                        {
+                            // ?
+                            uglyFinalCommand.append(" " + file.getLogicalName());
+                        }
+                    }
                     else
                     {
                         Collection<FileHandle> files = packInstance.getFiles(subPackTransformer);
@@ -820,16 +898,6 @@ public class WorkSession implements ModelChangeListener
             Command command = new Command(uglyFinalCommand.toString().split(" "));
             command.setSystemCommand(commandTemplate.isSystemCommand());
             return command;
-        }
-    }
-    
-    public class PackFileWriter extends FileWriter
-    {
-
-        public PackFileWriter(String fileName) throws IOException
-        {
-            super(fileName);
-            throw new UnsupportedOperationException("Not supported yet.");
         }
     }
 }

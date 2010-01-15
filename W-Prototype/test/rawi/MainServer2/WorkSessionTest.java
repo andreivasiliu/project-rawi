@@ -93,14 +93,14 @@ public class WorkSessionTest
     @Test
     public void testCommands()
     {
+        PackTransformer packTransformer = model.getPackTransformer("transformer1");
+        packTransformer.setCommand(new Command("say", "$pack1"));
+        packTransformer.setIsJoiner(true);
+
         PackInstance packInstance = workSession.getPackInstance("pack1");
         packInstance.getOrigin().setIsSplitter(true);
         packInstance.putFile(new FileHandle("hello.txt"));
         packInstance.putFile(new FileHandle("bye.txt"));
-
-        PackTransformer packTransformer = model.getPackTransformer("transformer1");
-        packTransformer.setCommand(new Command("say", "$pack1"));
-        packTransformer.setIsJoiner(true);
 
         workSession.startSession();
         Task task = workSession.getPendingTask();
