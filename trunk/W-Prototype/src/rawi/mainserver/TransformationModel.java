@@ -11,7 +11,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import rawi.common.Command;
-import rawi.common.FileHandle;
 import rawi.exceptions.DoubleSplitterException;
 import rawi.exceptions.DuplicateNameException;
 
@@ -358,7 +357,7 @@ public class TransformationModel
 
         public void setPattern(Pattern pattern)
         {
-            setIsSplitter(false);
+            //setIsSplitter(false);
             this.pattern = pattern;
             this.patternList = null;
 

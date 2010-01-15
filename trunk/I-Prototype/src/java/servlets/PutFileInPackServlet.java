@@ -33,18 +33,19 @@ public class PutFileInPackServlet extends HttpServlet {
             String pageURL = request.getRequestURL().toString();
             String servletName = request.getServletPath();
 
-            // baseURL = pageURL - ServletName (AssociateFileWithPack) + "DownloadServelt
-            String baseUrl = pageURL.substring(0, pageURL.indexOf(servletName))
-                    + "/TheDownloadServlet";
-
             String fileId = request.getParameter("fileId");
             String fileName = request.getParameter("fileName");
-            FileHandle fileHandle = new FileHandle(baseUrl, fileId, fileName);
-
             String sessionId = request.getParameter("sessionId");
-            String packId = request.getParameter("packId");        
+            String packId = request.getParameter("packId");
+
+            String baseUrl = pageURL.substring(0, pageURL.indexOf(servletName))
+                    + "/TheDownloadServlet/" + sessionId;
+            FileHandle fileHandle = new FileHandle(baseUrl, fileId, fileName);
             
-            out.println(sendAssociateRequestToMS(response, sessionId, fileHandle, packId));
+            if (sendAssociateRequestToMS(response, sessionId, fileHandle, packId))
+                out.println("Ok!");
+            else
+                out.println("Not okay... :(");
         } finally {
             out.close();
         }

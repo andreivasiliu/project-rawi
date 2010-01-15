@@ -1,5 +1,6 @@
 package clustercomputer;
 
+import java.io.BufferedReader;
 import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -9,12 +10,15 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
@@ -98,8 +102,12 @@ public class ClusterTask
 
         for (FileHandle fileHandle : filelist)
         {
-            System.out.println("UPLOADING Filename = " + fileHandle.getLogicalName());
-            int id = uploadOnlyOneFile(new FilePart(fileHandle.getLogicalName(), new File("task" + task.getId() + "/" + fileHandle.getLogicalName())));
+            System.out.println("Uploading " + fileHandle.getLogicalName() +
+                    " to: " + task.getUploadURI() + "/" + fileHandle.getLogicalName());
+
+            int id = uploadOnlyOneFile(new FilePart(fileHandle.getLogicalName(),
+                    new File("task" + task.getId() + "/" + fileHandle.getLogicalName())),
+                    fileHandle.getLogicalName());
             if (id != -1)
             {
                 fileHandle.setId(Integer.toString(id));
@@ -110,10 +118,10 @@ public class ClusterTask
     }
 
     /* done because UploadServlet accepts only one part...*/
-    private int uploadOnlyOneFile(FilePart filepart) throws IOException
+    private int uploadOnlyOneFile(FilePart filepart, String name) throws IOException
     {
         org.apache.commons.httpclient.HttpClient client = new org.apache.commons.httpclient.HttpClient();
-        PostMethod post = new PostMethod(task.getUploadURI());
+        PostMethod post = new PostMethod(task.getUploadURI() + "/" + name);
         Part[] part = new Part[]
         {
             filepart
@@ -123,19 +131,17 @@ public class ClusterTask
         System.out.println("Upload status = " + response);
         //System.out.println("Post response:" + post.getResponseBodyAsString());
         String resp = post.getResponseBodyAsString();
-        System.out.println("Post response:" + resp);
-        if (resp.substring(0, "File ID:".length() - 1).equals("File ID:"))
+
+        Matcher m = Pattern.compile("File ID: ([0-9]+)").matcher(resp);
+
+        if (m.find())
         {
-            try
-            {
-                return Integer.parseInt(resp.substring("File ID:".length() - 1, resp.length() - 1));
-            } catch (NumberFormatException e)
-            {
-                return -1;
-            }
+            return Integer.parseInt(m.group(1));
         }
         else
         {
+            System.out.println("Could not get a File ID!");
+            System.out.println("The response was: " + resp);
             return -1;
         }
     }
@@ -198,7 +204,7 @@ public class ClusterTask
                 byte[] old_file_code = map.get(files[i]);
                 if (!equals(new_file_code, old_file_code))
                 {
-                    list.add(new FileHandle(task.getUploadURI(), null, files[i]));
+                    list.add(new FileHandle(task.getDownloadURI(), null, files[i]));
                 }
             } catch (IOException ex)
             {
@@ -284,7 +290,17 @@ public class ClusterTask
         //Execution
         File file = new File("task" + task.getId()).getAbsoluteFile();
         String[] execString = task.getCommand().getExecString(file.getAbsolutePath());
-        Runtime.getRuntime().exec(execString, null, file).waitFor();
+        System.out.println("Executing: ");
+        for (int i = 0; i < execString.length; i++)
+            System.out.print(execString[i] + " ");
+        System.out.println();
+        
+        Process p = Runtime.getRuntime().exec(execString, null, file);
+        BufferedReader stdout = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        String line;
+        while ((line = stdout.readLine()) != null)
+            System.out.println("stdout: " + line);
+        p.waitFor();
     }
 
     //Unused

@@ -39,11 +39,20 @@ public class RMIMainServer extends RMIServerModel
 
     public ValidateXMLInfo validateXML(String xml) throws RemoteException
     {
-        System.out.println("Received xml: " +  xml.toString());
-        if (xml.contains("hello"))
+        //System.out.println("Received xml: " +  xml.toString());
+
+        try
+        {
+            Reader modelReader = new StringReader(xml);
+            TransformationModelParser.parseFromXML(modelReader);
+
             return new ValidateXMLInfo(true, "Validation succeeded", 0);
-        else
-            return new ValidateXMLInfo(false, "You must say hello", 1);
+        }
+        catch (Exception ex)
+        {
+            Logger.getLogger(RMIMainServer.class.getName()).log(Level.SEVERE, null, ex);
+            return new ValidateXMLInfo(false, ex.toString(), 0);
+        }
     }
 
     public void createSession(SessionInfo sessionInfo) throws RemoteException {
@@ -53,6 +62,8 @@ public class RMIMainServer extends RMIServerModel
             Reader modelReader = new StringReader(sessionInfo.modelXml);
             TransformationModel model = TransformationModelParser.parseFromXML(modelReader);
             WorkSession workSession = new WorkSession(sessionInfo.sessionId, model);
+            workSession.setSessionInfo(sessionInfo);
+            workSession.printStatus();
             clusterManager.addWorkSession(workSession);
 
             System.out.println("Created session: " + sessionInfo.sessionId +

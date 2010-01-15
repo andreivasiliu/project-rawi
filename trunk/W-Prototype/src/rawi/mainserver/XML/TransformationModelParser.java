@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -13,6 +14,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
+import rawi.common.Command;
 
 import rawi.mainserver.TransformationModel;
 import rawi.mainserver.TransformationModel.*;
@@ -73,6 +75,10 @@ public class TransformationModelParser extends DefaultHandler
             if (nodeName != null) {
                 packNode.setName(nodeName);
             }
+
+            if (attributes.getValue("isSplitter") != null &&
+                    attributes.getValue("isSplitter").equals("true"))
+                packNode.setIsSplitter(true);
         } else if (localName.equals("packTransformerNode")) {
             packTransformerNode = model.addPackTransformerNode();
 
@@ -83,6 +89,10 @@ public class TransformationModelParser extends DefaultHandler
             if (nodeName != null) {
                 packTransformerNode.setName(nodeName);
             }
+
+            if (attributes.getValue("isJoiner") != null &&
+                    attributes.getValue("isJoiner").equals("true"))
+                packTransformerNode.setIsJoiner(true);
         } else if (localName.equals("output")) {
             // TODO: Throw exception if ID is null.
 
@@ -92,7 +102,14 @@ public class TransformationModelParser extends DefaultHandler
 
             Set<String> outputs = localIdToOutputList.get(currentID);
             outputs.add(attributes.getValue("node"));
+        } else if (localName.equals("pattern")) {
+            Pattern pattern = Pattern.compile(attributes.getValue("regex"));
+            packNode.setPattern(pattern);
+        } else if (localName.equals("command")) {
+            Command cmd = new Command(attributes.getValue("exec").split(" "));
+            packTransformerNode.setCommand(cmd);
         }
+
     }
 
     @Override

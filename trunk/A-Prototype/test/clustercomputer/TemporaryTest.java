@@ -15,9 +15,9 @@ import org.junit.Test;
 public class TemporaryTest
 {
     @Test
-    public void test() throws IOException
+    public void test() throws IOException, InterruptedException
     {
-        String[] cmdarray = new String[] { "notepad", "abc.txt" };
-        Runtime.getRuntime().exec(cmdarray);
+        String[] cmdarray = new String[] { "C:\\Documents and Settings\\Andrei\\Desktop\\Splitter.exe", "2", "100", "100" };
+        System.out.println("Exit status: " + Runtime.getRuntime().exec(cmdarray).waitFor());
     }
 }

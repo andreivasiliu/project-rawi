@@ -143,8 +143,8 @@ public class CreateSession extends HttpServlet {
             String servletPath = request.getServletPath();
             pageURL = pageURL.substring(0, pageURL.indexOf(servletPath));
 
-            String downloadURL = pageURL + "/TheDownloadServlet/" + session.getId() + "/";
-            String uploadURL = pageURL + "/TheUploadServlet/" + session.getId() + "/";
+            String downloadURL = pageURL + "/TheDownloadServlet/" + session.getId();
+            String uploadURL = pageURL + "/TheUploadServlet/" + session.getId();
             String messageCenterIp = java.net.InetAddress.getLocalHost().getHostAddress();
 
             SessionInfo sessionInfo = new SessionInfo(session.getId().toString(),
