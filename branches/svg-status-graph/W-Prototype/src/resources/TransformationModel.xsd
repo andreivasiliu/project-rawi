@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.example.org/TransformationModel" elementFormDefault="qualified" xmlns:tm="http://www.example.org/TransformationModel">
+
+    <element name="transformationModel"
+    	type="tm:transformationModelType">
+    </element>
+    
+    <complexType name="transformationGraphType">
+        <sequence>
+        	<choice minOccurs="0" maxOccurs="unbounded"><element name="packNode" type="tm:packNodeType">
+        	</element><element name="packTransformerNode" type="tm:packTransformerType">
+        	</element></choice>
+        </sequence>
+    </complexType>
+
+    <complexType name="packNodeType">
+    	<complexContent>
+    		<extension base="tm:nodeType">
+    			<sequence>
+    				<choice>
+    					<element name="pattern" type="tm:patternType"></element>
+    					<element name="patternList"
+    						type="tm:patternListType">
+    					</element>
+    				</choice>
+    			</sequence>
+    			<attribute name="isSplitter" type="boolean" use="optional"></attribute>
+    		</extension>
+    	</complexContent>
+    </complexType>
+
+    <complexType name="packTransformerType">
+    	<complexContent>
+    		<extension base="tm:nodeType">
+    			<sequence>
+    				<element name="command" type="tm:commandType"></element>
+
+    			</sequence>
+    			<attribute name="isJoiner" type="boolean" use="optional"></attribute>
+    		</extension>
+    	</complexContent>
+    </complexType>
+
+    <complexType name="nodeType" abstract="true">
+    	<sequence>
+    		<element name="input" type="tm:linkType" minOccurs="0"
+    			maxOccurs="unbounded">
+    		</element>
+    		<element name="output" type="tm:linkType" minOccurs="0"
+    			maxOccurs="unbounded">
+    		</element>
+    	</sequence>
+    	<attribute name="id" use="required" type="tm:idType">
+    	</attribute>
+    	<attribute name="name" type="tm:nameType" use="optional"></attribute>
+    	<attribute name="x" type="int" use="optional"></attribute>
+    	<attribute name="y" type="int" use="optional"></attribute>
+    </complexType>
+
+    <simpleType name="idType">
+    	<annotation>
+    		<documentation>
+    			A node ID is a positive number. It may not be 0.
+    		</documentation>
+    	</annotation>
+    	<restriction base="int">
+    		<minInclusive value="1"></minInclusive>
+    	</restriction>
+    </simpleType>
+
+
+    <complexType name="linkType">
+    	<attribute name="node" type="tm:idType"></attribute>
+    </complexType>
+
+    <complexType name="transformationModelType">
+        <sequence>
+            <element name="globalParameters"
+            	type="tm:globalParametersType" minOccurs="0" maxOccurs="1">
+            </element>
+            <element name="transformationGraph"
+        		type="tm:transformationGraphType" minOccurs="1"
+        		maxOccurs="1">
+        	</element>
+
+        </sequence>
+    </complexType>
+
+    <simpleType name="nameType">
+    	<restriction base="string">
+    		<minLength value="1"></minLength>
+    	</restriction>
+    </simpleType>
+
+    <complexType name="patternType">
+    	<attribute name="name" use="optional">
+    		<simpleType>
+    			<restriction base="string">
+    				<pattern value="[a-zA-Z][a-zA-Z0-9-_]*"></pattern>
+    			</restriction>
+    		</simpleType>
+    	</attribute>
+    	<anyAttribute processContents="skip"></anyAttribute>
+    </complexType>
+
+    <complexType name="patternListType">
+    	<sequence>
+    		<element name="patternItem" type="tm:patternType" minOccurs="1" maxOccurs="unbounded"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType name="commandType">
+    	<anyAttribute processContents="skip"></anyAttribute>
+    </complexType>
+
+    <complexType name="globalParametersType">
+    	<sequence>
+    		<element name="parameter" type="tm:parameterType"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType name="parameterType">
+    	<attribute name="name" use="required">
+    		<simpleType>
+    			<restriction base="string">
+    				<pattern value="[a-zA-Z][a-zA-Z0-9-_]*"></pattern>
+    			</restriction>
+    		</simpleType>
+    	</attribute>
+    	<attribute name="default" type="string"></attribute>
+    </complexType>
+
+
+</schema>
+
+

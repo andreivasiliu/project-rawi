@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%">
+	<mx:HBox>
+		<mx:Label text="Label" id="labell"/>
+		<mx:TextInput id="nameInput" text="EmptyNodeGraph"/>
+	</mx:HBox>
+	<mx:CheckBox label="Enabled" paddingLeft="5" id="enableCheck" selected="true"/>
+	<mx:VBox id="subStates">
+		
+	</mx:VBox>
+</mx:VBox>

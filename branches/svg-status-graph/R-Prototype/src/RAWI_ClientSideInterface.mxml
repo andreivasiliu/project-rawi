@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml"
+	layout="absolute" width="100%" height="100%"
+	xmlns:ns1="RawiComponents.*"
+	initialize="init()"
+	creationComplete="ecran.reDrawConnections()"
+	>
+	<mx:ApplicationControlBar id="controlBar" dock="true">
+		<mx:Spacer width="50" />
+		<mx:Label text="RAWI" fontSize="20" alpha="1.0" fontWeight="bold" fontStyle="italic"/>
+		<mx:Spacer width="100" />
+		<mx:HBox id="mainMenu">
+		<mx:Text text="Some text here"/>
+		</mx:HBox>
+	</mx:ApplicationControlBar>
+	<mx:Panel width="250" layout="absolute" id="propertiesPanel" title="Properties" top="3" bottom="3" left="3" />
+	<mx:TabNavigator x="261" y="10" width="100%" height="100%" id="tabNav">
+		<ns1:GraphCanvas x="266" y="5" width="100%" height="100%" id="ecran" label="RayTracerTM" />
+	</mx:TabNavigator>
+	<mx:XML source="exemplu_model.xml" id="raytracer" format="xml" xmlns="" />
+	<mx:XML source="RaytracerSession.xml" id="raytracerWS" format="xml" xmlns="" />
+
+	<mx:Script>
+		<![CDATA[
+			import RawiComponents.GraphNode;
+			public function init():void
+			{
+				var xxy:XML = new XML(String(raytracer));
+				createGraphFromXML2(xxy);
+			}
+			
+			public namespace tm = "http://www.example.org/TransformationModel"; 
+			
+			public function createGraphFromXML2(data:XML):void
+			{
+				// TODO: this is a temporary test function - delete in final release 
+				use namespace tm;
+				ecran.reset();
+				
+				var graph:XMLList = data.transformationGraph;
+				
+				for each (var node:XML in graph.packNode + graph.packTransformerNode)
+				{
+					var gn:GraphNode = new GraphNode();
+					ecran.addChild(gn);
+					ecran.nodesMap[int(node.@id)] = gn;
+					gn.propsContainer.initialize();
+					gn.nodeId = node.@id;
+					gn.x = node.@x;
+					gn.y = node.@y;
+					gn.nodeType = node.localName();
+					gn.propsContainer.nameInput.text = node.@name + node.@id;
+					gn.targetContainer = propertiesPanel;
+					
+					for each (var output:XML in node.output)
+						gn.outputToNodes[output.@node] = output.@node;
+					
+					for each (var input:XML in node.input)
+						gn.inputFromNodes[input.@node] = input.@node;
+				}
+			}
+			public namespace ws = "http://www.example.org/WorkSession";
+			public function updateWSGraphFromXML(data:XML):void
+			{
+				// TODO: this is a temporary test function - delete in final release 
+				use namespace ws;
+				var graph:XMLList = data.nodeInstances;
+				for each (var node:XML in graph.packNode + graph.packTransformerNode)
+				{
+					GraphNode(ecran.nodesMap[int(node.@id)]).updateNodeState(node);
+				}
+			}
+		]]>
+	</mx:Script>
+
+</mx:Application>

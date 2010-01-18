@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<transformationModel xmlns="http://www.example.org/TransformationModel"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.example.org/TransformationModel TransformationModel.xsd">
+    <transformationGraph>
+	    <packNode id="1" name="pack1">
+	    	<output node="2" />
+	    </packNode>
+	    <packTransformerNode id="2" name="transformer1">
+	    	<input node="1" />
+	    	<output node="3" />
+	    </packTransformerNode>
+	    <packNode id="3" name="pack2">
+	    	<input node="2" />
+	    </packNode>
+    </transformationGraph>
+</transformationModel>
