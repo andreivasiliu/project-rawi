@@ -5,42 +5,38 @@
 package aprototype;
 
 import clustercomputer.ClusterComputer;
+import clustercomputer.MainServerNotification;
 import rawi.common.Notifier;
 import java.io.IOException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.Collection;
-import rawi.common.MainServerInterface;
 import rawi.common.NetworkUtils;
-import rawi.common.Ports;
-import rawi.rmiinfrastructure.RMIClientModel;
 
-public class Main
+public class Main extends Thread
 {
     public static void main(String[] args) throws RemoteException, IOException,
             NotBoundException
     {
-        //System.setProperty("java.rmi.server.hostname", "andrei.no-ip.biz");
+        System.setProperty("java.rmi.server.hostname", "5.242.52.108");
         ClusterComputer cc = new ClusterComputer();
 
         Collection<String> mainServerIpList = NetworkUtils.getIPsFromTracker("MainServer");
 
-        MainServerInterface msi;
         for (String serverIP : mainServerIpList)
         {
-            try
-            {
-                msi = new RMIClientModel<MainServerInterface>(
-                        serverIP,
-                        Ports.MainServerPort).getInterface();
-                msi.notifyPresence(NetworkUtils.getIPList());
-            }
-            catch (Exception e)
-            {
-                //Some ports may not work.
-            }
+            MainServerNotification msn = new MainServerNotification(serverIP);
+            msn.start();
         }
 
         new Notifier("ClusterComputer").start();
     }
+
+    @Override
+    public void run()
+    {
+
+    }
+
+
 }
