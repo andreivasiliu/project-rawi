@@ -2,6 +2,7 @@ package rawi.mainserver;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,8 +21,10 @@ import rawi.common.FileHandle;
 import rawi.common.Ports;
 import rawi.common.Task;
 import rawi.common.TaskResult;
+import rawi.common.WorkSessionStatus;
 import rawi.common.exceptions.InvalidIdException;
 import rawi.mainserver.WorkSession.PackInstance;
+import rawi.mainserver.WorkSession.PackTransformerInstance;
 import rawi.rmiinfrastructure.RMIClientModel;
 
 /** A manager that keeps and updates a list of working sessions.
@@ -364,6 +367,58 @@ public class ClusterManager implements Runnable
                     sessionId + "' is known.");
 
         return session;
+    }
+
+    // Probably one of the ugliest methods ever.
+    public WorkSessionStatus getSessionStatus(String sessionId)
+    {
+        WorkSession session = getSessionById(sessionId);
+        WorkSessionStatus sessionStatus = new WorkSessionStatus();
+
+        for (PackInstance packInstance : session.packInstances.values())
+        {
+            WorkSessionStatus.Pack pack = sessionStatus.addPack(
+                    packInstance.getOrigin().getId());
+            pack.name = packInstance.getOrigin().getName();
+            pack.x = packInstance.getOrigin().getCoordX();
+            pack.y = packInstance.getOrigin().getCoordY();
+
+            pack.status = new ArrayList<WorkSessionStatus.PackStatus>(packInstance.subPacks());
+            for (int i = 0; i < packInstance.subPacks(); i++)
+            {
+                if (packInstance.getState(i) == WorkSession.SubPackState.HAS_FILES)
+                    pack.status.add(WorkSessionStatus.PackStatus.HAS_FILES);
+                else
+                    pack.status.add(WorkSessionStatus.PackStatus.EMPTY);
+            }
+        }
+
+        for (PackTransformerInstance packTransformerInstance :
+                session.packTransformerInstances.values())
+        {
+            WorkSessionStatus.PackTransformer packTransformer =
+                    sessionStatus.addPackTransformer(packTransformerInstance
+                    .getOrigin().getId());
+            packTransformer.name = packTransformerInstance.getOrigin().getName();
+            packTransformer.x = packTransformerInstance.getOrigin().getCoordX();
+            packTransformer.y = packTransformerInstance.getOrigin().getCoordY();
+
+            packTransformer.status = new ArrayList<WorkSessionStatus.PackTransformerStatus>
+                    (packTransformerInstance.subPackTransformers());
+            for (int i = 0; i < packTransformerInstance.subPackTransformers(); i++)
+            {
+                packTransformer.status.add(WorkSessionStatus.PackTransformerStatus.valueOf(packTransformerInstance.getState(i).name()));
+            }
+        }
+
+        for (WorkSession.NodeInstance nodeInstance : session.nodeInstances.values())
+        {
+            for (TransformationModel.Node output : nodeInstance.getOrigin().getOutputs())
+                sessionStatus.addOutput(nodeInstance.getOrigin().getId(),
+                    output.getId());
+        }
+
+        return sessionStatus;
     }
 
     private class ClusterComputer

@@ -162,6 +162,7 @@ public class TransformationModel
         private int ID = ++lastUsedID;
         private String name = null;
         protected Pack splitterPack;
+        private long x, y;
         
         abstract public Set<? extends Node> getInputs();
         abstract public Set<? extends Node> getOutputs();
@@ -186,6 +187,26 @@ public class TransformationModel
         public Pack getSplitter()
         {
             return splitterPack;
+        }
+
+        long getCoordX()
+        {
+            return x;
+        }
+
+        long getCoordY()
+        {
+            return y;
+        }
+
+        public void setCoordX(long x)
+        {
+            this.x = x;
+        }
+
+        public void setCoordY(long y)
+        {
+            this.y = y;
         }
 
         protected void removeSplitter(Pack splitterPackToRemove)

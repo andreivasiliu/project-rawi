@@ -17,6 +17,7 @@ import rawi.common.Ports;
 import rawi.common.SessionInfo;
 import rawi.common.TaskResult;
 import rawi.common.ValidateXMLInfo;
+import rawi.common.WorkSessionStatus;
 import rawi.mainserver.ClusterManager;
 import rawi.mainserver.TransformationModel;
 import rawi.mainserver.WorkSession;
@@ -135,6 +136,12 @@ public class RMIMainServer extends RMIServerModel
     {
         System.out.println("Stop session request. Session id = " + sessionId);
         clusterManager.stopWorkSession(sessionId);
+    }
+
+    public WorkSessionStatus getSessionStatus(String sessionId) throws RemoteException
+    {
+        System.out.println("Session status requested.");
+        return clusterManager.getSessionStatus(sessionId);
     }
 }
 

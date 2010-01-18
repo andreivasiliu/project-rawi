@@ -3,8 +3,6 @@ package rawi.mainserver;
 import rawi.exceptions.InvalidIdException;
 import rawi.mainserver.TransformationModel.*;
 
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -46,6 +44,7 @@ public class WorkSession implements ModelChangeListener
              = new HashMap<PackTransformer, PackTransformerInstance>();
     Set<Integer> targettedNodes = new HashSet<Integer>();
     SessionStatus status = SessionStatus.STOPPED;
+    private long timeSinceStarted;
 
     Queue<Task> pendingTasks = new ConcurrentLinkedQueue<Task>();
     Queue<Task> activeTasks = new ConcurrentLinkedQueue<Task>();
@@ -147,6 +146,8 @@ public class WorkSession implements ModelChangeListener
                 makeTask(packTransformerInstance, i);
             }
         }
+
+        timeSinceStarted = System.currentTimeMillis();
     }
 
     private void makeTask(PackTransformerInstance packTransformerInstance,
@@ -254,6 +255,18 @@ public class WorkSession implements ModelChangeListener
         // of those packs, and if the work session is started, it will make
         // some new tasks.
         packTransformerInstance.distributeFilesToOutputs(subState, resultFiles);
+        packTransformerInstance.state.set(subState, SubPackTransformerState.DONE);
+
+        if (status == SessionStatus.STARTED && activeTasks.isEmpty() &&
+                pendingTasks.isEmpty())
+        {
+            status = SessionStatus.STOPPED;
+
+            System.out.println("Session stopped. Time elapsed since it was " +
+                    "started: " +
+                    ((System.currentTimeMillis() - timeSinceStarted) / 1000) +
+                    " seconds.");
+        }
     }
 
     public PackInstance getPackInstance(int id)
@@ -683,7 +696,7 @@ public class WorkSession implements ModelChangeListener
                 if (origin.isJoiner())
                 {
                     for (int i = 0; i < packInstance.subPacks(); i++)
-                        if (packInstance.getState(subPackTransformer) !=
+                        if (packInstance.getState(i) !=
                                 SubPackState.HAS_FILES)
                         {
                             state.set(subPackTransformer,
@@ -723,12 +736,12 @@ public class WorkSession implements ModelChangeListener
             // "dependencies not met", then more code needs to be added.
         }
 
-        private SubPackTransformerState getState(int subPackTransformer)
+        public SubPackTransformerState getState(int subPackTransformer)
         {
             return state.get(subPackTransformer);
         }
 
-        private int subPackTransformers()
+        public int subPackTransformers()
         {
             return state.size();
         }
