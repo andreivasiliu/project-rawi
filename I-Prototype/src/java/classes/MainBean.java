@@ -69,7 +69,7 @@ public class MainBean {
         if (xmlList.containsKey(name)) {
             return xmlList.get(name);
         }
-        return "";
+        return null;
     }
 
     // main servers list
