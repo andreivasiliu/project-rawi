@@ -21,6 +21,10 @@
         <servlet-class>servlets.ValidateXMLServlet</servlet-class>
     </servlet>
     <servlet>
+        <servlet-name>DownloadXMLServlet</servlet-name>
+        <servlet-class>servlets.DownloadXMLServlet</servlet-class>
+    </servlet>
+    <servlet>
         <servlet-name>GetLists</servlet-name>
         <servlet-class>servlets.GetLists</servlet-class>
     </servlet>
@@ -47,6 +51,10 @@
     <servlet-mapping>
         <servlet-name>ValidateXMLServlet</servlet-name>
         <url-pattern>/ValidateXMLServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>DownloadXMLServlet</servlet-name>
+        <url-pattern>/DownloadXMLServlet</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>GetLists</servlet-name>
