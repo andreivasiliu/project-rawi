@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%">
+	<mx:AdvancedDataGrid id="adg1" designViewDataType="tree" top="30" right="3" left="3" bottom="3">
+		<mx:columns>
+			<mx:AdvancedDataGridColumn headerText="Column 1" dataField="col1"/>
+			<mx:AdvancedDataGridColumn headerText="Column 2" dataField="col2"/>
+			<mx:AdvancedDataGridColumn headerText="Column 3" dataField="col3"/>
+		</mx:columns>
+	</mx:AdvancedDataGrid>
+	<mx:Button x="10" y="0" label="Refresh"/>
+	<mx:Button x="89" y="0" label="Download"/>
+	<mx:Button x="179" y="0" label="Upload"/>
+	<mx:Button x="252" y="0" label="Delete"/>
+	
+</mx:Canvas>

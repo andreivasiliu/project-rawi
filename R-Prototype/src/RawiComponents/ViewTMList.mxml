@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" label="ViewTMList">
+	<mx:DataGrid top="30" right="3" left="3" bottom="3" id="tmListDG" dataProvider="{tmList}">
+		<mx:columns>
+			<mx:DataGridColumn headerText="Column 1" dataField="tmName"/>
+			<mx:DataGridColumn headerText="Column 2" dataField="col2"/>
+			<mx:DataGridColumn headerText="Column 3" dataField="col3"/>
+		</mx:columns>
+	</mx:DataGrid>
+	<mx:Button x="10" y="0" label="Refresh" click="refreshHdlr()"/>
+	<mx:Button x="89" y="0" label="New" width="71" click="newHdlr()"/>
+	<mx:Button x="168" y="0" label="Edit" width="71" click="editHdlr()"/>
+	<mx:Button x="247" y="0" label="Delete" width="71" click="deleteHdlr()"/>
+	<mx:Script>
+		<![CDATA[
+			import RawiComponents.TMComponents.GetEditHdlr;
+			import RawiComponents.TMComponents.EditTM;
+			import mx.core.Application;
+			import mx.collections.ArrayCollection;
+			private var baseUri:String = "http://localhost:8080/I-Prototype";
+			[Bindable]
+			private var tmList:ArrayCollection = new ArrayCollection();
+			private function configureListeners(dispatcher:IEventDispatcher):void
+			{
+				// mange the other events from URLRequest
+	            //dispatcher.addEventListener(Event.COMPLETE, getFromToAirports);
+	            dispatcher.addEventListener(Event.OPEN, trace);
+	            dispatcher.addEventListener(ProgressEvent.PROGRESS, trace);
+	            dispatcher.addEventListener(SecurityErrorEvent.SECURITY_ERROR, trace);
+	            dispatcher.addEventListener(HTTPStatusEvent.HTTP_STATUS, trace);
+	            dispatcher.addEventListener(IOErrorEvent.IO_ERROR, trace);
+	        }
+	        // manage Refresh
+			private function refreshHdlr():void
+			{
+				var loader:URLLoader = new URLLoader();
+				// TODO: find out how to cancel the cache - by then add the time parameter at the end 
+				var request:URLRequest = new URLRequest(baseUri + "/GetLists?type=xml" + "&time=" + new Date().getTime());
+				trace(request.url);
+				loader.addEventListener(Event.COMPLETE, getListHdlr);
+				configureListeners(loader);
+				loader.load(request);
+			}
+	        private function getListHdlr(event:Event):void
+			{
+				var loader:URLLoader = URLLoader(event.target);
+				tmList = new ArrayCollection();
+				trace(loader.data);
+				// adauga aici object.data
+				if (loader.data.toString().length > 0)
+				{
+					var xmlData:XML = new XML(loader.data.toString());
+					//trace (xmlData);
+					for each (var child:XML in xmlData.xml)
+					{
+						var tmn:String = child;
+						tmn = tmn.substr(0, tmn.length-4);
+						tmList.addItem( {tmName:tmn, col2:"empty", col3:"empty" } );
+					}
+					tmListDG.selectedIndex = 0;
+	        	}
+			}
+			// manage Delete
+			private function deleteHdlr():void
+			{
+				var loader:URLLoader = new URLLoader();
+				var request:URLRequest = new URLRequest(baseUri + "/ValidateXMLServlet?delete=" + tmListDG.selectedItem.tmName + "&time=" + new Date().getTime());
+				loader.addEventListener(Event.COMPLETE, trace);
+				configureListeners(loader);
+				loader.load(request);
+				// request the new list
+				refreshHdlr();
+			}
+			// manage New
+			private function newHdlr():void
+			{
+				var etm:EditTM = new EditTM();
+				etm.label = "TM - untitled";
+				(Application.application as RAWI).tabNav.addChild(etm);
+				(Application.application as RAWI).tabNav.selectedChild = etm;
+			}
+			// manage Edit
+			private function editHdlr():void
+			{
+				var loader:URLLoader = new URLLoader();
+				// TODO: find out how to cancel the cache - by then add the time parameter at the end 
+				var request:URLRequest = new URLRequest(baseUri + "/DownloadXMLServlet?name=" + tmListDG.selectedItem.tmName + ".xml&time=" + new Date().getTime());
+				trace(request.url);
+				var geh:GetEditHdlr = new GetEditHdlr(tmListDG.selectedItem.tmName);
+				loader.addEventListener(Event.COMPLETE, geh.getEditHdlr);
+				configureListeners(loader);
+				loader.load(request);
+			}
+		]]>
+	</mx:Script>
+</mx:Canvas>
