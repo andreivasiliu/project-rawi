@@ -45,6 +45,7 @@ public class WorkSession implements ModelChangeListener
     Set<Integer> targettedNodes = new HashSet<Integer>();
     SessionStatus status = SessionStatus.STOPPED;
     private long timeSinceStarted;
+    public long timeUntilStopped;
 
     Queue<Task> pendingTasks = new ConcurrentLinkedQueue<Task>();
     Queue<Task> activeTasks = new ConcurrentLinkedQueue<Task>();
@@ -262,10 +263,9 @@ public class WorkSession implements ModelChangeListener
         {
             status = SessionStatus.STOPPED;
 
+            timeUntilStopped = (System.currentTimeMillis() - timeSinceStarted) / 1000;
             System.out.println("Session stopped. Time elapsed since it was " +
-                    "started: " +
-                    ((System.currentTimeMillis() - timeSinceStarted) / 1000) +
-                    " seconds.");
+                    "started: " + timeUntilStopped + " seconds.");
         }
     }
 

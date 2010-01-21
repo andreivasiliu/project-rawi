@@ -56,6 +56,10 @@
                 fill: rgb(255,220,220);
             }
 
+            .fullPackTransformer {
+                fill: rgb(220,220,255);
+            }
+
             .nodeConnection {
                 stroke: black;
                 stroke-width: 1;
@@ -63,32 +67,83 @@
         </style>
     </head>
     <body>
-        <h1>Session Status - <%= sessionId %> </h1>
+        <h1>Session Status Graph - <%= sessionId %> (<%= mainBean.getSessionById(sessionId).xmlName %>)</h1>
+        <p>
+            Status: <%= (sessionStatus.timeUntilStopped == 0) ? "running" : "stopped" %>.
+            (<a href="StartStopSession?sessionId=<%= sessionId %>&amp;action=start">start</a>
+            /
+            <a href="StartStopSession?sessionId=<%= sessionId %>&amp;action=stop">stop</a>)
+        </p>
+            <%
+                if (sessionStatus.timeUntilStopped != 0)
+                {
+                %> <p>Time elapsed until stopped: <%= sessionStatus.timeUntilStopped %> seconds.</p> <%
+                }
+            %>
         <svg xmlns="http://www.w3.org/2000/svg"
              width="<%= last_x + 150 %>" height="<%= last_y + 50 %>" version="1.1" >
             <defs>
-                <g id="box1">
-                    <rect class="pack" x="0" y="0" width="100" height="100"/>
-                </g>
-                <filter id="MyFilter" x="-20%" y="-20%" width="140%" height="140%">
-                    <feFlood result="box" flood-color="black" />
-                    <feFlood x="5%" y="5%" result="background" flood-color="rgb(255,220,220)" />
-<%--                    <feImage xmlns:xlink="http://www.w3.org/1999/xlink"
-                             result="box" xlink:href="#box1" />
---%>
+                <filter id="multi-node" filterUnits="objectBoundingBox"
+                        y="-50%" width="150%" height="170%">
+                    <feOffset in="SourceGraphic" dx="5" dy="-5" result="offset1" />
+                    <feOffset in="SourceGraphic" dx="10" dy="-10" result="offset2" />
                     <feMerge>
-                        <feMergeNode in="box" />
-                        <feMergeNode in="background" />
+                        <feMergeNode in="offset2" />
+                        <feMergeNode in="offset1" />
+                        <feMergeNode in="BackgroundImage" />
                         <feMergeNode in="SourceGraphic" />
                     </feMerge>
                 </filter>
             </defs>
 
             <%
+                for (WorkSessionStatus.Pack pack : sessionStatus.getPacks())
+                {
+                    int subPacks = pack.status.size();
+                    int completedSubPacks = 0;
+                    for (int i = 0; i < subPacks; i++)
+                    {
+                        if (pack.status.get(i) == WorkSessionStatus.PackStatus.HAS_FILES)
+                            completedSubPacks++;
+                    }
+
+                    if (pack.isMulti) { %>
+            <rect class="pack<%= (subPacks == completedSubPacks) ? " fullPack" : "" %>"
+                  x="<%= pack.x - pack_width / 2 + 10 %>"
+                  y="<%= pack.y - pack_height / 2 - 10 %>"
+                  width="<%= pack_width %>" height="<%= pack_height %>" />
+            <rect class="pack<%= (subPacks == completedSubPacks) ? " fullPack" : "" %>"
+                  x="<%= pack.x - pack_width / 2 + 5 %>"
+                  y="<%= pack.y - pack_height / 2 - 5 %>"
+                  width="<%= pack_width %>" height="<%= pack_height %>" />
+                 <% }
+                }
+
+                for (WorkSessionStatus.PackTransformer packTransformer :
+                        sessionStatus.getPackTransformers())
+                {
+                    int subStates = packTransformer.status.size();
+                    int completedSubStates = 0;
+                    for (int i = 0; i < subStates; i++)
+                    {
+                        if (packTransformer.status.get(i) == WorkSessionStatus.PackTransformerStatus.DONE)
+                            completedSubStates++;
+                    }
+
+                    if (packTransformer.isMulti) { %>
+            <circle class="packTransformer<%= (subStates == completedSubStates) ? " fullPackTransformer" : "" %>"
+                    cx="<%= packTransformer.x + 5 %>" cy="<%= packTransformer.y - 5 %>"
+                    r="<%= transformer_radius %>" />
+            <circle class="packTransformer<%= (subStates == completedSubStates) ? " fullPackTransformer" : "" %>"
+                    cx="<%= packTransformer.x + 2.5 %>" cy="<%= packTransformer.y - 2.5 %>"
+                    r="<%= transformer_radius %>" />
+            <%      }
+                }
+
                 for (WorkSessionStatus.Pack from : sessionStatus.getPacks()) {
                     for (PackTransformer to : from.getOutputs()) {
                         %>
-                <line class ="nodeConnection" x1="<%= from.x %>" y1="<%= from.y %>"
+                <line class="nodeConnection" x1="<%= from.x %>" y1="<%= from.y %>"
                       x2="<%= to.x %>" y2="<%= to.y %>" />
                         <%
                     }
@@ -98,13 +153,14 @@
                         sessionStatus.getPackTransformers()) {
                     for (Pack to : from.getOutputs()) {
                         %>
-                <line class ="nodeConnection" x1="<%= from.x %>" y1="<%= from.y %>"
+                <line class="nodeConnection" x1="<%= from.x %>" y1="<%= from.y %>"
                       x2="<%= to.x %>" y2="<%= to.y %>" />
                         <%
                     }
                 }
 
-                for (WorkSessionStatus.Pack pack : sessionStatus.getPacks()) {
+                for (WorkSessionStatus.Pack pack : sessionStatus.getPacks())
+                {
                     int subPacks = pack.status.size();
                     int completedSubPacks = 0;
                     for (int i = 0; i < subPacks; i++)
@@ -114,24 +170,31 @@
                     }
 
             %>
-                <rect class="pack<%= (subPacks == completedSubPacks) ? " fullPack" : "" %>"
-                      x="<%= pack.x - pack_width / 2 %>"
-                      y="<%= pack.y - pack_height / 2 %>"
-                      width="<%= pack_width %>" height="<%= pack_height %>" />
-                <g transform="translate(<%= pack.x + 2 %>, <%= pack.y + 5 %>)">
-                    <text text-anchor="middle"
-                          style="font-size: small; font-family: Bitstream Vera Sans">
-                        <tspan x="0" y="-0.6em"><%= (pack.name != null) ? pack.name : "" %></tspan>
-                        <tspan x="0" y="0.6em">(<%= completedSubPacks + "/" + subPacks %>)</tspan>
-                    </text>
-                </g>
-            <%  } %>
+                    <rect class="pack<%= (subPacks == completedSubPacks) ? " fullPack" : "" %>"
+                          x="<%= pack.x - pack_width / 2 %>"
+                          y="<%= pack.y - pack_height / 2 %>"
+                          width="<%= pack_width %>" height="<%= pack_height %>" />
+                    <g transform="translate(<%= pack.x + 2 %>, <%= pack.y + 5 %>)">
+                        <text text-anchor="middle"
+                              style="font-size: small; font-family: Bitstream Vera Sans">
+                            <tspan x="0" y="-0.6em"><%= (pack.name != null) ? pack.name : "" %></tspan>
+                            <tspan x="0" y="0.6em">(<%= completedSubPacks + "/" + subPacks %>)</tspan>
+                        </text>
+                    </g>
+            <%  }
 
-            <%
                 for (WorkSessionStatus.PackTransformer packTransformer :
-                        sessionStatus.getPackTransformers()) {
+                        sessionStatus.getPackTransformers())
+                {
+                    int subStates = packTransformer.status.size();
+                    int completedSubStates = 0;
+                    for (int i = 0; i < subStates; i++)
+                    {
+                        if (packTransformer.status.get(i) == WorkSessionStatus.PackTransformerStatus.DONE)
+                            completedSubStates++;
+                    }
             %>
-                <circle class="packTransformer"
+                <circle class="packTransformer<%= (subStates == completedSubStates) ? " fullPackTransformer" : "" %>"
                         cx="<%= packTransformer.x %>" cy="<%= packTransformer.y %>"
                         r="<%= transformer_radius %>" />
                 <text text-anchor="start"

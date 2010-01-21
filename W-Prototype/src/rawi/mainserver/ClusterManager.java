@@ -375,6 +375,8 @@ public class ClusterManager implements Runnable
         WorkSession session = getSessionById(sessionId);
         WorkSessionStatus sessionStatus = new WorkSessionStatus();
 
+        sessionStatus.timeUntilStopped = session.timeUntilStopped;
+
         for (PackInstance packInstance : session.packInstances.values())
         {
             WorkSessionStatus.Pack pack = sessionStatus.addPack(
@@ -391,6 +393,9 @@ public class ClusterManager implements Runnable
                 else
                     pack.status.add(WorkSessionStatus.PackStatus.EMPTY);
             }
+
+            if (packInstance.getOrigin().getSplitter() != null)
+                pack.isMulti = true;
         }
 
         for (PackTransformerInstance packTransformerInstance :
@@ -409,6 +414,9 @@ public class ClusterManager implements Runnable
             {
                 packTransformer.status.add(WorkSessionStatus.PackTransformerStatus.valueOf(packTransformerInstance.getState(i).name()));
             }
+
+            if (packTransformerInstance.getOrigin().getSplitter() != null)
+                packTransformer.isMulti = true;
         }
 
         for (WorkSession.NodeInstance nodeInstance : session.nodeInstances.values())
