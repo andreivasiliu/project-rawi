@@ -13,6 +13,7 @@ public class WorkSessionStatus implements Serializable
     Collection<Pack> packs = new LinkedList<Pack>();
     Collection<PackTransformer> packTransformers = new LinkedList<PackTransformer>();
     Map<Integer, Object> nodeById = new HashMap<Integer, Object>();
+    public long timeUntilStopped;
 
     public void addOutput(int fromId, int toId)
     {
@@ -32,12 +33,12 @@ public class WorkSessionStatus implements Serializable
 
     public void addOutput(Pack pack, PackTransformer packTransformer)
     {
-        pack.outputs.add(packTransformer);
+        pack.getOutputs().add(packTransformer);
     }
 
     public void addOutput(PackTransformer packTransformer, Pack pack)
     {
-        packTransformer.outputs.add(pack);
+        packTransformer.getOutputs().add(pack);
     }
 
     public Pack addPack(int id)
@@ -73,32 +74,42 @@ public class WorkSessionStatus implements Serializable
     public enum PackStatus { EMPTY, HAS_FILES }
     public enum PackTransformerStatus { DEPENDENCIES_NOT_MET, PENDING, WORKING, DONE }
 
-    public class Pack implements Serializable
+    public abstract class Node implements Serializable
     {
-        private Collection<PackTransformer> outputs =
-                new LinkedList<PackTransformer>();
-        public ArrayList<PackStatus> status;
+        protected Collection<? extends Node> outputs;
         public int id;
         public String name;
         public long x, y;
+        public boolean isMulti;
+    }
+
+    public class Pack extends Node implements Serializable
+    {
+        public ArrayList<PackStatus> status;
+
+        public Pack()
+        {
+            outputs = new LinkedList<PackTransformer>();
+        }
 
         public Collection<PackTransformer> getOutputs()
         {
-            return outputs;
+            return (Collection<PackTransformer>) outputs;
         }
     }
 
-    public class PackTransformer implements Serializable
+    public class PackTransformer extends Node implements Serializable
     {
-        private Collection<Pack> outputs = new LinkedList<Pack>();
         public ArrayList<PackTransformerStatus> status;
-        public int id;
-        public String name;
-        public long x, y;
+
+        public PackTransformer()
+        {
+            outputs = new LinkedList<Pack>();
+        }
 
         public Collection<Pack> getOutputs()
         {
-            return outputs;
+            return (Collection<Pack>) outputs;
         }
     }
 }
