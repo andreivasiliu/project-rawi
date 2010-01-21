@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"  width="100%" height="100%" label="ViewWSList">
+	<mx:DataGrid top="30" right="3" left="3" bottom="3">
+		<mx:columns>
+			<mx:DataGridColumn headerText="Column 1" dataField="col1"/>
+			<mx:DataGridColumn headerText="Column 2" dataField="col2"/>
+			<mx:DataGridColumn headerText="Column 3" dataField="col3"/>
+		</mx:columns>
+	</mx:DataGrid>
+	<mx:Button x="10" y="0" label="Refresh"/>
+	<mx:Button x="89" y="0" label="Edit" width="71"/>
+	<mx:Button x="168" y="0" label="Delete" width="71"/>
+	<mx:Button x="247" y="0" label="Start" width="71"/>
+	<mx:Button x="326" y="0" label="Stop" width="71"/>
+</mx:Canvas>

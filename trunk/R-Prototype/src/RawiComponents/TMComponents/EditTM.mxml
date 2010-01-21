@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%">
+	<mx:Button x="10" y="0" label="Save" width="71"/>
+	<mx:Button x="89" y="0" label="Validate" width="85" click="validateHdlr()"/>
+	<mx:Button x="182" y="0" label="Close" width="71" click="closeHdlr()"/>
+	<mx:HDividedBox left="3" top="30" right="3" bottom="3">
+		<mx:Canvas id="ecran" x="0" y="0" height="100%" width="100%"/>
+		<mx:Panel layout="absolute" id="propertiesPanel" top="0" right="0" bottom="0" width="30%" title="Properties"/>
+	</mx:HDividedBox>
+	<mx:Script>
+		<![CDATA[
+			import mx.core.Application;
+			public var nodesMap:Dictionary = new Dictionary();
+			public function initFromXml(data:XML):void
+			{
+				trace(data);
+			}
+			public function closeHdlr():void
+			{
+				// TODO: any checkes here? see if something needs saving
+				(Application.application as RAWI).tabNav.removeChild(this);
+			}
+			public function validateHdlr():void
+			{
+				// TODO: validate schema
+				trace("Validation in construction");
+			}
+			public function addNewPN(xx:int, yy:int):void
+			{
+				// TODO: add new packNode
+				trace("addNewPN", xx, yy);
+				var pn:packNode = new packNode();
+				pn.x = xx;
+				pn.y = yy;
+				pn.parentEcran = ecran;
+				pn.parentNodesMap = nodesMap;
+				pn.nid = generateUniqueId();
+				pn.propsPanel = propertiesPanel;
+				nodesMap[pn.nid] = pn;
+				ecran.addChild(pn);
+			}
+			public function addNewPTN(xx:int, yy:int):void
+			{
+				// TODO: add new packTransformerNode
+				trace("addNewPTN", xx, yy);
+				var pn:packTransformerNode = new packTransformerNode();
+				pn.x = xx;
+				pn.y = yy;
+				pn.parentEcran = ecran;
+				pn.parentNodesMap = nodesMap;
+				pn.nid = generateUniqueId();
+				pn.propsPanel = propertiesPanel;
+				nodesMap[pn.nid] = pn;
+				ecran.addChild(pn);
+			}
+			public function generateUniqueId():String
+			{
+				// find the first id that is free in the given dictionary
+				var id:int = 1;
+				while (nodesMap[id.toString()] != undefined)
+					id++;
+				return id.toString();
+			}
+		]]>
+	</mx:Script>
+	<mx:Button x="320" y="0" label="newPN" width="71" />
+	<mx:Button x="399" y="0" label="newPTN" />
+	<mx:Button x="320" y="0" label="newPN" width="71" mouseDown="event.target.startDrag()" mouseUp="stopDrg1(event)" mouseOut="mouseOutHdlr1(event)" />
+	<mx:Button x="399" y="0" label="newPTN" mouseDown="event.target.startDrag()" mouseUp="stopDrg2(event)" mouseOut="mouseOutHdlr2(event)"/>
+	<mx:Script>
+		<![CDATA[
+			// add new packNode
+			private function stopDrg1(event:MouseEvent):void
+			{
+				var p:Point = ecran.globalToLocal(new Point(event.stageX, event.stageY));
+				if (p.x > 0 && p.y > 0 && p.x < ecran.width && p.y < ecran.height)
+					addNewPN(event.target.x, event.target.y);
+				stopDrag();
+				event.target.x = 320;
+				event.target.y = 0;
+			}
+			// add new packTransformerNode
+			private function stopDrg2(event:MouseEvent):void
+			{
+				var p:Point = ecran.globalToLocal(new Point(event.stageX, event.stageY));
+				if (p.x > 0 && p.y > 0 && p.x < ecran.width && p.y < ecran.height)
+					addNewPTN(event.target.x, event.target.y);
+				stopDrag();
+				event.target.x = 399;
+				event.target.y = 0;
+			}
+			private function mouseOutHdlr1(event:MouseEvent):void
+			{
+				stopDrag();
+				event.target.x = 320;
+				event.target.y = 0;
+			}
+			private function mouseOutHdlr2(event:MouseEvent):void
+			{
+				stopDrag();
+				event.target.x = 399;
+				event.target.y = 0;
+			}
+		]]>
+	</mx:Script>
+</mx:Canvas>

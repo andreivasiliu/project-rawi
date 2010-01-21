@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" >
+	<mx:Script>
+		<![CDATA[
+			import mx.containers.VBox;
+			import mx.containers.Panel;
+			public var nid:String;
+			public var nodeType:String;
+			public var inputFromNodes:Dictionary = new Dictionary();
+			public var outputToNodes:Dictionary = new Dictionary();
+			public var propsPanel:Panel;
+			public var parentEcran:Canvas;
+			public var parentNodesMap:Dictionary;
+			protected var m_inputCenter:Point;
+			protected var m_outputCenter:Point;
+			protected var m_propsContainer:VBox;
+			public function get inputCenter():Point
+			{
+				return parentEcran.globalToLocal(localToGlobal(m_inputCenter))
+			}
+			public function get outputCenter():Point
+			{
+				return parentEcran.globalToLocal(localToGlobal(m_outputCenter));
+			}
+
+		]]>
+	</mx:Script>
+
+</mx:Canvas>

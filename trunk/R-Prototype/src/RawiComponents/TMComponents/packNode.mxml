@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PackNodeBase xmlns="RawiComponents.TMComponents.*" xmlns:mx="http://www.adobe.com/2006/mxml" width="100" height="50" initialize="init()">
+	<mx:Label x="10" y="10" text="Label" id="nodeName"/>
+	<mx:Script>
+		<![CDATA[
+			private function init():void
+			{
+				this.graphics.lineStyle(0, 0);
+				this.graphics.beginFill(0xffffff, 1);
+				this.graphics.drawRect(0, 0, 100, 50);
+				this.nodeType = "packNode";
+				this.m_inputCenter = new Point(0, 10);
+				this.m_outputCenter = new Point(10, 10);
+				trace("init from packNode");
+			}
+		]]>
+	</mx:Script>
+</PackNodeBase>

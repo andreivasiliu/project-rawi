@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%">
+	<mx:Button x="10" y="0" label="Refresh"/>
+	<mx:Button x="89" y="0" label="Start" width="71"/>
+	<mx:Button x="168" y="0" label="Stop" width="71"/>
+	<mx:HDividedBox left="3" top="30" right="3" bottom="3">
+		<mx:Canvas id="ecran" x="0" y="0" height="100%" width="100%" />
+		<mx:Panel layout="absolute" id="propertiesPanel" top="0" right="0" bottom="0" width="30%" title="Properties"/>
+	</mx:HDividedBox>
+
+</mx:Canvas>
