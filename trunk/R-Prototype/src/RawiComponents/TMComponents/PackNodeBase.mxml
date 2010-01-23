@@ -11,6 +11,7 @@
 			public var parentCont:EditTM;
 			protected var m_inputCenter:Point;
 			protected var m_outputCenter:Point;
+			private var dragging:Boolean = false;
 			[Bindable]
 			public var propsContainer:propsBase;
 			public function get inputCenter():Point
@@ -21,21 +22,74 @@
 			{
 				return parentCont.ecran.globalToLocal(localToGlobal(m_outputCenter));
 			}
-			public virtual function getXmlRepresentation():XML
+			public function getXmlRepresentation():XMLNode
 			{ return null }
-			private function mouseDownHdlr(event:MouseEvent):void
+			// update the propsContainer
+			public function activateProps():void
 			{
-				startDrag();
 				this.parentCont.propertiesPanel.removeAllChildren();
 				this.parentCont.propertiesPanel.addChild(this.propsContainer);
 			}
+			private function mouseDownHdlr(event:MouseEvent):void
+			{
+				event.stopImmediatePropagation();
+				if (event.shiftKey || event.ctrlKey || event.altKey) // set the start node for the operation
+					this.parentCont.activeNode = this;
+				else									 // start dragging
+				{
+					startDrag();
+					dragging = true;
+					activateProps();
+				}
+			}
 			private function mouseUpHdlr(event:MouseEvent):void
 			{
-				stopDrag();
+				if (dragging)		// drag the node
+				{
+					stopDrag();
+					dragging = false;
+				}
+				if (event.shiftKey)		// delete the node
+				{
+					if (this.parentCont.activeNode == this)
+					{
+						// remove references
+						for each (var ref:String in this.inputFromNodes)
+							delete PackNodeBase(this.parentCont.nodesMap[ref]).outputToNodes[this.nid];
+						for each (var ref2:String in this.outputToNodes)
+							delete PackNodeBase(this.parentCont.nodesMap[ref2]).inputFromNodes[this.nid];
+						// remove from stage
+						delete this.parentCont.nodesMap[this.nid];
+						this.parentCont.reDrawConnections();
+						this.parentCont.ecran.removeChild(this);
+					}
+				}
+				else if (event.ctrlKey) // add new connection
+				{
+					if (this.parentCont.activeNode != null && this.parentCont.activeNode != this)
+					{
+						this.parentCont.activeNode.outputToNodes[this.nid] = this.nid;
+						this.inputFromNodes[this.parentCont.activeNode.nid] = this.parentCont.activeNode.nid;
+						this.parentCont.reDrawConnections();
+					}
+				}
+				else if (event.altKey)	// delete the connection
+				{
+					if (this.parentCont.activeNode != null && this.parentCont.activeNode != this)
+					{
+						delete this.parentCont.activeNode.outputToNodes[this.nid];
+						delete this.inputFromNodes[this.parentCont.activeNode.nid];
+						this.parentCont.reDrawConnections();
+					}
+				}
 			}
 			private function mouseMoveHdlr(event:MouseEvent):void
 			{
-				parentCont.reDrawConnections();
+				if (dragging)
+				{
+					parentCont.reDrawConnections();
+					this.propsContainer.showPos(this.x, this.y);
+				}
 			}
 		]]>
 	</mx:Script>

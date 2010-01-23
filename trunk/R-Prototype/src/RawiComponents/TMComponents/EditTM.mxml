@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%">
-	<mx:Button x="10" y="0" label="Save" width="71"/>
-	<mx:Button x="89" y="0" label="Validate" width="85" click="validateHdlr()"/>
-	<mx:Button x="182" y="0" label="Close" width="71" click="closeHdlr()"/>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" initialize="init()" label="{'TM - ' + propsGen.schemaName.text}">
+	<mx:Button x="10" y="0" label="Save" width="71" click="svh.Save()"/>
+	<mx:Button x="89" y="0" label="Validate" width="85" click="svh.Validate()"/>
+	<mx:Button x="182" y="0" label="Close" width="71" click="svh.Close()"/>
 	<mx:HDividedBox left="3" top="30" right="3" bottom="3">
-		<mx:Canvas height="100%" width="100%" id="baseEcran">
-			<mx:Canvas id="ecran" x="0" y="0" width="100%" height="100%"/>
+		<mx:Canvas height="100%" width="100%" id="baseEcran" clipContent="true" mouseDown="activateGeneralProps()">
+			<mx:Canvas id="ecran" x="0" y="0"/>
 		</mx:Canvas>
 		<mx:Panel layout="absolute" id="propertiesPanel" top="0" right="0" bottom="0" width="30%" height="100%" title="Properties"/>
 	</mx:HDividedBox>
@@ -13,10 +13,20 @@
 		<![CDATA[
 			import mx.core.Application;
 			public var nodesMap:Dictionary = new Dictionary();
+			public var activeNode:PackNodeBase;
+			[Bindable]
+			public var propsGen:propsGeneral = new propsGeneral();
+			public var svh:SaveValidateHdlr;
 			public namespace tm = "http://www.example.org/TransformationModel";
+			public function init():void
+			{
+				propsGen.initialize();
+				activateGeneralProps();
+				svh = new SaveValidateHdlr(this);
+			}
+			// init from Xml - call this when you receive datas from the server
 			public function initFromXml(data:XML):void
 			{
-				// TODO: init from XML
 				use namespace tm;
 				for each (var node:XML in data.transformationGraph.packNode + data.transformationGraph.packTransformerNode)
 				{
@@ -27,7 +37,8 @@
 						gn = pn;
 						ecran.addChild(gn);
 						pn.propsContainer.initialize();
-						pn.propsLocalContainer.pattern.text = node.pattern.@regex
+						pn.propsLocalContainer.pattern.text = node.pattern.@regex;
+						pn.propsLocalContainer.isSplitter.selected = node.@isSplitter == "true" ? true : false;
 					}
 					if (node.localName() == "packTransformerNode")
 					{
@@ -36,13 +47,12 @@
 						ecran.addChild(gn);
 						ptn.propsContainer.initialize();
 						ptn.propsLocalContainer.command.text = node.command.@exec;
+						ptn.propsLocalContainer.isJoiner.selected = node.@isJoiner  == "true" ? true : false;
 					}
 					gn.nid = node.@id;
 					nodesMap[gn.nid] = gn;
 					gn.x = node.@x;
 					gn.y = node.@y;
-					//gn.propsContainer.initialize();
-					//gn.propsContainer.nameInput.text = node.@name + node.@id;
 					gn.parentCont = this;
 					gn.propsContainer.nodeName.text = node.@name;
 					
@@ -52,17 +62,33 @@
 					for each (var input:XML in node.input)
 						gn.inputFromNodes[input.@node] = input.@node;
 				}
+				this.propsGen.schemaDescription.text = data.description;
 				reDrawConnections();
 			}
-			public function closeHdlr():void
+			public function getSchemaXmlRepresentation():XML
 			{
-				// TODO: any checkes here? see if something needs saving
-				(Application.application as RAWI).tabNav.removeChild(this);
-			}
-			public function validateHdlr():void
-			{
-				// TODO: validate schema
-				trace("Validation in construction");
+				var tm:XML = new XML("<transformationModel xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' " + 
+						"xmlns='http://www.example.org/TransformationModel' " + 
+						"xsi:schemaLocation='http://www.example.org/TransformationModel TransformationModel.xsd'/>");
+				
+				var gp:XMLNode = new XMLNode(XMLNodeType.ELEMENT_NODE, "globalParameters");
+				var param:XMLNode = new XMLNode(XMLNodeType.ELEMENT_NODE, "parameter");
+				param.attributes.name = "nr";
+				param.attributes.default = "10";
+				gp.appendChild(param);
+				tm.appendChild(gp);
+				
+				var descr:XMLNode = new XMLNode(XMLNodeType.ELEMENT_NODE, "description");
+				var descrVal:XMLNode = new XMLNode(XMLNodeType.TEXT_NODE, this.propsGen.schemaDescription.text); 
+				descr.appendChild(descrVal);
+				tm.appendChild(descr);
+				
+				var tg:XMLNode = new XMLNode(XMLNodeType.ELEMENT_NODE, "transformationGraph");
+				for each (var pn:PackNodeBase in nodesMap)
+					tg.appendChild(pn.getXmlRepresentation());
+				tm.appendChild(tg);
+				
+				return tm;
 			}
 			public function reDrawConnections():void
 			{
@@ -94,6 +120,7 @@
 				pn.propsContainer.nodeName.text = "new Pack";
 				nodesMap[pn.nid] = pn;
 				reDrawConnections();
+				pn.activateProps();
 			}
 			public function addNewPTN(xx:int, yy:int):void
 			{
@@ -108,6 +135,7 @@
 				ptn.propsContainer.nodeName.text = "new Transformer";
 				nodesMap[ptn.nid] = ptn;
 				reDrawConnections();
+				ptn.activateProps();
 			}
 			public function generateUniqueId():String
 			{
@@ -116,6 +144,11 @@
 				while (nodesMap[id.toString()] != undefined)
 					id++;
 				return id.toString();
+			}
+			public function activateGeneralProps():void
+			{
+				this.propertiesPanel.removeAllChildren();
+				this.propertiesPanel.addChild(propsGen);
 			}
 		]]>
 	</mx:Script>

@@ -22,7 +22,7 @@
 			private var tmList:ArrayCollection = new ArrayCollection();
 			private function configureListeners(dispatcher:IEventDispatcher):void
 			{
-				// mange the other events from URLRequest
+				// manage the other events from URLRequest
 	            //dispatcher.addEventListener(Event.COMPLETE, getFromToAirports);
 	            dispatcher.addEventListener(Event.OPEN, trace);
 	            dispatcher.addEventListener(ProgressEvent.PROGRESS, trace);
@@ -64,7 +64,7 @@
 			private function deleteHdlr():void
 			{
 				var loader:URLLoader = new URLLoader();
-				var request:URLRequest = new URLRequest(baseUri + "/ValidateXMLServlet?delete=" + tmListDG.selectedItem.tmName + "&time=" + new Date().getTime());
+				var request:URLRequest = new URLRequest(baseUri + "/ValidateXMLServlet?delete=" + tmListDG.selectedItem.tmName + ".xml&time=" + new Date().getTime());
 				loader.addEventListener(Event.COMPLETE, trace);
 				configureListeners(loader);
 				loader.load(request);
@@ -78,6 +78,7 @@
 				etm.label = "TM - untitled";
 				(Application.application as RAWI).tabNav.addChild(etm);
 				(Application.application as RAWI).tabNav.selectedChild = etm;
+				etm.svh.baseUri = baseUri;
 			}
 			// manage Edit
 			private function editHdlr():void
@@ -87,6 +88,7 @@
 				var request:URLRequest = new URLRequest(baseUri + "/DownloadXMLServlet?name=" + tmListDG.selectedItem.tmName + ".xml&time=" + new Date().getTime());
 				trace(request.url);
 				var geh:GetEditHdlr = new GetEditHdlr(tmListDG.selectedItem.tmName);
+				geh.baseUri = baseUri;
 				loader.addEventListener(Event.COMPLETE, geh.getEditHdlr);
 				configureListeners(loader);
 				loader.load(request);
