@@ -19,17 +19,17 @@ package RawiComponents.TMComponents
 		public function getEditHdlr(event:Event):void
 		{
 			var loader:URLLoader = URLLoader(event.target);
-			trace(loader.data);
+			//trace(loader.data);
 			// adauga aici object.data
 			if (loader.data.toString().length > 0)
 			{
 				var xmlData:XML = new XML(loader.data.toString());
 				//trace (xmlData);
 				var etm:EditTM = new EditTM();
-				etm.initFromXml(xmlData);
-				etm.label = tmName;
 				(Application.application as RAWI).tabNav.addChild(etm);
 				(Application.application as RAWI).tabNav.selectedChild = etm;
+				etm.initFromXml(xmlData);
+				etm.label = tmName;
 			}
 		}
 	}

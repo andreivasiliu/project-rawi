@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<propsBase xmlns="RawiComponents.TMComponents.*" xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" initialize="init()">
+	<mx:HBox width="100%">
+		<mx:Label text="Name" />
+		<mx:TextInput id="nodeNameTextInput" width="100%"/>
+	</mx:HBox>
+	<mx:HBox width="100%">
+		<mx:Label text="Pattern" />
+		<mx:TextInput id="pattern" width="100%" />
+	</mx:HBox>
+	<mx:Script>
+		<![CDATA[
+			public function init():void
+			{
+				this.nodeName = this.nodeNameTextInput;
+			}
+		]]>
+	</mx:Script>
+</propsBase>
