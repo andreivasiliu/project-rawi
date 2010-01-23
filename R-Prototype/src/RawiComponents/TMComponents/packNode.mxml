@@ -1,18 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PackNodeBase xmlns="RawiComponents.TMComponents.*" xmlns:mx="http://www.adobe.com/2006/mxml" width="100" height="50" initialize="init()">
-	<mx:Label x="10" y="10" text="Label" id="nodeName"/>
+<PackNodeBase xmlns="RawiComponents.TMComponents.*" xmlns:mx="http://www.adobe.com/2006/mxml" initialize="init()" >
+	<mx:Label x="5" y="5" text="{propsContainer.nodeName.text}" id="nodeName" resize="drawBorders()"/>
 	<mx:Script>
 		<![CDATA[
+			public var propsLocalContainer:propsPM;
 			private function init():void
 			{
-				this.graphics.lineStyle(0, 0);
-				this.graphics.beginFill(0xffffff, 1);
-				this.graphics.drawRect(0, 0, 100, 50);
 				this.nodeType = "packNode";
-				this.m_inputCenter = new Point(0, 10);
-				this.m_outputCenter = new Point(10, 10);
+				this.m_inputCenter = new Point(0, 0);
+				this.m_outputCenter = new Point(0, 25);
+				this.propsLocalContainer = new propsPM(); 
+				this.propsContainer = this.propsLocalContainer;
+				this.clipContent = false;
 				trace("init from packNode");
 			}
+			public override function getXmlRepresentation():XML
+			{
+				trace("getXmlRepresentation from packNode");
+				return new XML();
+			}
+			public function drawBorders():void
+			{
+				//this.m_inputCenter = new Point((nodeName.width + 10)/2, 0);
+				//this.m_outputCenter = new Point((nodeName.width + 10)/2, 25);
+				this.nodeName.x = -nodeName.width/2
+				this.graphics.clear();
+				this.graphics.lineStyle(0, 0);
+				this.graphics.beginFill(0xffffff, 1);
+				this.graphics.drawRect(nodeName.x - 5, 0, nodeName.width + 10, 25);
+			}
+			// events to consideer: render, resize, updateComplete
 		]]>
 	</mx:Script>
 </PackNodeBase>

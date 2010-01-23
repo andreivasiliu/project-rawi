@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" >
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" mouseUp="mouseUpHdlr(event)" mouseDown="mouseDownHdlr(event)" mouseMove="mouseMoveHdlr(event)">
 	<mx:Script>
 		<![CDATA[
 			import mx.containers.VBox;
@@ -8,21 +8,35 @@
 			public var nodeType:String;
 			public var inputFromNodes:Dictionary = new Dictionary();
 			public var outputToNodes:Dictionary = new Dictionary();
-			public var propsPanel:Panel;
-			public var parentEcran:Canvas;
-			public var parentNodesMap:Dictionary;
+			public var parentCont:EditTM;
 			protected var m_inputCenter:Point;
 			protected var m_outputCenter:Point;
-			protected var m_propsContainer:VBox;
+			[Bindable]
+			public var propsContainer:propsBase;
 			public function get inputCenter():Point
 			{
-				return parentEcran.globalToLocal(localToGlobal(m_inputCenter))
+				return parentCont.ecran.globalToLocal(localToGlobal(m_inputCenter))
 			}
 			public function get outputCenter():Point
 			{
-				return parentEcran.globalToLocal(localToGlobal(m_outputCenter));
+				return parentCont.ecran.globalToLocal(localToGlobal(m_outputCenter));
 			}
-
+			public virtual function getXmlRepresentation():XML
+			{ return null }
+			private function mouseDownHdlr(event:MouseEvent):void
+			{
+				startDrag();
+				this.parentCont.propertiesPanel.removeAllChildren();
+				this.parentCont.propertiesPanel.addChild(this.propsContainer);
+			}
+			private function mouseUpHdlr(event:MouseEvent):void
+			{
+				stopDrag();
+			}
+			private function mouseMoveHdlr(event:MouseEvent):void
+			{
+				parentCont.reDrawConnections();
+			}
 		]]>
 	</mx:Script>
 

@@ -4,16 +4,55 @@
 	<mx:Button x="89" y="0" label="Validate" width="85" click="validateHdlr()"/>
 	<mx:Button x="182" y="0" label="Close" width="71" click="closeHdlr()"/>
 	<mx:HDividedBox left="3" top="30" right="3" bottom="3">
-		<mx:Canvas id="ecran" x="0" y="0" height="100%" width="100%"/>
-		<mx:Panel layout="absolute" id="propertiesPanel" top="0" right="0" bottom="0" width="30%" title="Properties"/>
+		<mx:Canvas height="100%" width="100%" id="baseEcran">
+			<mx:Canvas id="ecran" x="0" y="0" width="100%" height="100%"/>
+		</mx:Canvas>
+		<mx:Panel layout="absolute" id="propertiesPanel" top="0" right="0" bottom="0" width="30%" height="100%" title="Properties"/>
 	</mx:HDividedBox>
 	<mx:Script>
 		<![CDATA[
 			import mx.core.Application;
 			public var nodesMap:Dictionary = new Dictionary();
+			public namespace tm = "http://www.example.org/TransformationModel";
 			public function initFromXml(data:XML):void
 			{
-				trace(data);
+				// TODO: init from XML
+				use namespace tm;
+				for each (var node:XML in data.transformationGraph.packNode + data.transformationGraph.packTransformerNode)
+				{
+					var gn:PackNodeBase;
+					if (node.localName() == "packNode")
+					{
+						var pn:packNode = new packNode();
+						gn = pn;
+						ecran.addChild(gn);
+						pn.propsContainer.initialize();
+						pn.propsLocalContainer.pattern.text = node.pattern.@regex
+					}
+					if (node.localName() == "packTransformerNode")
+					{
+						var ptn:packTransformerNode = new packTransformerNode();
+						gn = ptn;
+						ecran.addChild(gn);
+						ptn.propsContainer.initialize();
+						ptn.propsLocalContainer.command.text = node.command.@exec;
+					}
+					gn.nid = node.@id;
+					nodesMap[gn.nid] = gn;
+					gn.x = node.@x;
+					gn.y = node.@y;
+					//gn.propsContainer.initialize();
+					//gn.propsContainer.nameInput.text = node.@name + node.@id;
+					gn.parentCont = this;
+					gn.propsContainer.nodeName.text = node.@name;
+					
+					for each (var output:XML in node.output)
+						gn.outputToNodes[output.@node] = output.@node;
+					
+					for each (var input:XML in node.input)
+						gn.inputFromNodes[input.@node] = input.@node;
+				}
+				reDrawConnections();
 			}
 			public function closeHdlr():void
 			{
@@ -25,33 +64,50 @@
 				// TODO: validate schema
 				trace("Validation in construction");
 			}
+			public function reDrawConnections():void
+			{
+				ecran.graphics.clear();
+				ecran.graphics.lineStyle(0);
+				
+				for each (var n:PackNodeBase in nodesMap)
+					for each (var c:String in n.outputToNodes)
+					{
+						var x:int, y:int;
+						x = n.outputCenter.x;
+						y = n.outputCenter.y;
+						ecran.graphics.moveTo(x, y);
+						x = PackNodeBase(nodesMap[c]).inputCenter.x;
+						y = PackNodeBase(nodesMap[c]).inputCenter.y;
+						ecran.graphics.lineTo(x, y);
+					}
+			}
 			public function addNewPN(xx:int, yy:int):void
 			{
-				// TODO: add new packNode
 				trace("addNewPN", xx, yy);
 				var pn:packNode = new packNode();
+				ecran.addChild(pn);
 				pn.x = xx;
 				pn.y = yy;
-				pn.parentEcran = ecran;
-				pn.parentNodesMap = nodesMap;
 				pn.nid = generateUniqueId();
-				pn.propsPanel = propertiesPanel;
+				pn.parentCont = this;
+				pn.propsContainer.initialize();
+				pn.propsContainer.nodeName.text = "new Pack";
 				nodesMap[pn.nid] = pn;
-				ecran.addChild(pn);
+				reDrawConnections();
 			}
 			public function addNewPTN(xx:int, yy:int):void
 			{
-				// TODO: add new packTransformerNode
 				trace("addNewPTN", xx, yy);
-				var pn:packTransformerNode = new packTransformerNode();
-				pn.x = xx;
-				pn.y = yy;
-				pn.parentEcran = ecran;
-				pn.parentNodesMap = nodesMap;
-				pn.nid = generateUniqueId();
-				pn.propsPanel = propertiesPanel;
-				nodesMap[pn.nid] = pn;
-				ecran.addChild(pn);
+				var ptn:packTransformerNode = new packTransformerNode();
+				ecran.addChild(ptn);
+				ptn.x = xx;
+				ptn.y = yy;
+				ptn.parentCont = this;
+				ptn.nid = generateUniqueId();
+				ptn.propsContainer.initialize();
+				ptn.propsContainer.nodeName.text = "new Transformer";
+				nodesMap[ptn.nid] = ptn;
+				reDrawConnections();
 			}
 			public function generateUniqueId():String
 			{
@@ -72,9 +128,9 @@
 			// add new packNode
 			private function stopDrg1(event:MouseEvent):void
 			{
-				var p:Point = ecran.globalToLocal(new Point(event.stageX, event.stageY));
-				if (p.x > 0 && p.y > 0 && p.x < ecran.width && p.y < ecran.height)
-					addNewPN(event.target.x, event.target.y);
+				var p:Point = baseEcran.globalToLocal(new Point(event.stageX, event.stageY));
+				if (p.x > 0 && p.y > 0 && p.x < baseEcran.width && p.y < baseEcran.height)
+					addNewPN(p.x - 20, p.y - 12);
 				stopDrag();
 				event.target.x = 320;
 				event.target.y = 0;
@@ -82,9 +138,9 @@
 			// add new packTransformerNode
 			private function stopDrg2(event:MouseEvent):void
 			{
-				var p:Point = ecran.globalToLocal(new Point(event.stageX, event.stageY));
-				if (p.x > 0 && p.y > 0 && p.x < ecran.width && p.y < ecran.height)
-					addNewPTN(event.target.x, event.target.y);
+				var p:Point = baseEcran.globalToLocal(new Point(event.stageX, event.stageY));
+				if (p.x > 0 && p.y > 0 && p.x < baseEcran.width && p.y < baseEcran.height)
+					addNewPTN(p.x, p.y - 10);
 				stopDrag();
 				event.target.x = 399;
 				event.target.y = 0;
