@@ -5,7 +5,12 @@
 			import mx.controls.TextInput;
 			[Bindable]
 			public var nodeName:TextInput;
+			public var objX:int;
+			public var objY:int;
+			[Bindable]
+			public var ownerOfProps:PackNodeBase;
+			public function showPos(newX:int, newY:int):void
+			{ }
 		]]>
 	</mx:Script>
-
 </mx:VBox>

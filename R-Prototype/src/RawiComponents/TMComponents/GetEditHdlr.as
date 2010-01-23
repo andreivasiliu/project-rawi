@@ -15,6 +15,7 @@ package RawiComponents.TMComponents
 		{
 			this.tmName = tmName;
 		}
+		public var baseUri:String;
 		public var tmName:String = "";
 		public function getEditHdlr(event:Event):void
 		{
@@ -29,7 +30,9 @@ package RawiComponents.TMComponents
 				(Application.application as RAWI).tabNav.addChild(etm);
 				(Application.application as RAWI).tabNav.selectedChild = etm;
 				etm.initFromXml(xmlData);
-				etm.label = tmName;
+				etm.svh.baseUri = baseUri;
+				etm.propsGen.initialize();
+				etm.propsGen.schemaName.text = tmName;
 			}
 		}
 	}

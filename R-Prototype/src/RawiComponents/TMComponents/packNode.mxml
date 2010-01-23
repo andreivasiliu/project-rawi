@@ -3,21 +3,44 @@
 	<mx:Label x="5" y="5" text="{propsContainer.nodeName.text}" id="nodeName" resize="drawBorders()"/>
 	<mx:Script>
 		<![CDATA[
-			public var propsLocalContainer:propsPM;
+			public var propsLocalContainer:propsPN;
 			private function init():void
 			{
 				this.nodeType = "packNode";
 				this.m_inputCenter = new Point(0, 0);
 				this.m_outputCenter = new Point(0, 25);
-				this.propsLocalContainer = new propsPM(); 
+				this.propsLocalContainer = new propsPN(); 
 				this.propsContainer = this.propsLocalContainer;
 				this.clipContent = false;
+				this.propsContainer.ownerOfProps = this;
 				trace("init from packNode");
 			}
-			public override function getXmlRepresentation():XML
+			public override function getXmlRepresentation():XMLNode
 			{
-				trace("getXmlRepresentation from packNode");
-				return new XML();
+				var repr:XMLNode = new XMLNode(XMLNodeType.ELEMENT_NODE, this.nodeType);
+				repr.attributes.id = this.nid;
+				if (this.propsContainer.nodeName.text != "")
+					repr.attributes.name = this.propsContainer.nodeName.text;
+				repr.attributes.x = this.x;
+				repr.attributes.y = this.y;
+				if (this.propsLocalContainer.isSplitter.selected)
+					repr.attributes.isSplitter = true;
+				for each (var ref:String in inputFromNodes)
+				{
+					var tempNode:XMLNode = new XMLNode(XMLNodeType.ELEMENT_NODE, "input");
+					tempNode.attributes.node = ref;
+					repr.appendChild(tempNode);
+				}
+				for each (var reff:String in outputToNodes)
+				{
+					var tempNode2:XMLNode = new XMLNode(XMLNodeType.ELEMENT_NODE, "output");
+					tempNode2.attributes.node = reff;
+					repr.appendChild(tempNode2);
+				}
+				var specific:XMLNode = new XMLNode(XMLNodeType.ELEMENT_NODE, "pattern");
+				specific.attributes.regex = this.propsLocalContainer.pattern.text;
+				repr.appendChild(specific);
+				return repr;
 			}
 			public function drawBorders():void
 			{
@@ -29,7 +52,6 @@
 				this.graphics.beginFill(0xffffff, 1);
 				this.graphics.drawRect(nodeName.x - 5, 0, nodeName.width + 10, 25);
 			}
-			// events to consideer: render, resize, updateComplete
 		]]>
 	</mx:Script>
 </PackNodeBase>
