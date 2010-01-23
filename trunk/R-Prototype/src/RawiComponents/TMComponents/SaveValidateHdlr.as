@@ -5,11 +5,13 @@ package RawiComponents.TMComponents
 	
 	import mx.controls.Alert;
 	import mx.core.Application;
+	import mx.events.CloseEvent;
 	
 	public class SaveValidateHdlr extends Object
 	{
 		private var m_editor:EditTM;
 		public var baseUri:String;
+		public var savedVersion:String = "";
 		public function SaveValidateHdlr(editor:EditTM)
 		{
 			m_editor = editor;
@@ -49,8 +51,16 @@ package RawiComponents.TMComponents
 		}
 		public function Close():void
 		{
-			// TODO: any checkes here? see if something needs saving
-			(Application.application as RAWI).tabNav.removeChild(m_editor);
+			// if the current version of the schema is different from the last one saved - ask for permision to close
+			if (this.m_editor.getSchemaXmlRepresentation().toString() != savedVersion)
+				Alert.show("You have unsaved modifications, close anyway?", "", Alert.YES | Alert.CANCEL, null, alertCloseHdlr);
+			else
+				(Application.application as RAWI).tabNav.removeChild(m_editor);
+		}
+		private function alertCloseHdlr(event:CloseEvent):void
+		{
+			if (event.detail == Alert.YES)
+				(Application.application as RAWI).tabNav.removeChild(m_editor);
 		}
 		private function configureListeners(dispatcher:IEventDispatcher):void
 		{
@@ -85,7 +95,10 @@ package RawiComponents.TMComponents
 			{
 				var xmlData:XML = new XML(loader.data.toString());
 				if (xmlData.elements("xml-success"))
+				{
 					Alert.show(xmlData.elements("xml-message"), "Saving " + xmlData.elements("xml-name"));
+					savedVersion = m_editor.getSchemaXmlRepresentation().toString();
+				}
 				else
 					Alert.show(xmlData.elements("xml-message"), "Error saving" + xmlData.elements("xml-name"));
 			}

@@ -63,6 +63,7 @@
 						gn.inputFromNodes[input.@node] = input.@node;
 				}
 				this.propsGen.schemaDescription.text = data.description;
+				svh.savedVersion = getSchemaXmlRepresentation().toString();
 				reDrawConnections();
 			}
 			public function getSchemaXmlRepresentation():XML
