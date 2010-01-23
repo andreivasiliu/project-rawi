@@ -9,8 +9,8 @@
 	</mx:DataGrid>
 	<mx:Button x="10" y="0" label="Refresh" click="refreshHdlr()"/>
 	<mx:Button x="89" y="0" label="New" width="71" click="newHdlr()"/>
-	<mx:Button x="168" y="0" label="Edit" width="71" click="editHdlr()"/>
-	<mx:Button x="247" y="0" label="Delete" width="71" click="deleteHdlr()"/>
+	<mx:Button x="168" y="0" label="Edit" width="71" click="editHdlr()" id="editBtn" enabled="false"/>
+	<mx:Button x="247" y="0" label="Delete" width="71" click="deleteHdlr()" id="deleteBtn" enabled="false"/>
 	<mx:Script>
 		<![CDATA[
 			import RawiComponents.TMComponents.GetEditHdlr;
@@ -45,6 +45,8 @@
 			{
 				var loader:URLLoader = URLLoader(event.target);
 				tmList = new ArrayCollection();
+				this.editBtn.enabled = false;
+				this.deleteBtn.enabled = false;
 				trace(loader.data);
 				// adauga aici object.data
 				if (loader.data.toString().length > 0)
@@ -56,6 +58,8 @@
 						var tmn:String = child;
 						tmn = tmn.substr(0, tmn.length-4);
 						tmList.addItem( {tmName:tmn, col2:"empty", col3:"empty" } );
+						this.editBtn.enabled = true;
+						this.deleteBtn.enabled = true;
 					}
 					tmListDG.selectedIndex = 0;
 	        	}
@@ -63,35 +67,42 @@
 			// manage Delete
 			private function deleteHdlr():void
 			{
-				var loader:URLLoader = new URLLoader();
-				var request:URLRequest = new URLRequest(baseUri + "/ValidateXMLServlet?delete=" + tmListDG.selectedItem.tmName + ".xml&time=" + new Date().getTime());
-				loader.addEventListener(Event.COMPLETE, trace);
-				configureListeners(loader);
-				loader.load(request);
-				// request the new list
-				refreshHdlr();
+				if (tmListDG.selectedItem != null)
+				{
+					var loader:URLLoader = new URLLoader();
+					var request:URLRequest = new URLRequest(baseUri + "/ValidateXMLServlet?delete=" + tmListDG.selectedItem.tmName + ".xml&time=" + new Date().getTime());
+					loader.addEventListener(Event.COMPLETE, trace);
+					configureListeners(loader);
+					loader.load(request);
+					// request the new list
+					refreshHdlr();
+				}
 			}
 			// manage New
 			private function newHdlr():void
 			{
 				var etm:EditTM = new EditTM();
-				etm.label = "TM - untitled";
 				(Application.application as RAWI).tabNav.addChild(etm);
 				(Application.application as RAWI).tabNav.selectedChild = etm;
 				etm.svh.baseUri = baseUri;
+				etm.propsGen.schemaName.text = "untitled";
+				etm.svh.savedVersion = etm.getSchemaXmlRepresentation().toString();
 			}
 			// manage Edit
 			private function editHdlr():void
 			{
-				var loader:URLLoader = new URLLoader();
-				// TODO: find out how to cancel the cache - by then add the time parameter at the end 
-				var request:URLRequest = new URLRequest(baseUri + "/DownloadXMLServlet?name=" + tmListDG.selectedItem.tmName + ".xml&time=" + new Date().getTime());
-				trace(request.url);
-				var geh:GetEditHdlr = new GetEditHdlr(tmListDG.selectedItem.tmName);
-				geh.baseUri = baseUri;
-				loader.addEventListener(Event.COMPLETE, geh.getEditHdlr);
-				configureListeners(loader);
-				loader.load(request);
+				if (tmListDG.selectedItem != null)
+				{
+					var loader:URLLoader = new URLLoader();
+					// TODO: find out how to cancel the cache - by then add the time parameter at the end 
+					var request:URLRequest = new URLRequest(baseUri + "/DownloadXMLServlet?name=" + tmListDG.selectedItem.tmName + ".xml&time=" + new Date().getTime());
+					trace(request.url);
+					var geh:GetEditHdlr = new GetEditHdlr(tmListDG.selectedItem.tmName);
+					geh.baseUri = baseUri;
+					loader.addEventListener(Event.COMPLETE, geh.getEditHdlr);
+					configureListeners(loader);
+					loader.load(request);
+				}
 			}
 		]]>
 	</mx:Script>
