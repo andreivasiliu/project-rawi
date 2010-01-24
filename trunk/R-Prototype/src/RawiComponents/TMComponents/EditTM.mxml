@@ -7,7 +7,7 @@
 		<mx:Canvas height="100%" width="100%" id="baseEcran" clipContent="true" mouseDown="activateGeneralProps()">
 			<mx:Canvas id="ecran" x="0" y="0"/>
 		</mx:Canvas>
-		<mx:Panel layout="absolute" id="propertiesPanel" top="0" right="0" bottom="0" width="30%" height="100%" title="Properties"/>
+		<mx:Panel layout="absolute" id="propertiesPanel" top="0" right="0" bottom="0" width="30%" height="100%" title="Properties" minWidth="200"/>
 	</mx:HDividedBox>
 	<mx:Script>
 		<![CDATA[
@@ -57,10 +57,10 @@
 					gn.propsContainer.nodeName.text = node.@name;
 					
 					for each (var output:XML in node.output)
-						gn.outputToNodes[output.@node] = output.@node;
+						gn.outputToNodes[int(output.@node)] = int(output.@node);
 					
 					for each (var input:XML in node.input)
-						gn.inputFromNodes[input.@node] = input.@node;
+						gn.inputFromNodes[int(input.@node)] = int(input.@node);
 				}
 				this.propsGen.schemaDescription.text = data.description;
 				svh.savedVersion = getSchemaXmlRepresentation().toString();
@@ -138,13 +138,13 @@
 				reDrawConnections();
 				ptn.activateProps();
 			}
-			public function generateUniqueId():String
+			public function generateUniqueId():int
 			{
 				// find the first id that is free in the given dictionary
 				var id:int = 1;
 				while (nodesMap[id.toString()] != undefined)
 					id++;
-				return id.toString();
+				return id;
 			}
 			public function activateGeneralProps():void
 			{
@@ -153,6 +153,7 @@
 			}
 		]]>
 	</mx:Script>
+	<!-- TODO: modify the buttons to look like the actual nodes -->
 	<mx:Button x="320" y="0" label="newPN" width="71" />
 	<mx:Button x="399" y="0" label="newPTN" />
 	<mx:Button x="320" y="0" label="newPN" width="71" mouseDown="event.target.startDrag()" mouseUp="stopDrg1(event)" mouseOut="mouseOutHdlr1(event)" />
@@ -163,8 +164,12 @@
 			private function stopDrg1(event:MouseEvent):void
 			{
 				var p:Point = baseEcran.globalToLocal(new Point(event.stageX, event.stageY));
+				// don't drop the button outside the baseEcran, but draw it inside the ecran Canvas
 				if (p.x > 0 && p.y > 0 && p.x < baseEcran.width && p.y < baseEcran.height)
-					addNewPN(p.x - 20, p.y - 12);
+				{
+					p = ecran.globalToLocal(new Point(event.stageX, event.stageY));
+					addNewPN(p.x, p.y - 12);
+				}
 				stopDrag();
 				event.target.x = 320;
 				event.target.y = 0;
@@ -173,8 +178,12 @@
 			private function stopDrg2(event:MouseEvent):void
 			{
 				var p:Point = baseEcran.globalToLocal(new Point(event.stageX, event.stageY));
+				// don't drop the button outside the baseEcran, but draw it inside the ecran Canvas
 				if (p.x > 0 && p.y > 0 && p.x < baseEcran.width && p.y < baseEcran.height)
+				{
+					p = ecran.globalToLocal(new Point(event.stageX, event.stageY));
 					addNewPTN(p.x, p.y - 10);
+				}
 				stopDrag();
 				event.target.x = 399;
 				event.target.y = 0;
