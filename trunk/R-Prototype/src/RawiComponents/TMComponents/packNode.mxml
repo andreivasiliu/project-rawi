@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackNodeBase xmlns="RawiComponents.TMComponents.*" xmlns:mx="http://www.adobe.com/2006/mxml" initialize="init()" >
-	<mx:Label x="5" y="5" text="{propsContainer.nodeName.text}" id="nodeName" resize="drawBorders()"/>
+	<mx:Label x="5" y="5" text="{propsContainer.nodeName.text}" id="nodeName" resize="drawObject()"/>
 	<mx:Script>
 		<![CDATA[
 			public var propsLocalContainer:propsPN;
 			private function init():void
 			{
 				this.nodeType = "packNode";
-				this.m_inputCenter = new Point(0, 0);
-				this.m_outputCenter = new Point(0, 25);
+				this.m_inputCenter = new Point(0, 2);
+				this.m_outputCenter = new Point(0, 23);
 				this.propsLocalContainer = new propsPN(); 
 				this.propsContainer = this.propsLocalContainer;
 				this.clipContent = false;
@@ -42,15 +42,19 @@
 				repr.appendChild(specific);
 				return repr;
 			}
-			public function drawBorders():void
+			public override function drawObject():void
 			{
-				//this.m_inputCenter = new Point((nodeName.width + 10)/2, 0);
-				//this.m_outputCenter = new Point((nodeName.width + 10)/2, 25);
 				this.nodeName.x = -nodeName.width/2
 				this.graphics.clear();
+				if (this.parentCont.activeNode == this)
+				{
+					this.graphics.lineStyle(0, 0xff0000);
+					this.graphics.beginFill(0x0000ff, 1);
+					this.graphics.drawRect(nodeName.x - 5, 0, nodeName.width + 10, 25);
+				}
 				this.graphics.lineStyle(0, 0);
 				this.graphics.beginFill(0xffffff, 1);
-				this.graphics.drawRect(nodeName.x - 5, 0, nodeName.width + 10, 25);
+				this.graphics.drawRect(nodeName.x - 3, 2, nodeName.width + 6, 21);
 			}
 		]]>
 	</mx:Script>

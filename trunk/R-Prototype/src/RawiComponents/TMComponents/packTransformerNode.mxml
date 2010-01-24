@@ -6,12 +6,9 @@
 			public var propsLocalContainer:propsPTN;
 			private function init():void
 			{
-				this.graphics.lineStyle(0, 0);
-				this.graphics.beginFill(0x0000ff, 1);
-				this.graphics.drawCircle(0, 10, 10);
 				this.nodeType = "packTransformerNode";
-				this.m_inputCenter = new Point(0, 0);
-				this.m_outputCenter = new Point(0, 10);
+				this.m_inputCenter = new Point(0, 2);
+				this.m_outputCenter = new Point(0, 8);
 				this.propsLocalContainer = new propsPTN(); 
 				this.propsContainer = this.propsLocalContainer;
 				this.clipContent = false;
@@ -44,6 +41,20 @@
 				specific.attributes.exec = this.propsLocalContainer.command.text;
 				repr.appendChild(specific);
 				return repr;
+			}
+			public override function drawObject():void
+			{
+				this.graphics.clear();
+				if (this.parentCont.activeNode == this)
+				{
+					this.graphics.lineStyle(0, 0xff0000);
+					this.graphics.beginFill(0xff00ff, 1);
+					this.graphics.drawCircle(0, 10, 10);
+				}
+				this.graphics.lineStyle(0, 0);
+				this.graphics.beginFill(0x0000ff, 1);
+				this.graphics.drawCircle(0, 10, 9);
+
 			}
 		]]>
 	</mx:Script>
