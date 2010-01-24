@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" mouseUp="mouseUpHdlr(event)" mouseDown="mouseDownHdlr(event)" mouseMove="mouseMoveHdlr(event)">
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+	mouseUp="mouseUpHdlr(event)" mouseDown="mouseDownHdlr(event)" mouseMove="mouseMoveHdlr(event)"
+	mouseOver="mouseOverHdlr(event)" mouseOut="mouseOutHdlr(event)" keyDown="keyDownHdlr(event)" keyUp="keyUpHdlr(event)" >
 	<mx:Script>
 		<![CDATA[
 			import mx.containers.VBox;
@@ -12,6 +14,7 @@
 			protected var m_inputCenter:Point;
 			protected var m_outputCenter:Point;
 			private var dragging:Boolean = false;
+			public var overMe:Boolean = false;
 			[Bindable]
 			public var propsContainer:propsBase;
 			public function get inputCenter():Point
@@ -25,63 +28,24 @@
 			public function getXmlRepresentation():XMLNode
 			{ return null }
 			// update the propsContainer
-			public function activateProps():void
+			public function setAsActiveNode():void
 			{
 				this.parentCont.propertiesPanel.removeAllChildren();
 				this.parentCont.propertiesPanel.addChild(this.propsContainer);
+				parentCont.activeNode = this;
+				parentCont.reDrawObjects();
 			}
-			private function mouseDownHdlr(event:MouseEvent):void
+			public function drawObject():void {}
+			//-----------------------de aici -------------------------------se incepe ------------------------ cu editarea -----------------------------------
+			private function mouseOverHdlr(event:MouseEvent):void
 			{
-				event.stopImmediatePropagation();
-				if (event.shiftKey || event.ctrlKey || event.altKey) // set the start node for the operation
-					this.parentCont.activeNode = this;
-				else									 // start dragging
-				{
-					startDrag();
-					dragging = true;
-					activateProps();
-				}
+				overMe = true;
+				this.parentCont.activeOverNode = this;
 			}
-			private function mouseUpHdlr(event:MouseEvent):void
+			private function mouseOutHdlr(event:MouseEvent):void
 			{
-				if (dragging)		// drag the node
-				{
-					stopDrag();
-					dragging = false;
-				}
-				if (event.shiftKey)		// delete the node
-				{
-					if (this.parentCont.activeNode == this)
-					{
-						// remove references
-						for each (var ref:int in this.inputFromNodes)
-							delete PackNodeBase(this.parentCont.nodesMap[ref]).outputToNodes[this.nid];
-						for each (var ref2:int in this.outputToNodes)
-							delete PackNodeBase(this.parentCont.nodesMap[ref2]).inputFromNodes[this.nid];
-						// remove from stage
-						delete this.parentCont.nodesMap[this.nid];
-						this.parentCont.reDrawConnections();
-						this.parentCont.ecran.removeChild(this);
-					}
-				}
-				else if (event.ctrlKey) // add new connection
-				{
-					if (this.parentCont.activeNode != null && this.parentCont.activeNode != this)
-					{
-						this.parentCont.activeNode.outputToNodes[this.nid] = this.nid;
-						this.inputFromNodes[this.parentCont.activeNode.nid] = this.parentCont.activeNode.nid;
-						this.parentCont.reDrawConnections();
-					}
-				}
-				else if (event.altKey)	// delete the connection
-				{
-					if (this.parentCont.activeNode != null && this.parentCont.activeNode != this)
-					{
-						delete this.parentCont.activeNode.outputToNodes[this.nid];
-						delete this.inputFromNodes[this.parentCont.activeNode.nid];
-						this.parentCont.reDrawConnections();
-					}
-				}
+				overMe = false;
+				this.parentCont.activeOverNode = null;
 			}
 			private function mouseMoveHdlr(event:MouseEvent):void
 			{
@@ -89,6 +53,108 @@
 				{
 					parentCont.reDrawConnections();
 					this.propsContainer.showPos(this.x, this.y);
+				}
+				else if (this.parentCont.stateEditor.state == EditorState.NEW_CONN)
+				{
+					this.parentCont.reDrawTempConnection();
+				}
+				else if (this.parentCont.stateEditor.state == EditorState.DEL_CONN)
+				{
+					this.parentCont.reDrawTempConnection();
+				}
+			}
+			private function keyDownHdlr(event:KeyboardEvent):void
+			{
+				// delete the node
+				if (event.keyCode == Keyboard.DELETE)
+				{
+					// remove references
+					for each (var ref:int in this.inputFromNodes)
+						delete PackNodeBase(this.parentCont.nodesMap[ref]).outputToNodes[this.nid];
+					for each (var ref2:int in this.outputToNodes)
+						delete PackNodeBase(this.parentCont.nodesMap[ref2]).inputFromNodes[this.nid];
+					// remove from stage
+					delete this.parentCont.nodesMap[this.nid];
+					this.parentCont.activeNode = null;
+					this.parentCont.reDrawConnections();
+					this.parentCont.ecran.removeChild(this);
+				}
+				else if (event.keyCode == Keyboard.CONTROL)
+				{
+					this.parentCont.stateEditor.state = EditorState.NEW_CONN;
+					this.parentCont.reDrawTempConnection();
+				}
+				else if (event.keyCode == Keyboard.SHIFT)
+				{
+					this.parentCont.stateEditor.state = EditorState.DEL_CONN;
+					this.parentCont.reDrawTempConnection();
+				}
+				// stop Dragging
+				if (dragging)
+				{
+					stopDrag();
+					dragging = false;
+				}
+			}
+			private function keyUpHdlr(event:KeyboardEvent):void
+			{
+				this.parentCont.stateEditor.state = EditorState.NOTHING;
+				this.parentCont.reDrawTempConnection();
+			}
+			private function mouseDownHdlr(event:MouseEvent):void
+			{
+				event.stopImmediatePropagation();
+				if (this.parentCont.stateEditor.state == EditorState.NOTHING)		// Drag the node
+				{
+					startDrag();
+					dragging = true;
+					setAsActiveNode();
+				}
+				else if (this.parentCont.stateEditor.state == EditorState.NEW_CONN)
+				{
+					addNewConnection();
+					this.parentCont.stateEditor.state = EditorState.NOTHING;
+				}
+				else if (this.parentCont.stateEditor.state == EditorState.DEL_CONN)
+				{
+					deleteConnection();
+					this.parentCont.stateEditor.state = EditorState.NOTHING;
+				}
+			}
+			private function mouseUpHdlr(event:MouseEvent):void
+			{
+				if (dragging)
+				{
+					stopDrag();
+					dragging = false;
+				}
+				else if (this.parentCont.stateEditor.state == EditorState.NEW_CONN)
+				{
+					addNewConnection();
+					this.parentCont.stateEditor.state = EditorState.NOTHING;
+				}
+				else if (this.parentCont.stateEditor.state == EditorState.DEL_CONN)
+				{
+					deleteConnection();
+					this.parentCont.stateEditor.state = EditorState.NOTHING;
+				}
+			}
+			private function addNewConnection():void
+			{
+				if (this.parentCont.activeNode != null && this.parentCont.activeNode != this)
+				{
+					this.parentCont.activeNode.outputToNodes[this.nid] = this.nid;
+					this.inputFromNodes[this.parentCont.activeNode.nid] = this.parentCont.activeNode.nid;
+					this.parentCont.reDrawConnections();
+				}
+			}
+			private function deleteConnection():void
+			{
+				if (this.parentCont.activeNode != null && this.parentCont.activeNode != this)
+				{
+					delete this.parentCont.activeNode.outputToNodes[this.nid];
+					delete this.inputFromNodes[this.parentCont.activeNode.nid];
+					this.parentCont.reDrawConnections();
 				}
 			}
 		]]>
