@@ -4,7 +4,7 @@
 		<![CDATA[
 			import mx.containers.VBox;
 			import mx.containers.Panel;
-			public var nid:String;
+			public var nid:int;
 			public var nodeType:String;
 			public var inputFromNodes:Dictionary = new Dictionary();
 			public var outputToNodes:Dictionary = new Dictionary();
@@ -54,9 +54,9 @@
 					if (this.parentCont.activeNode == this)
 					{
 						// remove references
-						for each (var ref:String in this.inputFromNodes)
+						for each (var ref:int in this.inputFromNodes)
 							delete PackNodeBase(this.parentCont.nodesMap[ref]).outputToNodes[this.nid];
-						for each (var ref2:String in this.outputToNodes)
+						for each (var ref2:int in this.outputToNodes)
 							delete PackNodeBase(this.parentCont.nodesMap[ref2]).inputFromNodes[this.nid];
 						// remove from stage
 						delete this.parentCont.nodesMap[this.nid];
