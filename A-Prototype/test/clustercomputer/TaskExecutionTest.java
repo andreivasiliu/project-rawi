@@ -36,8 +36,8 @@ public class TaskExecutionTest {
             ClusterComputerInterface clustercomputer = client.getInterface();
 
             ArrayList<FileHandle> fhl = new ArrayList<FileHandle>();
-            fhl.add(new FileHandle("mycp.exe"));
-            fhl.add(new FileHandle("DecorateMessageInterface.java"));
+            fhl.add(new FileHandle("http://students.info.uaic.ro/~andrei.arusoaie/rawi_workspace/", null, "mycp.exe"));
+            fhl.add(new FileHandle("http://students.info.uaic.ro/~andrei.arusoaie/rawi_workspace/", null, "DecorateMessageInterface.java"));
             Task task1 = new Task("666", fhl, command, uploadURI, downloadURI, mainServerAddress);
 
             clustercomputer.execute(task1);

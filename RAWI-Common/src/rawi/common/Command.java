@@ -46,4 +46,12 @@ public class Command implements Serializable
         return commandArray;
     }
 
+    @Override
+    public String toString()
+    {
+        String command = commandArray[0];
+        for (int i = 1; i < commandArray.length; i++)
+            command += " " + commandArray[i];
+        return command;
+    }
 }

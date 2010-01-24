@@ -1,6 +1,7 @@
 package clustercomputer;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -8,6 +9,7 @@ import rawi.common.Task;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -289,18 +291,31 @@ public class ClusterTask
     {
         //Execution
         File file = new File("task" + task.getId()).getAbsoluteFile();
-        String[] execString = task.getCommand().getExecString(file.getAbsolutePath());
-        System.out.println("Executing: ");
+//        String[] execString = task.getCommand().getExecString(file.getAbsolutePath());
+
+        createLocalBatch(file.getAbsolutePath(), task.getCommand().toString());
+
+        /*        System.out.println("Executing: ");
         for (int i = 0; i < execString.length; i++)
             System.out.print(execString[i] + " ");
         System.out.println();
+*/
         
-        Process p = Runtime.getRuntime().exec(execString, null, file);
+        Process p = Runtime.getRuntime().exec(file.getAbsolutePath() + "/" +"myBatch.bat", null, file);
         BufferedReader stdout = new BufferedReader(new InputStreamReader(p.getInputStream()));
         String line;
         while ((line = stdout.readLine()) != null)
             System.out.println("stdout: " + line);
         p.waitFor();
+    }
+
+
+    public void createLocalBatch(String path, String command) throws IOException
+    {
+        FileWriter f = new FileWriter(path + "/" + "myBatch.bat");
+        BufferedWriter bw = new BufferedWriter(f);
+        bw.write(command);
+        bw.close();
     }
 
     //Unused
@@ -339,5 +354,4 @@ public class ClusterTask
             Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
 }
