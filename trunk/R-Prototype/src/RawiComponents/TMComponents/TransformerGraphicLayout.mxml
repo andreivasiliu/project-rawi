@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100" height="25"  initialize="drawObject()">
+	<mx:Label x="10" y="3" text="Transformer" id="nodeName"/>
+	<mx:Script>
+		<![CDATA[
+			public function drawObject():void
+			{
+				this.graphics.clear();
+				
+				var fillType:String = GradientType.RADIAL;
+				var colors:Array = [0xC0C9CF, 0xffffff];
+				var alphas:Array = [1, 0.7];
+				var ratios:Array = [0x88, 0xFF];
+				var matr:Matrix = new Matrix();
+				matr.createGradientBox(20, 20, 0, -10, 0);
+				var spreadMethod:String = SpreadMethod.PAD;
+
+				// Draw the object
+				this.graphics.lineStyle(0, 0xffffff, 1);
+
+				matr.createGradientBox(20, 20, 0, -10, 0);
+				this.graphics.beginGradientFill(fillType, colors, alphas, ratios, matr, spreadMethod);
+				this.graphics.drawCircle(0, 10, 10);
+				this.graphics.endFill();
+				
+				this.graphics.beginFill(0, 0);
+				this.graphics.lineStyle(0, 0, 0);
+				this.graphics.drawRect(-10, 0, 100, 20);
+				this.graphics.endFill();
+			}
+		]]>
+	</mx:Script>
+</mx:Canvas>

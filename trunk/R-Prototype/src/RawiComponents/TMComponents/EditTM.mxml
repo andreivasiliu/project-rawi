@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" initialize="init()" label="{'TM - ' + propsGen.schemaName.text}">
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" initialize="init()" label="{'TM - ' + propsGen.schemaName.text}" xmlns:TMComponents="RawiComponents.TMComponents.*">
 	<mx:Button x="10" y="0" label="Save" width="71" click="svh.Save()"/>
 	<mx:Button x="89" y="0" label="Validate" width="85" click="svh.Validate()"/>
 	<mx:Button x="182" y="0" label="Close" width="71" click="svh.Close()"/>
@@ -69,6 +69,7 @@
 			}
 			public function reDrawTempConnection():void
 			{
+				ecranGlass.mouseEnabled = false;	// disable mouse events for the ecranGlass
 				ecranGlass.graphics.clear();
 				ecranGlass.graphics.lineStyle(0);
 				if (activeNode != null)
@@ -78,16 +79,10 @@
 						var p:Point = new Point();
 						p.x = activeNode.outputCenter.x;
 						p.y = activeNode.outputCenter.y;
-						/*
-						glassEcran is above ecran
-						- if you draw the line in glassEcran mouse events are
-						forwarded to ecran - PackNodeBase are invisible
-						- so do not draw under the mouse
-						- keep the pixels near the mouseXY pointer clear 
-						*/
 						ecranGlass.graphics.moveTo(p.x, p.y);
-						p.x = p.x < ecranGlass.mouseX ? ecranGlass.mouseX - 1 : ecranGlass.mouseX + 1;
-						p.y = p.x < ecranGlass.mouseY ? ecranGlass.mouseY - 1 : ecranGlass.mouseY + 1;
+						
+						p.x = ecranGlass.mouseX;
+						p.y = ecranGlass.mouseY;
 						ecranGlass.graphics.lineTo(p.x, p.y);
 					}
 					else if (this.stateEditor.state == EditorState.DEL_CONN)
@@ -118,7 +113,7 @@
 							}
 					}
 				}
-			}			
+			}
 		]]>
 	</mx:Script>
 		
@@ -253,8 +248,7 @@
 					if (nd.isSplitter)
 					{
 						marked = new Dictionary();
-						for each (var child:int in nd.outputToNodes)
-							DFS(nodesMap[child]);
+						DFS(nd);
 					}
 				}
 				reDrawObjects();
@@ -271,11 +265,15 @@
 			}
 		]]>
 	</mx:Script>
-	<!-- TODO: modify the buttons to look like the actual nodes -->
+	<!-- TODO: modify the buttons to look like the actual nodes
 	<mx:Button x="320" y="0" label="newPN" width="71" />
 	<mx:Button x="399" y="0" label="newPTN" />
 	<mx:Button x="320" y="0" label="newPN" width="71" mouseDown="event.target.startDrag()" mouseUp="stopDrg1(event)" mouseOut="mouseOutHdlr1(event)" />
-	<mx:Button x="399" y="0" label="newPTN" mouseDown="event.target.startDrag()" mouseUp="stopDrg2(event)" mouseOut="mouseOutHdlr2(event)"/>
+	<mx:Button x="399" y="0" label="newPTN" mouseDown="event.target.startDrag()" mouseUp="stopDrg2(event)" mouseOut="mouseOutHdlr2(event)"/> -->
+	<TMComponents:PackGraphicLayout x="320" y="0" />
+	<TMComponents:TransformerGraphicLayout x="380" y="0" />
+	<TMComponents:PackGraphicLayout id="dummy1" x="320" y="0" mouseDown="dummy1.startDrag()" mouseUp="stopDrg1(event)" mouseOut="mouseOutHdlr1(event)" />
+	<TMComponents:TransformerGraphicLayout id="dummy2" x="380" y="0" mouseDown="{dummy2.startDrag(); trace('TGL', dummy2.width, dummy2.height)}" mouseUp="stopDrg2(event)" mouseOut="mouseOutHdlr2(event)"/>
 	<mx:Script>
 		<![CDATA[
 			// add new packNode
@@ -289,8 +287,8 @@
 					addNewPN(p.x, p.y - 12);
 				}
 				stopDrag();
-				event.target.x = 320;
-				event.target.y = 0;
+				dummy1.x = 320;
+				dummy1.y = 0;
 			}
 			// add new packTransformerNode
 			private function stopDrg2(event:MouseEvent):void
@@ -303,20 +301,20 @@
 					addNewPTN(p.x, p.y - 10);
 				}
 				stopDrag();
-				event.target.x = 399;
-				event.target.y = 0;
+				dummy2.x = 380;
+				dummy2.y = 0;
 			}
 			private function mouseOutHdlr1(event:MouseEvent):void
 			{
 				stopDrag();
-				event.target.x = 320;
-				event.target.y = 0;
+				dummy1.x = 320;
+				dummy1.y = 0;
 			}
 			private function mouseOutHdlr2(event:MouseEvent):void
 			{
 				stopDrag();
-				event.target.x = 399;
-				event.target.y = 0;
+				dummy2.x = 380;
+				dummy2.y = 0;
 			}
 		]]>
 	</mx:Script>
