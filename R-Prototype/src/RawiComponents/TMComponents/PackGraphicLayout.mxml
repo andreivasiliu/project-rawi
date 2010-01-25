@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="50" height="20" initialize="drawObject()">
+	<mx:Label x="2" y="2" text="  Pack " id="nodeName" resize="drawObject()"/>
+	<mx:Script>
+		<![CDATA[
+			private var myHeight:int = 22;
+			public function drawObject():void
+			{
+				this.clipContent = false;
+				this.nodeName.x = -nodeName.width/2
+				this.graphics.clear();
+				
+				var fillType:String = GradientType.LINEAR;
+				var colors:Array = [0xC0C9CF, 0xffffff];
+				var alphas:Array = [1, 1];
+				var ratios:Array = [0x00, 0xFF];
+				var matr:Matrix = new Matrix();
+				matr.createGradientBox(nodeName.width + 10, 25, Math.PI/2, 0, 0);
+				var spreadMethod:String = SpreadMethod.PAD;
+				// Draw shadow
+				this.graphics.lineStyle(0, 0xcccccc, 0.8, false);
+				this.graphics.beginFill(0xcccccc, 0.8);
+				this.graphics.drawRoundRect(nodeName.x - 3, 2, nodeName.width + 10, myHeight, myHeight, myHeight);
+				this.graphics.endFill();
+
+				// Draw the object
+				//colors = [0xffffff, 0xC0C9CF];
+				this.graphics.lineStyle(0, 0xffffff, 1, true);
+				this.graphics.beginGradientFill(fillType, colors, alphas, ratios, matr, spreadMethod);
+				this.graphics.drawRoundRect(nodeName.x - 5, 0, nodeName.width + 10, myHeight, myHeight, myHeight);
+				this.graphics.endFill();
+			}
+		]]>
+	</mx:Script>
+</mx:Canvas>

@@ -56,14 +56,20 @@
 				matr.createGradientBox(nodeName.width + 10, 25, Math.PI/2, 0, 0);
 				var spreadMethod:String = SpreadMethod.PAD;
 				// Draw shadow
-				this.graphics.lineStyle(0, 0xffffff, 1, true);
+				this.graphics.lineStyle(0, 0xcccccc, 0.8, false);
 				this.graphics.beginFill(0xcccccc, 0.8);
 				if (isMultiNode)
 				{
+					this.graphics.beginFill(0xcccccc, 0.8);
 					this.graphics.drawRoundRect(nodeName.x - 3 + 10, 2 - 10, nodeName.width + 10, myHeight, myHeight, myHeight);
+					this.graphics.endFill();
+					this.graphics.beginFill(0xcccccc, 0.8);
 					this.graphics.drawRoundRect(nodeName.x - 3 + 5, 2 - 5, nodeName.width + 10, myHeight, myHeight, myHeight);
+					this.graphics.endFill();
 				}
+				this.graphics.beginFill(0xcccccc, 0.8);
 				this.graphics.drawRoundRect(nodeName.x - 3, 2, nodeName.width + 10, myHeight, myHeight, myHeight);
+				this.graphics.endFill();
 
 				// Draw the object
 				if (this.parentCont.activeNode == this)
@@ -72,6 +78,7 @@
 					this.graphics.lineStyle(0, 0xffffff, 1, true);
 				if (isMultiNode)
 				{
+					//colors = [0xC0C9CF, 0xffffff];
 					this.graphics.beginGradientFill(fillType, colors, alphas, ratios, matr, spreadMethod);
 					this.graphics.drawRoundRect(nodeName.x - 5 + 10, 0 - 10, nodeName.width + 10, myHeight, myHeight, myHeight);
 					this.graphics.endFill();
@@ -80,6 +87,7 @@
 					this.graphics.drawRoundRect(nodeName.x - 5 + 5, 0 - 5, nodeName.width + 10, myHeight, myHeight, myHeight);
 					this.graphics.endFill();
 				}
+				//colors = [0xffffff, 0xC0C9CF];
 				this.graphics.beginGradientFill(fillType, colors, alphas, ratios, matr, spreadMethod);
 				this.graphics.drawRoundRect(nodeName.x - 5, 0, nodeName.width + 10, myHeight, myHeight, myHeight);
 				this.graphics.endFill();
