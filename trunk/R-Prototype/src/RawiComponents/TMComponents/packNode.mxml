@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackNodeBase xmlns="RawiComponents.TMComponents.*" xmlns:mx="http://www.adobe.com/2006/mxml" initialize="init()" >
-	<mx:Label x="5" y="5" text="{propsContainer.nodeName.text}" id="nodeName" resize="drawObject()"/>
+	<mx:Label x="2" y="2" text="{propsContainer.nodeName.text}" id="nodeName" resize="drawObject()"/>
 	<mx:Script>
 		<![CDATA[
 			public var propsLocalContainer:propsPN;
+			public var myHeight:int = 22;
 			private function init():void
 			{
 				this.nodeType = "packNode";
 				this.m_inputCenter = new Point(0, 2);
-				this.m_outputCenter = new Point(0, 23);
+				this.m_outputCenter = new Point(0, myHeight);
 				this.propsLocalContainer = new propsPN(); 
 				this.propsContainer = this.propsLocalContainer;
 				this.clipContent = false;
@@ -46,15 +47,46 @@
 			{
 				this.nodeName.x = -nodeName.width/2
 				this.graphics.clear();
-				if (this.parentCont.activeNode == this)
+				
+				var fillType:String = GradientType.LINEAR;
+				var colors:Array = [0xC0C9CF, 0xffffff];
+				var alphas:Array = [1, 1];
+				var ratios:Array = [0x00, 0xFF];
+				var matr:Matrix = new Matrix();
+				matr.createGradientBox(nodeName.width + 10, 25, Math.PI/2, 0, 0);
+				var spreadMethod:String = SpreadMethod.PAD;
+				// Draw shadow
+				this.graphics.lineStyle(0, 0xffffff, 1, true);
+				this.graphics.beginFill(0xcccccc, 0.8);
+				if (isMultiNode)
 				{
-					this.graphics.lineStyle(0, 0xff0000);
-					this.graphics.beginFill(0x0000ff, 1);
-					this.graphics.drawRect(nodeName.x - 5, 0, nodeName.width + 10, 25);
+					this.graphics.drawRoundRect(nodeName.x - 3 + 10, 2 - 10, nodeName.width + 10, myHeight, myHeight, myHeight);
+					this.graphics.drawRoundRect(nodeName.x - 3 + 5, 2 - 5, nodeName.width + 10, myHeight, myHeight, myHeight);
 				}
-				this.graphics.lineStyle(0, 0);
-				this.graphics.beginFill(0xffffff, 1);
-				this.graphics.drawRect(nodeName.x - 3, 2, nodeName.width + 6, 21);
+				this.graphics.drawRoundRect(nodeName.x - 3, 2, nodeName.width + 10, myHeight, myHeight, myHeight);
+
+				// Draw the object
+				if (this.parentCont.activeNode == this)
+					this.graphics.lineStyle(2, 0x888888, 1, true);
+				else
+					this.graphics.lineStyle(0, 0xffffff, 1, true);
+				if (isMultiNode)
+				{
+					this.graphics.beginGradientFill(fillType, colors, alphas, ratios, matr, spreadMethod);
+					this.graphics.drawRoundRect(nodeName.x - 5 + 10, 0 - 10, nodeName.width + 10, myHeight, myHeight, myHeight);
+					this.graphics.endFill();
+
+					this.graphics.beginGradientFill(fillType, colors, alphas, ratios, matr, spreadMethod);
+					this.graphics.drawRoundRect(nodeName.x - 5 + 5, 0 - 5, nodeName.width + 10, myHeight, myHeight, myHeight);
+					this.graphics.endFill();
+				}
+				this.graphics.beginGradientFill(fillType, colors, alphas, ratios, matr, spreadMethod);
+				this.graphics.drawRoundRect(nodeName.x - 5, 0, nodeName.width + 10, myHeight, myHeight, myHeight);
+				this.graphics.endFill();
+			}
+			public override function get isSplitter():Boolean
+			{
+				return this.propsLocalContainer.isSplitter.selected;
 			}
 		]]>
 	</mx:Script>
