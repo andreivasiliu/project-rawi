@@ -12,7 +12,7 @@
 	</mx:HDividedBox>
 	<mx:Script>
 		<![CDATA[
-			//  Add Delete Connect DeleteConnection functionality
+			// Manage existing objects on the scene - add/delete connection
 			private var m_activeNode:PackNodeBase = null;
 			public var activeOverNode:PackNodeBase = null;
 			public var stateEditor:EditorState = new EditorState();
@@ -44,7 +44,6 @@
 				reDrawTempConnection();
 				trace("MouseDown from EditTM");
 			}
-			
 			public function reDrawConnections():void
 			{
 				ecran.graphics.clear();
@@ -61,6 +60,7 @@
 						y = PackNodeBase(nodesMap[c]).inputCenter.y;
 						ecran.graphics.lineTo(x, y);
 					}
+				updateMultiNode();
 			}
 			public function reDrawObjects():void
 			{
@@ -88,7 +88,6 @@
 						ecranGlass.graphics.moveTo(p.x, p.y);
 						p.x = p.x < ecranGlass.mouseX ? ecranGlass.mouseX - 1 : ecranGlass.mouseX + 1;
 						p.y = p.x < ecranGlass.mouseY ? ecranGlass.mouseY - 1 : ecranGlass.mouseY + 1;
-						//p = ecran.globalToLocal(p);
 						ecranGlass.graphics.lineTo(p.x, p.y);
 					}
 					else if (this.stateEditor.state == EditorState.DEL_CONN)
@@ -96,6 +95,7 @@
 						if (activeOverNode != null && activeOverNode != activeNode)
 							if (activeNode.outputToNodes[activeOverNode.nid] != undefined)
 							{
+								// Draw an X in the middle of the segment
 								var center:Point = new Point();
 								p = new Point();
 								center.x = (activeNode.outputCenter.x + activeOverNode.inputCenter.x) / 2;
@@ -124,6 +124,7 @@
 		
 	<mx:Script>
 		<![CDATA[
+			// Cod for container buttons
 			import mx.core.Application;
 			public var nodesMap:Dictionary = new Dictionary();
 			[Bindable]
@@ -178,6 +179,7 @@
 				svh.savedVersion = getSchemaXmlRepresentation().toString();
 				reDrawConnections();
 				reDrawObjects();
+				updateMultiNode();
 			}
 			public function getSchemaXmlRepresentation():XML
 			{
@@ -241,6 +243,31 @@
 				while (nodesMap[id.toString()] != undefined)
 					id++;
 				return id;
+			}
+			public function updateMultiNode():void
+			{
+				for each (var nd:PackNodeBase in nodesMap)
+					nd.isMultiNode = false;
+				for each (nd in nodesMap)
+				{
+					if (nd.isSplitter)
+					{
+						marked = new Dictionary();
+						for each (var child:int in nd.outputToNodes)
+							DFS(nodesMap[child]);
+					}
+				}
+				reDrawObjects();
+			}
+			private var marked:Dictionary;
+			private function DFS(nd:PackNodeBase):void
+			{
+				if (!nd.isJoiner)
+				{
+					nd.isMultiNode = true;
+					for each (var child:int in nd.outputToNodes)
+						DFS(nodesMap[child]);
+				}
 			}
 		]]>
 	</mx:Script>

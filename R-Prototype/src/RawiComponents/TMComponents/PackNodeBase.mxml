@@ -17,6 +17,7 @@
 			public var overMe:Boolean = false;
 			[Bindable]
 			public var propsContainer:propsBase;
+			public var isMultiNode:Boolean = false;
 			public function get inputCenter():Point
 			{
 				return parentCont.ecran.globalToLocal(localToGlobal(m_inputCenter))
@@ -36,7 +37,6 @@
 				parentCont.reDrawObjects();
 			}
 			public function drawObject():void {}
-			//-----------------------de aici -------------------------------se incepe ------------------------ cu editarea -----------------------------------
 			private function mouseOverHdlr(event:MouseEvent):void
 			{
 				overMe = true;
@@ -49,6 +49,7 @@
 			}
 			private function mouseMoveHdlr(event:MouseEvent):void
 			{
+				parentCont.reDrawConnections();
 				if (dragging)
 				{
 					parentCont.reDrawConnections();
@@ -103,6 +104,7 @@
 			}
 			private function mouseDownHdlr(event:MouseEvent):void
 			{
+				parentCont.reDrawConnections();
 				event.stopImmediatePropagation();
 				if (this.parentCont.stateEditor.state == EditorState.NOTHING)		// Drag the node
 				{
@@ -123,6 +125,7 @@
 			}
 			private function mouseUpHdlr(event:MouseEvent):void
 			{
+				parentCont.reDrawConnections();
 				if (dragging)
 				{
 					stopDrag();
@@ -145,8 +148,8 @@
 				{
 					this.parentCont.activeNode.outputToNodes[this.nid] = this.nid;
 					this.inputFromNodes[this.parentCont.activeNode.nid] = this.parentCont.activeNode.nid;
-					this.parentCont.reDrawConnections();
 				}
+				this.parentCont.reDrawConnections();
 			}
 			private function deleteConnection():void
 			{
@@ -154,9 +157,13 @@
 				{
 					delete this.parentCont.activeNode.outputToNodes[this.nid];
 					delete this.inputFromNodes[this.parentCont.activeNode.nid];
-					this.parentCont.reDrawConnections();
 				}
+				this.parentCont.reDrawConnections();
 			}
+			public function get isJoiner():Boolean
+			{ return false; }
+			public function get isSplitter():Boolean
+			{ return false; }
 		]]>
 	</mx:Script>
 

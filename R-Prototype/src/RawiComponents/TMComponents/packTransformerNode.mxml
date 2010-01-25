@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PackNodeBase xmlns="RawiComponents.TMComponents.*" xmlns:mx="http://www.adobe.com/2006/mxml"  initialize="init()">
+<PackNodeBase xmlns="RawiComponents.TMComponents.*" xmlns:mx="http://www.adobe.com/2006/mxml" initialize="init()">
 	<mx:Label x="10" y="3" text="{propsContainer.nodeName.text}" id="nodeName"/>
 	<mx:Script>
 		<![CDATA[
@@ -8,7 +8,7 @@
 			{
 				this.nodeType = "packTransformerNode";
 				this.m_inputCenter = new Point(0, 2);
-				this.m_outputCenter = new Point(0, 8);
+				this.m_outputCenter = new Point(0, 19);
 				this.propsLocalContainer = new propsPTN(); 
 				this.propsContainer = this.propsLocalContainer;
 				this.clipContent = false;
@@ -45,18 +45,41 @@
 			public override function drawObject():void
 			{
 				this.graphics.clear();
-				if (this.parentCont.activeNode == this)
-				{
-					this.graphics.lineStyle(0, 0xff0000);
-					this.graphics.beginFill(0xff00ff, 1);
-					this.graphics.drawCircle(0, 10, 10);
-				}
-				this.graphics.lineStyle(0, 0);
-				this.graphics.beginFill(0x0000ff, 1);
-				this.graphics.drawCircle(0, 10, 9);
+				
+				var fillType:String = GradientType.RADIAL;
+				var colors:Array = [0xC0C9CF, 0xffffff];
+				var alphas:Array = [1, 0.7];
+				var ratios:Array = [0x88, 0xFF];
+				var matr:Matrix = new Matrix();
+				matr.createGradientBox(20, 20, 0, -10, 0);
+				var spreadMethod:String = SpreadMethod.PAD;
 
+				// Draw the object
+				if (this.parentCont.activeNode == this)
+					this.graphics.lineStyle(2, 0x888888, 1);
+				else
+					this.graphics.lineStyle(0, 0xffffff, 1);
+				if (isMultiNode)
+				{
+					matr.createGradientBox(20, 20, 0, -10 + 10, 0 - 10);
+					this.graphics.beginGradientFill(fillType, colors, alphas, ratios, matr, spreadMethod);
+					this.graphics.drawCircle(0 + 10, 10 - 10, 10);
+					this.graphics.endFill();
+
+					matr.createGradientBox(20, 20, 0, -10 + 5, 0 - 5);
+					this.graphics.beginGradientFill(fillType, colors, alphas, ratios, matr, spreadMethod);
+					this.graphics.drawCircle(0 + 5, 10 - 5, 10);
+					this.graphics.endFill();
+				}
+				matr.createGradientBox(20, 20, 0, -10, 0);
+				this.graphics.beginGradientFill(fillType, colors, alphas, ratios, matr, spreadMethod);
+				this.graphics.drawCircle(0, 10, 10);
+				this.graphics.endFill();
+			}
+			public override function get isJoiner():Boolean
+			{
+				return this.propsLocalContainer.isJoiner.selected;
 			}
 		]]>
 	</mx:Script>
-
 </PackNodeBase>

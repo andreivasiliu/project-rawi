@@ -14,7 +14,7 @@
 		<mx:Label text="y" />
 		<mx:TextInput id="yy" text="{ownerOfProps.y}" width="40"  keyDown="manualChangePos(event)" restrict="0-9"/>
 	</mx:HBox>
-	<mx:CheckBox label="Splitter" id="isSplitter"/>
+	<mx:CheckBox label="Splitter" id="isSplitter" change="{this.ownerOfProps.parentCont.updateMultiNode()}"/>
 	<mx:Script>
 		<![CDATA[
 			import mx.events.IndexChangedEvent;

@@ -31,6 +31,7 @@ package RawiComponents.TMComponents
 			
 			configureListeners(loader);
 			loader.load(request);
+			trace("Validate", m_editor.propsGen.schemaName.text + ".xml");
 		}
 		public function Save():void
 		{
@@ -48,6 +49,7 @@ package RawiComponents.TMComponents
 			
 			configureListeners(loader);
 			loader.load(request);
+			trace("Save", m_editor.propsGen.schemaName.text + ".xml");
 		}
 		public function Close():void
 		{
