@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" initialize="init()"
+	label="{'WS - ' + propsGen.schemaName.text}">
+	<mx:Button x="10" y="0" label="Refresh"/>
+	<mx:Button x="89" y="0" label="Start" width="71"/>
+	<mx:Button x="168" y="0" label="Stop" width="71"/>
+	<mx:HDividedBox left="3" top="30" right="3" bottom="3">
+		<mx:Canvas height="100%" width="100%" id="baseEcran" clipContent="true" mouseDown="mouseDownHdlr(event)">
+			<mx:Canvas id="ecran" x="0" y="0"/>
+		</mx:Canvas>
+		<mx:Panel layout="absolute" id="propertiesPanel" top="0" right="0" bottom="0" width="254" height="100%" title="Properties" minWidth="254"/>
+	</mx:HDividedBox>
+	<mx:Script>
+		<![CDATA[
+			public var nodesMap:Dictionary = new Dictionary();
+			public namespace tm = "http://www.example.org/WorkSession";
+			private var m_activeNode:PackNodeBase = null;
+			public var sessionState:SessionState = new SessionState();
+			[Bindable]
+			public var propsGen:propsGeneral = new propsGeneral;
+			public function set activeNode(value:PackNodeBase):void
+			{
+				m_activeNode = value;
+				reDrawObjects();
+				propertiesPanel.removeAllChildren();
+				
+				if (value == null)
+				{
+					propertiesPanel.addChild(propsGen);
+					ecran.setFocus();
+				}
+				else
+				{
+					propertiesPanel.addChild(value.propsContainer);
+					value.setFocus();
+				}
+			}
+			public function get activeNode():PackNodeBase
+			{
+				return m_activeNode;
+			}
+			public function init():void
+			{
+				// TODO: some inits here
+			}
+			public function initFromXml(data:XML):void
+			{
+				this.propertiesPanel.removeAllChildren();
+				this.propertiesPanel.addChild(propsGen);
+				this.sessionState.sessionId = data.sessionId;
+				this.sessionState.downloadUrl = data.downloadUrl;
+				this.sessionState.uploadUrl = data.uploadUrl;
+				this.sessionState.messageLogIp = data.messageLogIp;
+				
+				propsGen.uploaderOne.sessionState = this.sessionState;
+				trace("init ws from XML", data);
+			}
+			public function reDrawObjects():void
+			{
+				for each (var pnb:PackNodeBase in nodesMap)
+					pnb.drawObject();
+			}
+			public function reDrawConnections():void
+			{
+				ecran.graphics.clear();
+				ecran.graphics.lineStyle(0, 0, 1, true);
+				
+				for each (var n:PackNodeBase in nodesMap)
+					for each (var c:String in n.outputToNodes)
+					{
+						var x:int, y:int;
+						x = n.outputCenter.x;
+						y = n.outputCenter.y;
+						ecran.graphics.moveTo(x, y);
+						x = PackNodeBase(nodesMap[c]).inputCenter.x;
+						y = PackNodeBase(nodesMap[c]).inputCenter.y;
+						ecran.graphics.lineTo(x, y);
+					}
+			}
+			public function mouseDownHdlr(event:MouseEvent):void
+			{
+				activeNode = null;
+				trace("MouseDown from EditWS");
+			}
+		]]>
+	</mx:Script>
+</mx:Canvas>

@@ -9,13 +9,12 @@ package RawiComponents.TMComponents
 	 * Using this class to save the tmName - you cannot bind request to response
 	 * so you can't know the TM name only from response
 	 */
-	public class GetEditHdlr extends Object
+	public class GetEditTMHdlr extends Object
 	{
-		public function GetEditHdlr(tmName:String = "untitled")
+		public function GetEditTMHdlr(tmName:String = "untitled")
 		{
 			this.tmName = tmName;
 		}
-		public var baseUri:String;
 		public var tmName:String = "";
 		public function getEditHdlr(event:Event):void
 		{
@@ -30,7 +29,6 @@ package RawiComponents.TMComponents
 				(Application.application as RAWI).tabNav.addChild(etm);
 				(Application.application as RAWI).tabNav.selectedChild = etm;
 				etm.initFromXml(xmlData);
-				etm.svh.baseUri = baseUri;
 				etm.propsGen.initialize();
 				etm.propsGen.schemaName.text = tmName;
 			}

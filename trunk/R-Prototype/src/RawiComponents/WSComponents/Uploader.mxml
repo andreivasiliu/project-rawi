@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="23" initialize="init()">
+	<mx:ViewStack x="0" y="0" id="viewstack" width="100%" height="100%">
+		<mx:Canvas label="SelectFile" width="100%" height="100%">
+			<mx:HBox width="100%">
+				<mx:TextInput id="filePathLabel" text="" width="100%" paddingTop="3" editable="false"/>
+				<mx:Button label="..." click="browseHdlr()"/>
+				<mx:Button label="Up" enabled="false" id="upButt" click="uploadHdlr()"/>
+			</mx:HBox>
+		</mx:Canvas>
+		<mx:Canvas label="ViewProgress" width="100%" height="100%">
+			<mx:HBox width="100%">
+				<mx:ProgressBar height="22" width="100%" id="progressBar" labelPlacement="center" source="{file}"/>
+				<mx:Button label="Cancel" />
+			</mx:HBox>
+		</mx:Canvas>
+		<mx:Canvas label="FileStatus" width="100%" height="100%" id="third">
+			<mx:HBox width="100%" id="third2">
+				<mx:TextInput id="fileOnServerName" text="" width="100%" paddingTop="3" editable="false"/>
+			</mx:HBox>
+		</mx:Canvas>
+	</mx:ViewStack>
+	<mx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			import RawiComponents.GlobalSettings;
+			public var sessionState:SessionState;
+			public var stateFile:FileState = new FileState();
+			[Bindable]
+			public var file:FileReference = new FileReference();
+			public var fileIdOnServer:String = "";
+			public function init():void
+			{
+				file.addEventListener(Event.CANCEL, cancelHandler);
+				file.addEventListener(Event.COMPLETE, completeHandler);
+				file.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, uploadDataComplete);
+				file.addEventListener(IOErrorEvent.IO_ERROR, ioErrorHandler);
+				file.addEventListener(Event.OPEN, openHandler);
+				file.addEventListener(ProgressEvent.PROGRESS, progressHandler);
+				file.addEventListener(SecurityErrorEvent.SECURITY_ERROR, securityErrorHandler);
+				file.addEventListener(Event.SELECT, selectHandler);
+				stateFile.state = FileState.EMPTY;
+				viewstack.addEventListener(FlexEvent.UPDATE_COMPLETE, updatePage3);
+			}
+			private function browseHdlr():void {
+				file.browse();
+			}
+			private function uploadHdlr():void
+			{
+				var uploadURL:URLRequest = new URLRequest();
+				viewstack.selectedIndex = 1;
+				uploadURL.url = sessionState.uploadUrl + "/" + file.name;
+				trace("Upload file:", uploadURL.url);
+				file.upload(uploadURL);
+			}
+			private function cancelHandler(event:Event):void { }
+			private function completeHandler(event:Event):void {
+				trace("completeHandler: " + event);
+				//viewstack.selectedIndex = 2;
+			}
+			private function ioErrorHandler(event:IOErrorEvent):void {
+				trace("ioErrorHandler: " + event);
+			}
+			private function openHandler(event:Event):void {
+				trace("openHandler: " + event);
+			}
+			private function progressHandler(event:ProgressEvent):void {
+				var file:FileReference = FileReference(event.target);
+				trace("progressHandler name=" + file.name + " bytesLoaded=" + event.bytesLoaded + " bytesTotal=" + event.bytesTotal);
+				if (progressBar != null)
+					progressBar.label = file.name.substr(0, 15) + " " + int(event.bytesLoaded*100/event.bytesTotal) + "%";
+			}
+			private function securityErrorHandler(event:SecurityErrorEvent):void {
+				trace("securityErrorHandler: " + event);
+			}
+			private function selectHandler(event:Event):void {
+				upButt.enabled = true;
+				filePathLabel.text = file.name;
+				stateFile.state = FileState.SELECTED;
+				trace("selectHandler", event);
+			}
+			private function uploadDataComplete(event:DataEvent):void {
+				this.fileIdOnServer = event.data.match("[0-9]+")[0];
+				trace("File id on server:", fileIdOnServer);
+				viewstack.selectedIndex = 2;
+			}
+			private function updatePage3(event:FlexEvent):void
+			{
+				if (viewstack.selectedIndex == 2)
+					fileOnServerName.text = file.name;
+			}
+		]]>
+	</mx:Script>
+</mx:Canvas>

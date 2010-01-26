@@ -9,7 +9,7 @@
 			<mx:Canvas id="ecran" x="0" y="0"/>
 			<mx:Canvas id="ecranGlass" x="0" y="0" width="{ecran.width}" height="{ecran.height}" />
 		</mx:Canvas>
-		<mx:Panel layout="absolute" id="propertiesPanel" top="0" right="0" bottom="0" width="30%" height="100%" title="Properties" minWidth="200"/>
+		<mx:Panel layout="absolute" id="propertiesPanel" top="0" right="0" bottom="0" width="254" height="100%" title="Properties" minWidth="254"/>
 	</mx:HDividedBox>
 	<mx:Script>
 		<![CDATA[
@@ -157,6 +157,8 @@
 						ptn.propsContainer.initialize();
 						ptn.propsLocalContainer.command.text = node.command.@exec;
 						ptn.propsLocalContainer.isJoiner.selected = node.@isJoiner  == "true" ? true : false;
+						ptn.propsLocalContainer.createBatch.selected = node.@createBatch  == "true" ? true : false;
+						ptn.propsLocalContainer.systemCommand.selected = node.@systemCommand  == "true" ? true : false;
 					}
 					gn.nid = node.@id;
 					nodesMap[gn.nid] = gn;
@@ -268,8 +270,10 @@
 	</mx:Script>
 	<TMComponents:PackGraphicLayout x="320" y="0" />
 	<TMComponents:TransformerGraphicLayout x="380" y="0" />
-	<TMComponents:PackGraphicLayout id="dummy1" x="320" y="0" mouseDown="dummy1.startDrag()" mouseUp="stopDrg1(event)"/>
-	<TMComponents:TransformerGraphicLayout id="dummy2" x="380" y="0" mouseDown="{dummy2.startDrag(); trace('TGL', dummy2.width, dummy2.height)}" mouseUp="stopDrg2(event)"/>
+	<TMComponents:PackGraphicLayout id="dummy1" x="320" y="0" mouseDown="dummy1.startDrag()"
+		 mouseUp="stopDrg1(event)" toolTip="Click or Drag to add a new Pack on the scene."/>
+	<TMComponents:TransformerGraphicLayout id="dummy2" x="380" y="0" mouseDown="{dummy2.startDrag(); trace('TGL', dummy2.width, dummy2.height)}"
+		mouseUp="stopDrg2(event)" toolTip="Click or Drag to add a new Transformer on the scene."/>
 	<mx:Script>
 		<![CDATA[
 			// add new packNode

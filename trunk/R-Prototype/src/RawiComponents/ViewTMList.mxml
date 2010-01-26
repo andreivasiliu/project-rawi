@@ -11,13 +11,16 @@
 	<mx:Button x="89" y="0" label="New" width="71" click="newHdlr()"/>
 	<mx:Button x="168" y="0" label="Edit" width="71" click="editHdlr()" id="editBtn" enabled="false"/>
 	<mx:Button x="247" y="0" label="Delete" width="71" click="deleteHdlr()" id="deleteBtn" enabled="false"/>
+	<mx:Button x="326" y="0" label="CreateWS" id="createWSBtn" enabled="false" click="createWSHdlr()"/>
 	<mx:Script>
 		<![CDATA[
-			import RawiComponents.TMComponents.GetEditHdlr;
+			import RawiComponents.WSComponents.GetEditWSHdlr;
+			import RawiComponents.TMComponents.GetEditTMHdlr;
 			import RawiComponents.TMComponents.EditTM;
+			import RawiComponents.GlobalSettings;
 			import mx.core.Application;
 			import mx.collections.ArrayCollection;
-			private var baseUri:String = "http://localhost:8080/I-Prototype";
+			
 			[Bindable]
 			private var tmList:ArrayCollection = new ArrayCollection();
 			private function configureListeners(dispatcher:IEventDispatcher):void
@@ -35,7 +38,7 @@
 			{
 				var loader:URLLoader = new URLLoader();
 				// TODO: find out how to cancel the cache - by then add the time parameter at the end 
-				var request:URLRequest = new URLRequest(baseUri + "/GetLists?type=xml" + "&time=" + new Date().getTime());
+				var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/GetLists?type=xml" + "&time=" + new Date().getTime());
 				trace(request.url);
 				loader.addEventListener(Event.COMPLETE, getListHdlr);
 				configureListeners(loader);
@@ -47,6 +50,7 @@
 				tmList = new ArrayCollection();
 				this.editBtn.enabled = false;
 				this.deleteBtn.enabled = false;
+				this.createWSBtn.enabled = false;
 				trace(loader.data);
 				// adauga aici object.data
 				if (loader.data.toString().length > 0)
@@ -60,6 +64,7 @@
 						tmList.addItem( {tmName:tmn, col2:"empty", col3:"empty" } );
 						this.editBtn.enabled = true;
 						this.deleteBtn.enabled = true;
+						this.createWSBtn.enabled = true;
 					}
 					tmListDG.selectedIndex = 0;
 	        	}
@@ -70,7 +75,7 @@
 				if (tmListDG.selectedItem != null)
 				{
 					var loader:URLLoader = new URLLoader();
-					var request:URLRequest = new URLRequest(baseUri + "/ValidateXMLServlet?delete=" + tmListDG.selectedItem.tmName + ".xml&time=" + new Date().getTime());
+					var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/ValidateXMLServlet?delete=" + tmListDG.selectedItem.tmName + ".xml&time=" + new Date().getTime());
 					loader.addEventListener(Event.COMPLETE, trace);
 					configureListeners(loader);
 					loader.load(request);
@@ -84,7 +89,6 @@
 				var etm:EditTM = new EditTM();
 				(Application.application as RAWI).tabNav.addChild(etm);
 				(Application.application as RAWI).tabNav.selectedChild = etm;
-				etm.svh.baseUri = baseUri;
 				etm.propsGen.schemaName.text = "untitled";
 				etm.svh.savedVersion = etm.getSchemaXmlRepresentation().toString();
 			}
@@ -95,15 +99,29 @@
 				{
 					var loader:URLLoader = new URLLoader();
 					// TODO: find out how to cancel the cache - by then add the time parameter at the end 
-					var request:URLRequest = new URLRequest(baseUri + "/DownloadXMLServlet?name=" + tmListDG.selectedItem.tmName + ".xml&time=" + new Date().getTime());
+					var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/DownloadXMLServlet?name=" + tmListDG.selectedItem.tmName + ".xml&time=" + new Date().getTime());
 					trace(request.url);
-					var geh:GetEditHdlr = new GetEditHdlr(tmListDG.selectedItem.tmName);
-					geh.baseUri = baseUri;
+					var geh:GetEditTMHdlr = new GetEditTMHdlr(tmListDG.selectedItem.tmName);
 					loader.addEventListener(Event.COMPLETE, geh.getEditHdlr);
 					configureListeners(loader);
 					loader.load(request);
 				}
 			}
+			private function createWSHdlr():void
+			{
+				if (tmListDG.selectedItem != null)
+				{
+					var loader:URLLoader = new URLLoader();
+					// TODO: find out how to cancel the cache - by then add the time parameter at the end
+					var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/CreateSession?modelName=" + this.tmListDG.selectedItem.tmName + ".xml" + "&mainServerIp=&time=" + new Date().getTime());
+					trace(request.url);
+					var geh:GetEditWSHdlr = new GetEditWSHdlr(tmListDG.selectedItem.tmName);
+					loader.addEventListener(Event.COMPLETE, geh.getEditHdlr);
+					configureListeners(loader);
+					loader.load(request);
+				}
+			}
+			
 		]]>
 	</mx:Script>
 </mx:Canvas>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%">
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.TextInput;
+			[Bindable]
+			public var nodeName:TextInput;
+			public var objX:int;
+			public var objY:int;
+			[Bindable]
+			public var ownerOfProps:PackNodeBase;
+			public function showPos(newX:int, newY:int):void
+			{ }
+		]]>
+	</mx:Script>
+</mx:VBox>
