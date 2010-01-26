@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"
 	xmlns:rc="RawiComponents.*"
-	xmlns:swc="RawiComponents.SWComponents.*">
+	xmlns:wsc="RawiComponents.WSComponents.*">
 	<mx:ApplicationControlBar id="controlBar" dock="true">
 		<mx:Spacer width="50" />
 		<mx:Label text="RAWI" fontSize="20" alpha="1.0" fontWeight="bold" fontStyle="italic"/>
@@ -14,7 +14,7 @@
 		<rc:ViewTMList label="ViewTMList"/>
 		<rc:ViewWSList label="ViewWSList" />
 		<rc:FileBox label="FileBox" />
-		<swc:ViewSW label="ViewSW" />
+		<wsc:ViewWS label="ViewSW" />
 	</mx:TabNavigator>
 		
 </mx:Application>

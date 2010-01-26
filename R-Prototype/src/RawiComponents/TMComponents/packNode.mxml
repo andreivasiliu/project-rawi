@@ -47,6 +47,8 @@
 			{
 				this.nodeName.x = -nodeName.width/2
 				this.graphics.clear();
+				var multiOffset:int = 4;
+				var radius:int = 20;
 				
 				var fillType:String = GradientType.LINEAR;
 				var colors:Array = [0xC0C9CF, 0xffffff];
@@ -61,35 +63,35 @@
 				if (isMultiNode)
 				{
 					this.graphics.beginFill(0xcccccc, 0.8);
-					this.graphics.drawRoundRect(nodeName.x - 3 + 10, 2 - 10, nodeName.width + 10, myHeight, myHeight, myHeight);
+					this.graphics.drawRoundRect(nodeName.x - 3 + multiOffset * 2, 2 - multiOffset * 2, nodeName.width + 10, myHeight, radius, radius);
 					this.graphics.endFill();
 					this.graphics.beginFill(0xcccccc, 0.8);
-					this.graphics.drawRoundRect(nodeName.x - 3 + 5, 2 - 5, nodeName.width + 10, myHeight, myHeight, myHeight);
+					this.graphics.drawRoundRect(nodeName.x - 3 + multiOffset * 1, 2 - multiOffset * 1, nodeName.width + 10, myHeight, radius, radius);
 					this.graphics.endFill();
 				}
 				this.graphics.beginFill(0xcccccc, 0.8);
-				this.graphics.drawRoundRect(nodeName.x - 3, 2, nodeName.width + 10, myHeight, myHeight, myHeight);
+				this.graphics.drawRoundRect(nodeName.x - 3, 2, nodeName.width + 10, myHeight, radius, radius);
 				this.graphics.endFill();
 
 				// Draw the object
 				if (this.parentCont.activeNode == this)
-					this.graphics.lineStyle(2, 0x888888, 1, true);
+					this.graphics.lineStyle(2, 0x555588, 1, true);
 				else
-					this.graphics.lineStyle(0, 0xffffff, 1, true);
+					this.graphics.lineStyle(0, 0x888888, 1, true);
 				if (isMultiNode)
 				{
 					//colors = [0xC0C9CF, 0xffffff];
 					this.graphics.beginGradientFill(fillType, colors, alphas, ratios, matr, spreadMethod);
-					this.graphics.drawRoundRect(nodeName.x - 5 + 10, 0 - 10, nodeName.width + 10, myHeight, myHeight, myHeight);
+					this.graphics.drawRoundRect(nodeName.x - 5 + multiOffset * 2, 0 - multiOffset * 2, nodeName.width + 10, myHeight, radius, radius);
 					this.graphics.endFill();
 
 					this.graphics.beginGradientFill(fillType, colors, alphas, ratios, matr, spreadMethod);
-					this.graphics.drawRoundRect(nodeName.x - 5 + 5, 0 - 5, nodeName.width + 10, myHeight, myHeight, myHeight);
+					this.graphics.drawRoundRect(nodeName.x - 5 + multiOffset * 1, 0 - multiOffset * 1, nodeName.width + 10, myHeight, radius, radius);
 					this.graphics.endFill();
 				}
 				//colors = [0xffffff, 0xC0C9CF];
 				this.graphics.beginGradientFill(fillType, colors, alphas, ratios, matr, spreadMethod);
-				this.graphics.drawRoundRect(nodeName.x - 5, 0, nodeName.width + 10, myHeight, myHeight, myHeight);
+				this.graphics.drawRoundRect(nodeName.x - 5, 0, nodeName.width + 10, myHeight, radius, radius);
 				this.graphics.endFill();
 			}
 			public override function get isSplitter():Boolean
