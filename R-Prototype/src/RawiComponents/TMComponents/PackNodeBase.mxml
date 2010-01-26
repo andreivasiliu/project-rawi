@@ -130,6 +130,15 @@
 				{
 					stopDrag();
 					dragging = false;
+					// if you dragged the button outside
+					var plusX:int = this.x < 0 ? -this.x : 0;
+					var plusY:int = this.y < 0 ? -this.y : 0;
+					for each (var pn:PackNodeBase in this.parentCont.nodesMap)
+					{
+						pn.x += plusX;
+						pn.y += plusY;
+					}
+					this.parentCont.reDrawConnections();
 				}
 				else if (this.parentCont.stateEditor.state == EditorState.NEW_CONN)
 				{

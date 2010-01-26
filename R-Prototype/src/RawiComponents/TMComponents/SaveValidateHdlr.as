@@ -1,5 +1,7 @@
 package RawiComponents.TMComponents
 {
+	import RawiComponents.GlobalSettings;
+	
 	import flash.events.*;
 	import flash.net.*;
 	
@@ -10,7 +12,6 @@ package RawiComponents.TMComponents
 	public class SaveValidateHdlr extends Object
 	{
 		private var m_editor:EditTM;
-		public var baseUri:String;
 		public var savedVersion:String = "";
 		public function SaveValidateHdlr(editor:EditTM)
 		{
@@ -20,7 +21,7 @@ package RawiComponents.TMComponents
 		{
 			trace(m_editor.getSchemaXmlRepresentation());
 			var loader:URLLoader = new URLLoader();
-			var request:URLRequest = new URLRequest(baseUri + "/ValidateXMLServlet");
+			var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/ValidateXMLServlet");
 			var variables:URLVariables = new URLVariables();
 			variables.time = new Date().getTime()
 			variables.name = m_editor.propsGen.schemaName.text + ".xml";
@@ -36,7 +37,7 @@ package RawiComponents.TMComponents
 		public function Save():void
 		{
 			var loader:URLLoader = new URLLoader();
-			var request:URLRequest = new URLRequest(baseUri + "/ValidateXMLServlet");
+			var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/ValidateXMLServlet");
 			var variables:URLVariables = new URLVariables();
 			variables.time = new Date().getTime()
 			variables.name = m_editor.propsGen.schemaName.text + ".xml";

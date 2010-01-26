@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="400" height="300">
+	<mx:Script>
+		<![CDATA[
+			import mx.containers.VBox;
+			import mx.containers.Panel;
+			public var nid:int;
+			public var nodeType:String;
+			public var inputFromNodes:Dictionary = new Dictionary();
+			public var outputToNodes:Dictionary = new Dictionary();
+			public var parentCont:EditWS;
+			protected var m_inputCenter:Point;
+			protected var m_outputCenter:Point;
+			private var dragging:Boolean = false;
+			public var overMe:Boolean = false;
+			[Bindable]
+			public var propsContainer:propsBase;
+			public var isMultiNode:Boolean = false;
+			public function get inputCenter():Point
+			{
+				return parentCont.ecran.globalToLocal(localToGlobal(m_inputCenter))
+			}
+			public function get outputCenter():Point
+			{
+				return parentCont.ecran.globalToLocal(localToGlobal(m_outputCenter));
+			}
+			// update the propsContainer
+			public function setAsActiveNode():void
+			{
+				this.parentCont.propertiesPanel.removeAllChildren();
+				this.parentCont.propertiesPanel.addChild(this.propsContainer);
+				parentCont.activeNode = this;
+				parentCont.reDrawObjects();
+			}
+			public function drawObject():void {}
+		]]>
+	</mx:Script>
+</mx:Canvas>

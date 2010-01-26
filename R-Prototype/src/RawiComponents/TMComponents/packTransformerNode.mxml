@@ -25,6 +25,10 @@
 				repr.attributes.y = this.y;
 				if (this.propsLocalContainer.isJoiner.selected)
 					repr.attributes.isJoiner = true;
+				if (this.propsLocalContainer.createBatch.selected)
+					repr.attributes.createBatch = true;
+				if (this.propsLocalContainer.systemCommand.selected)
+					repr.attributes.systemCommand = true;
 				for each (var ref:String in inputFromNodes)
 				{
 					var tempNode:XMLNode = new XMLNode(XMLNodeType.ELEMENT_NODE, "input");

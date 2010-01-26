@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<propsBase xmlns="RawiComponents.TMComponents.*" xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" xmlns:WSComponents="RawiComponents.WSComponents.*">
+	<mx:Form width="100%" height="100%" paddingLeft="4" paddingTop="5" paddingRight="5" indicatorGap="4">
+		<mx:FormHeading label="Session Properties" />
+		<mx:FormItem label="      Name" width="100%">
+			<mx:TextInput id="schemaName" width="100%" editable="false"/>
+		</mx:FormItem>
+		<mx:Label text="Description"/>
+		<mx:TextArea id="schemaDescription" width="100%" height="100" editable="false"/>
+		<WSComponents:Uploader id="uploaderOne"/>
+	</mx:Form>
+</propsBase>
