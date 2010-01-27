@@ -50,7 +50,6 @@ public class RMIMainServer extends RMIServerModel
         }
         catch (Exception ex)
         {
-            Logger.getLogger(RMIMainServer.class.getName()).log(Level.SEVERE, null, ex);
             return new ValidateXMLInfo(false, ex.toString(), 0);
         }
     }

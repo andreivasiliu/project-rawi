@@ -6,6 +6,7 @@ import java.util.HashMap;
 public class Session {
     Long id;
     public String xmlName;
+    public String xmlContents;
     public String folderName;
     public String mainServerIp;
     HashMap<Long, UploadedFile> fileList = new HashMap<Long, UploadedFile>();
@@ -14,9 +15,11 @@ public class Session {
     public Session() {
     }
 
-    public Session(Long id, String xmlName, String folderName, String mainServerIp) {
+    public Session(Long id, String xmlName, String xmlContents,
+            String folderName, String mainServerIp) {
         this.id = id;
         this.xmlName = xmlName;
+        this.xmlContents = xmlContents;
         this.folderName = folderName;
         this.mainServerIp = mainServerIp;
     }

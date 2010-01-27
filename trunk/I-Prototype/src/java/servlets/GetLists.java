@@ -1,6 +1,7 @@
 package servlets;
 
 import classes.MainBean;
+import classes.Session;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
@@ -21,6 +22,8 @@ public class GetLists extends HttpServlet {
                 printListOfXMLNames(out);
             } else if (request.getParameter("type").equals("mainServer")) {
                 printListOfMainServers(out);
+            } else if (request.getParameter("type").equals("workSessions")) {
+                printListOfSessions(out);
             }
         } finally {
             out.close();
@@ -32,7 +35,7 @@ public class GetLists extends HttpServlet {
                 .getXmlNamesList();
         out.println("<xmlList>");
         for (String xmlName : xmlNames)
-            out.println("<xml>" + xmlName + "</xml>");
+            out.println("  <xml>" + xmlName + "</xml>");
         out.println("</xmlList>");
 
     }
@@ -42,8 +45,20 @@ public class GetLists extends HttpServlet {
                 .getListOfMainServers();
         out.println("<mainServers>");
         for(String serverIp: mainServersIp)
-            out.println("<mainServerIp>" + serverIp + "</mainServerIp>");
+            out.println("  <mainServerIp>" + serverIp + "</mainServerIp>");
         out.println("</mainServers>");
+    }
+
+    public void printListOfSessions(PrintWriter out) {
+        List<Session> sessionList = MainBean.getFromContext(getServletContext())
+                .getSessionList();
+
+        out.println("<workSessions>");
+        for(Session session: sessionList)
+            out.println("  <workSession id=\"" + session.getId() + "\"" +
+                        " xmlName=\"" + session.xmlName + "\"" +
+                        " mainServerIp=\"" + session.mainServerIp + "\" />");
+        out.println("</workSessions>");
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

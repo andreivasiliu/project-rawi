@@ -304,52 +304,26 @@ public class ClusterManager implements Runnable
     {
         System.out.println("Scanning for computers...");
         for (String ip : IPs)
-        {
             System.out.println(" - " + ip);
-        }
 
         String ip;
-
         while ((ip = IPs.poll()) != null)
-        {
-            try
-            {
-                ClusterComputerInterface cci = 
-                        new RMIClientModel<ClusterComputerInterface>(ip,
-                        Ports.ClusterComputerPort).getInterface();
-
-                ClusterComputerStatus status = cci.getStatus();
-
-                ClusterComputer clusterComputer = getClusterComputer(status.id);
-                clusterComputer.status = status;
-                clusterComputer.ipAddress = ip;
-
-                System.out.println("Found computer with" +
-                        " ID " +  status.id +
-                        " at " + ip +
-                        " (" + status.processors + " processors)");
-            }
-            catch (NotBoundException ex)
-            {
-                // Silently ignore
-            }
-            catch (RemoteException ex)
-            {
-                // Silently ignore
-            }
-        }
+            new Thread(new IPScanner(ip)).start();
     }
 
     private ClusterComputer getClusterComputer(String id)
     {
         ClusterComputer clusterComputer;
 
-        if ((clusterComputer = computerById.get(id)) == null)
+        synchronized (clusterManagerLock)
         {
-            clusterComputer = new ClusterComputer();
-            clusterComputer.id = id;
-            computerById.put(id, clusterComputer);
-            computerList.add(clusterComputer);
+            if ((clusterComputer = computerById.get(id)) == null)
+            {
+                clusterComputer = new ClusterComputer();
+                clusterComputer.id = id;
+                computerById.put(id, clusterComputer);
+                computerList.add(clusterComputer);
+            }
         }
 
         return clusterComputer;
@@ -391,6 +365,45 @@ public class ClusterManager implements Runnable
         synchronized int taskCount()
         {
             return activeTasks.size();
+        }
+    }
+
+    private class IPScanner implements Runnable
+    {
+        private String ip;
+
+        public IPScanner(String ip)
+        {
+            this.ip = ip;
+        }
+
+        public void run()
+        {
+            try
+            {
+                ClusterComputerInterface cci =
+                        new RMIClientModel<ClusterComputerInterface>(ip,
+                        Ports.ClusterComputerPort).getInterface();
+
+                ClusterComputerStatus status = cci.getStatus();
+
+                ClusterComputer clusterComputer = getClusterComputer(status.id);
+                clusterComputer.status = status;
+                clusterComputer.ipAddress = ip;
+
+                System.out.println("Found computer with" +
+                        " ID " +  status.id +
+                        " at " + ip +
+                        " (" + status.processors + " processors)");
+            }
+            catch (NotBoundException ex)
+            {
+                // Silently ignore
+            }
+            catch (RemoteException ex)
+            {
+                // Silently ignore
+            }
         }
     }
 

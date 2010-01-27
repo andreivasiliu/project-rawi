@@ -5,6 +5,7 @@
 package servlets;
 
 import classes.MainBean;
+import classes.Session;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.ServletException;
@@ -23,17 +24,25 @@ public class DownloadXMLServlet extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/xml;charset=UTF-8");
         PrintWriter out = response.getWriter();
+        MainBean mainBean = MainBean.getFromContext(this.getServletContext());
+        String xmlContents = null;
 
         String xmlName = request.getParameter("name");
+        String sessionId = request.getParameter("sessionId");
 
-        MainBean mainBean = MainBean.getFromContext(this.getServletContext());
+        if (xmlName != null) {
+            xmlContents = mainBean.getXmlContentByName(xmlName);
+        }
+        else if (sessionId != null) {
+            Session session = mainBean.getSessionById(Long.parseLong(sessionId));
+            if (session != null)
+                xmlContents = session.xmlContents;
+        }
 
-        String xmlContent = mainBean.getXmlContentByName(xmlName);
-
-        if (xmlContent == null)
-            response.sendError(404);
+        if (xmlContents == null)
+            response.sendError(404, "No such TransformationModel XML exists.");
         else
-            out.write(xmlContent);
+            out.write(xmlContents);
     }
 
     @Override

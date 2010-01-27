@@ -26,6 +26,7 @@
         <h3>Get lists</h3>
         <a href="GetLists?type=xml">Get list of XML names (TM names)</a> <br />
         <a href="GetLists?type=mainServer">Get list of Main Servers</a> <br />
+        <a href="GetLists?type=workSessions">Get list of Work Sessions</a> <br />
         <br /><hr width="500" align="left"/><br />
         
     </body>

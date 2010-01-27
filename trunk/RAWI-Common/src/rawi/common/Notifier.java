@@ -32,6 +32,7 @@ public class Notifier extends Thread {
     public Notifier(String type)
     {
         super("Notifier-Thread");
+        super.setDaemon(true);
         this.type = type;
     }
 
@@ -69,6 +70,9 @@ public class Notifier extends Thread {
                     //wait
                     this.wait(60000);
                 } catch (InterruptedException ex) {
+                } catch (IOException ex) {
+                    System.out.println("Warning: Could not contact the IP Tracker (" + 
+                            ex.toString() + ")");
                 }
             }
         } catch (IOException ex) {
