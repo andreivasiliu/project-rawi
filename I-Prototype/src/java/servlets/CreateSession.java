@@ -56,8 +56,11 @@ public class CreateSession extends HttpServlet {
         Long sessionId = theBean.getNextAvailableSessionId();
         String folderName = getServletContext().getRealPath("FileRepository")
                 + "/Session" + Long.toString(sessionId);
+        String modelContents = MainBean.getFromContext(getServletContext())
+                .getXmlContentByName(modelName);
 
-        Session session = new Session(sessionId, modelName, folderName, mainServerIp);
+        Session session = new Session(sessionId, modelName, modelContents,
+                folderName, mainServerIp);
 
         SessionInfo sessionInfo =
                 createSessionOnMainServer(session, request, response);
@@ -113,6 +116,8 @@ public class CreateSession extends HttpServlet {
     // gets the ip of a running Main Server
     private String getMainServerIp() {
         List<String> mainServersIps = theBean.getListOfMainServers();
+        mainServersIps.add(0, "127.0.0.1");
+        
         for (String mainServerIp : mainServersIps) {
             try {
                 InetAddress addr = InetAddress.getByName(mainServerIp);
