@@ -1,4 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="200" height="100">
-	
-</mx:Canvas>
+<PackNodeBase xmlns:mx="http://www.adobe.com/2006/mxml" xmlns="RawiComponents.WSComponents.*" initialize="init()">
+	<mx:Label x="10" y="3" text="{propsContainer.nodeName.text}" id="nodeName"/>
+	<mx:Label x="10" y="20" text="(P/W/D)" id="m_nodeState"/>
+	<mx:Script>
+		<![CDATA[
+			public var propsLocalContainer:propsPTN;
+			private function init():void
+			{
+				this.nodeType = "packTransformerNode";
+				this.m_inputCenter = new Point(0, 2);
+				this.m_outputCenter = new Point(0, 19);
+				this.propsLocalContainer = new propsPTN(); 
+				this.propsContainer = this.propsLocalContainer;
+				this.clipContent = false;
+				this.propsContainer.ownerOfProps = this;
+				this.nodeState = m_nodeState;
+				trace("init from packTransformerNode");
+			}
+			public override function drawObject():void
+			{
+				this.graphics.clear();
+				
+				var fillType:String = GradientType.RADIAL;
+				var colors:Array = [0xC0C9CF, 0xffffff];
+				var alphas:Array = [1, 0.7];
+				var ratios:Array = [0x88, 0xFF];
+				var matr:Matrix = new Matrix();
+				matr.createGradientBox(20, 20, 0, -10, 0);
+				var spreadMethod:String = SpreadMethod.PAD;
+
+				// Draw the object
+				if (this.parentCont.activeNode == this)
+					this.graphics.lineStyle(2, 0x888888, 1);
+				else
+					this.graphics.lineStyle(0, 0xffffff, 1);
+				if (isMultiNode)
+				{
+					matr.createGradientBox(20, 20, 0, -10 + 10, 0 - 10);
+					this.graphics.beginGradientFill(fillType, colors, alphas, ratios, matr, spreadMethod);
+					this.graphics.drawCircle(0 + 10, 10 - 10, 10);
+					this.graphics.endFill();
+
+					matr.createGradientBox(20, 20, 0, -10 + 5, 0 - 5);
+					this.graphics.beginGradientFill(fillType, colors, alphas, ratios, matr, spreadMethod);
+					this.graphics.drawCircle(0 + 5, 10 - 5, 10);
+					this.graphics.endFill();
+				}
+				matr.createGradientBox(20, 20, 0, -10, 0);
+				this.graphics.beginGradientFill(fillType, colors, alphas, ratios, matr, spreadMethod);
+				this.graphics.drawCircle(0, 10, 10);
+				this.graphics.endFill();
+				
+				// above is like PTN from TM Components - Below shows status for running session
+				
+				
+			}
+			public override function get isJoiner():Boolean
+			{
+				return this.propsLocalContainer.isJoiner.selected;
+			}
+		]]>
+	</mx:Script>
+</PackNodeBase>

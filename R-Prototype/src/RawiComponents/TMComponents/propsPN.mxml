@@ -14,12 +14,11 @@
 		<mx:FormItem label="y">
 			<mx:TextInput id="yy" text="{ownerOfProps.y}" width="40"  keyDown="manualChangePos(event)" restrict="0-9"/>
 		</mx:FormItem>
-			<mx:CheckBox label="    Splitter" id="isSplitter" change="{this.ownerOfProps.parentCont.updateMultiNode()}" labelPlacement="left"/>
-		
+		<mx:CheckBox label="Splitter" id="isSplitter" change="{this.ownerOfProps.parentCont.updateMultiNode()}" paddingLeft="8"/>
+		<mx:CheckBox label="Allows multiple files" id="allowsMultipleFiles" paddingLeft="8"/>
 	</mx:Form>
 	<mx:Script>
 		<![CDATA[
-			import mx.events.IndexChangedEvent;
 			public function init():void
 			{
 				this.nodeName = this.nodeNameTextInput;

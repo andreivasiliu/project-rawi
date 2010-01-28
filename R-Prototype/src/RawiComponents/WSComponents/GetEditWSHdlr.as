@@ -1,18 +1,42 @@
 package RawiComponents.WSComponents
 {
+	import RawiComponents.GlobalSettings;
+	
 	import flash.events.Event;
 	import flash.net.URLLoader;
+	import flash.net.URLRequest;
 	
 	import mx.core.Application;
 	
 	public class GetEditWSHdlr extends Object
 	{
-		public function GetEditWSHdlr(tmName:String = "untitled")
-		{
-			this.tmName = tmName;
-		}
+		public var sessionId:String = "";
 		public var tmName:String = "";
-		public function getEditHdlr(event:Event):void
+		public function getCreateSessionHdlr(event:Event):void	// invoked when createSession returns
+		{
+			var loader:URLLoader = URLLoader(event.target);
+			//trace(loader.data);
+			// adauga aici object.data
+			if (loader.data.toString().length > 0)
+			{
+				var xmlData:XML = new XML(loader.data.toString());
+				//trace (xmlData);
+				viewEditHdlr(xmlData.sessionId, tmName);
+			}
+		}
+		public function viewEditHdlr(sid:String, tmName:String):void	// invoked when EditWS is clicked in ViewWSList 
+		{
+			this.sessionId = sid;
+			this.tmName = tmName;
+			var loader:URLLoader = new URLLoader();
+			// TODO: find out how to cancel the cache - by then add the time parameter at the end 
+			var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/DownloadXMLServlet?sessionId=" + sessionId + "&time=" + new Date().getTime());
+			trace(request.url);
+			loader.addEventListener(Event.COMPLETE, getTmXml);
+			GlobalSettings.configureListeners(loader);
+			loader.load(request);
+		}
+		private function getTmXml(event:Event):void
 		{
 			var loader:URLLoader = URLLoader(event.target);
 			//trace(loader.data);
@@ -24,9 +48,9 @@ package RawiComponents.WSComponents
 				var ews:EditWS = new EditWS();
 				(Application.application as RAWI).tabNav.addChild(ews);
 				(Application.application as RAWI).tabNav.selectedChild = ews;
-				ews.initFromXml(xmlData);
-				ews.propsGen.initialize();
-				ews.propsGen.schemaName.text = tmName;
+				trace("getTmXml", sessionId); 
+				ews.sessionState.sessionId = this.sessionId;
+				ews.initFromXml(xmlData, tmName);
 			}
 		}
 	}

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<propsBase xmlns="RawiComponents.WSComponents.*" xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" initialize="init()">
+	<mx:Form width="100%" height="100%" paddingLeft="4" paddingTop="5" paddingRight="5" indicatorGap="4">
+		<mx:FormHeading label="Pack Properties" />
+		<mx:FormItem label="Name" width="100%">
+			<mx:TextInput id="nodeNameTextInput" width="100%" editable="false"/>
+		</mx:FormItem>
+		<mx:FormItem label="    Pattern" width="100%">
+			<mx:TextInput id="pattern" width="100%" editable="false"/>
+		</mx:FormItem>
+		<mx:CheckBox label="Splitter" id="isSplitter" paddingLeft="8" enabled="false"/>
+		<mx:CheckBox label="Allows multiple files" id="allowsMultipleFiles" paddingLeft="8" enabled="false"/>
+		<mx:VBox id="fileBox" width="100%" height="100%" initialize="addNewUploader()">
+			
+		</mx:VBox>
+	</mx:Form>
+	<mx:Script>
+		<![CDATA[
+			public function init():void
+			{
+				this.nodeName = this.nodeNameTextInput;
+			}
+			public function addNewUploader():Uploader
+			{
+				var upl:Uploader = new Uploader();
+				fileBox.addChild(upl);
+				upl.myOwner = this;
+				return upl;
+			}
+		]]>
+	</mx:Script>
+</propsBase>

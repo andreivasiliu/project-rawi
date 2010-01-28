@@ -1,15 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"  width="100%" height="100%" label="ViewWSList">
-	<mx:DataGrid top="30" right="3" left="3" bottom="3">
+	<mx:DataGrid top="30" right="3" left="3" bottom="3" id="wsListDG" dataProvider="{wsList}">
 		<mx:columns>
-			<mx:DataGridColumn headerText="Column 1" dataField="col1"/>
-			<mx:DataGridColumn headerText="Column 2" dataField="col2"/>
-			<mx:DataGridColumn headerText="Column 3" dataField="col3"/>
+			<mx:DataGridColumn headerText="Session Id" dataField="sessionId"/>
+			<mx:DataGridColumn headerText="TM model" dataField="xmlName"/>
+			<mx:DataGridColumn headerText="Main server IP" dataField="mainServerIp"/>
 		</mx:columns>
 	</mx:DataGrid>
-	<mx:Button x="10" y="0" label="Refresh"/>
-	<mx:Button x="89" y="0" label="Edit" width="71"/>
-	<mx:Button x="168" y="0" label="Delete" width="71"/>
-	<mx:Button x="247" y="0" label="Start" width="71"/>
-	<mx:Button x="326" y="0" label="Stop" width="71"/>
+	<mx:Button x="10" y="0" label="Refresh" click="refreshHdlr()"/>
+	<mx:Button x="89" y="0" label="Edit" width="71" click="editHdlr()" id="editBtn"/>
+	<mx:Button x="168" y="0" label="Delete" width="71" click="deleteHdlr()" id="deleteBtn" enabled="false"/>
+	<mx:Script>
+		<![CDATA[
+			import RawiComponents.WSComponents.GetEditWSHdlr;
+			import RawiComponents.TMComponents.GetEditTMHdlr;
+			import RawiComponents.TMComponents.EditTM;
+			import RawiComponents.GlobalSettings;
+			import mx.core.Application;
+			import mx.collections.ArrayCollection;
+			
+			[Bindable]
+			private var wsList:ArrayCollection = new ArrayCollection();
+	        // manage Refresh
+			private function refreshHdlr():void
+			{
+				var loader:URLLoader = new URLLoader();
+				// TODO: find out how to cancel the cache - by then add the time parameter at the end 
+				var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/GetLists?type=workSessions" + "&time=" + new Date().getTime());
+				trace(request.url);
+				loader.addEventListener(Event.COMPLETE, getListHdlr);
+				GlobalSettings.configureListeners(loader);
+				loader.load(request);
+			}
+	        private function getListHdlr(event:Event):void
+			{
+				var loader:URLLoader = URLLoader(event.target);
+				wsList = new ArrayCollection();
+				this.editBtn.enabled = false;
+				trace(loader.data);
+				// adauga aici object.data
+				if (loader.data.toString().length > 0)
+				{
+					var xmlData:XML = new XML(loader.data.toString());
+					//trace (xmlData);
+					for each (var child:XML in xmlData.workSession)
+					{
+						trace(child.@id);
+						wsList.addItem( {sessionId:child.@id, xmlName:child.@xmlName, mainServerIp:child.@mainServerIp } );
+						this.editBtn.enabled = true;
+					}
+					wsListDG.selectedIndex = 0;
+	        	}
+			}
+			// manage Edit
+			private function editHdlr():void
+			{
+				if (wsListDG.selectedItem != null)
+				{
+					var getEditWS:GetEditWSHdlr = new GetEditWSHdlr();
+					getEditWS.viewEditHdlr(wsListDG.selectedItem.sessionId, wsListDG.selectedItem.xmlName);
+				}
+			}
+			// manage Delete
+			private function deleteHdlr():void
+			{
+				if (wsListDG.selectedItem != null && false)	// TODO: false until given an purpose
+				{
+					var loader:URLLoader = new URLLoader();
+					var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/DeleteWS?delete=" + wsListDG.selectedItem.tmName + ".xml&time=" + new Date().getTime());
+					loader.addEventListener(Event.COMPLETE, trace);
+					GlobalSettings.configureListeners(loader);
+					loader.load(request);
+					// request the new list
+					refreshHdlr();
+				}
+			}
+		]]>
+	</mx:Script>
 </mx:Canvas>
