@@ -7,7 +7,7 @@
 		<mx:Label text="RAWI" fontSize="20" alpha="1.0" fontWeight="bold" fontStyle="italic"/>
 		<mx:Spacer width="100" />
 		<mx:HBox id="mainMenu">
-			<mx:Text text="Some text here"/>
+			<mx:Text text="Some text here" id="statusLabel"/>
 		</mx:HBox>
 	</mx:ApplicationControlBar>
 	<mx:TabNavigator id="tabNav" left="3" top="10" right="3" bottom="3">

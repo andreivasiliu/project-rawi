@@ -17,6 +17,7 @@
 			private var m_activeNode:PackNodeBase = null;
 			public var activeOverNode:PackNodeBase = null;
 			public var stateEditor:EditorState = new EditorState();
+			public var gridSize:int = 5;
 			public function set activeNode(value:PackNodeBase):void
 			{
 				m_activeNode = value;
@@ -43,7 +44,6 @@
 				activeNode = null;
 				this.stateEditor.state = EditorState.NOTHING;
 				reDrawTempConnection();
-				trace("MouseDown from EditTM");
 			}
 			public function reDrawConnections():void
 			{

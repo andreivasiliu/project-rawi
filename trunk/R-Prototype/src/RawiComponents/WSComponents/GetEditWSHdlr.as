@@ -24,10 +24,10 @@ package RawiComponents.WSComponents
 				viewEditHdlr(xmlData.sessionId, tmName);
 			}
 		}
-		public function viewEditHdlr(sid:String, tmName:String):void	// invoked when EditWS is clicked in ViewWSList 
+		public function viewEditHdlr(sid:String, ptmName:String):void	// invoked when EditWS is clicked in ViewWSList 
 		{
 			this.sessionId = sid;
-			this.tmName = tmName;
+			this.tmName = ptmName;
 			var loader:URLLoader = new URLLoader();
 			// TODO: find out how to cancel the cache - by then add the time parameter at the end 
 			var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/DownloadXMLServlet?sessionId=" + sessionId + "&time=" + new Date().getTime());

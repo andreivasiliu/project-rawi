@@ -106,8 +106,9 @@
 					var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/CreateSession?modelName=" + this.tmListDG.selectedItem.tmName + ".xml" + "&mainServerIp=&time=" + new Date().getTime());
 					trace(request.url);
 					var geh:GetEditWSHdlr = new GetEditWSHdlr();
-					loader.addEventListener(Event.COMPLETE, geh.getCreateSessionHdlr);
 					GlobalSettings.configureListeners(loader);
+					loader.addEventListener(Event.COMPLETE, geh.getCreateSessionHdlr);
+					geh.tmName = this.tmListDG.selectedItem.tmName;
 					loader.load(request);
 				}
 			}
