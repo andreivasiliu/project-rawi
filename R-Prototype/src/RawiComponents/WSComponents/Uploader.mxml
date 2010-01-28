@@ -44,6 +44,7 @@
 			public var fileIdOnServer:String = "";
 			[Bindable]
 			public var fileName:String = "";
+			public var fileUrl:String = "";
 			public function init():void
 			{
 				file.addEventListener(Event.CANCEL, cancelHandler);
@@ -125,14 +126,15 @@
 					trace("Asociation succeded-File: " + fileName + " (" + fileIdOnServer + ") on session " +
 						myOwner.ownerOfProps.parentCont.sessionState.sessionId + " node(" +  myOwner.ownerOfProps.nid + ")", event);
 				else
-					Alert.show("File: " + fileName + " (" + fileIdOnServer + ") on session " + myOwner.ownerOfProps.parentCont.sessionState.sessionId +
-						" node(" +  myOwner.ownerOfProps.nid + ")", "Error asociating file");
+					GlobalSettings.alert("Error asociating: " + fileName + " (" + fileIdOnServer + ") on session " + myOwner.ownerOfProps.parentCont.sessionState.sessionId +
+						" node(" +  myOwner.ownerOfProps.nid + ")");
 			}
 			private function downloadHdlr():void
 			{
 				var downloadURL:URLRequest = new URLRequest();
-				downloadURL.url = GlobalSettings.baseUri + "/TheDownloadServlet/" + myOwner.ownerOfProps.parentCont.sessionState.sessionId +
-					"/" + fileIdOnServer + "/" + fileName;
+				//downloadURL.url = GlobalSettings.baseUri + "/TheDownloadServlet/" + myOwner.ownerOfProps.parentCont.sessionState.sessionId +
+				//	"/" + fileIdOnServer + "/" + fileName;
+				downloadURL.url = this.fileUrl;
 				fileDld.download(downloadURL, fileName);
 			}
 			private function openDldHandler(event:Event):void

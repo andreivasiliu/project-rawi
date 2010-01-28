@@ -4,6 +4,7 @@
 	<mx:Button x="10" y="0" label="Refresh" click="refreshHdlr()"/>
 	<mx:Button x="89" y="0" label="Start" width="71" id="startBtn" enabled="false" click="startHdlr()"/>
 	<mx:Button x="168" y="0" label="Stop" width="71" id="stopBtn" enabled="false" click="stopHdlr()"/>
+	<mx:Button x="247" y="0" label="Close" width="71" click="closeHdlr()"/>
 	<mx:HDividedBox left="3" top="30" right="3" bottom="3">
 		<mx:Canvas height="100%" width="100%" id="baseEcran" clipContent="true" mouseDown="mouseDownHdlr(event)">
 			<mx:Canvas id="ecran" x="0" y="0"/>
@@ -12,6 +13,7 @@
 	</mx:HDividedBox>
 	<mx:Script>
 		<![CDATA[
+			import mx.core.Application;
 			import RawiComponents.GlobalSettings;
 			public var nodesMap:Dictionary = new Dictionary();
 			public namespace ws = "http://www.example.org/WorkSession";
@@ -132,7 +134,6 @@
 			public function mouseDownHdlr(event:MouseEvent):void
 			{
 				activeNode = null;
-				trace("MouseDown from EditWS");
 			}
 			public function autoRefreshHdlr(event:TimerEvent):void
 			{
@@ -182,6 +183,7 @@
 								var upl:Uploader = packNode(nodesMap[int(node.@id)]).propsLocalContainer.addNewUploader();
 								upl.fileName = nn.file.@name;
 								upl.fileIdOnServer = nn.file.@id;
+								upl.fileUrl = nn.file.@url;
 								upl.viewstack.selectedIndex = 2;
 								trace("Uploader:", nn.file.@name);
 							}
@@ -225,6 +227,11 @@
 				else
 					trace("StartStartStopSession response failed:", event);
 				refreshHdlr();
+			}
+			public function closeHdlr():void
+			{
+				this.refreshTimer.stop();
+				(Application.application as RAWI).tabNav.removeChild(this);
 			}
 			public function updateMultiNode():void
 			{

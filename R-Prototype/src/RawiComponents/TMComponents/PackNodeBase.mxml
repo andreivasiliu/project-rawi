@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
 	mouseUp="mouseUpHdlr(event)" mouseDown="mouseDownHdlr(event)" mouseMove="mouseMoveHdlr(event)"
-	mouseOver="mouseOverHdlr(event)" mouseOut="mouseOutHdlr(event)" keyDown="keyDownHdlr(event)" keyUp="keyUpHdlr(event)" >
+	mouseOver="mouseOverHdlr(event)" mouseOut="mouseOutHdlr(event)" keyDown="keyDownHdlr(event)" keyUp="keyUpHdlr(event)">
 	<mx:Script>
 		<![CDATA[
 			import mx.containers.VBox;
@@ -18,6 +18,8 @@
 			[Bindable]
 			public var propsContainer:propsBase;
 			public var isMultiNode:Boolean = false;
+			private var dragRelativeX:int = 0;
+			private var dragRelativeY:int = 0;
 			public function get inputCenter():Point
 			{
 				return parentCont.ecran.globalToLocal(localToGlobal(m_inputCenter))
@@ -46,13 +48,23 @@
 			{
 				overMe = false;
 				this.parentCont.activeOverNode = null;
+				if (dragging)
+				{
+					this.stopDrag();
+					dragging = false;
+				}
 			}
 			private function mouseMoveHdlr(event:MouseEvent):void
 			{
 				parentCont.reDrawConnections();
 				if (dragging)
 				{
-					parentCont.reDrawConnections();
+					if (event.altKey) // snap to grid
+					{
+						x = int((parentCont.ecran.mouseX - dragRelativeX) / parentCont.gridSize)*parentCont.gridSize;
+						y = int((parentCont.ecran.mouseY - dragRelativeY) / parentCont.gridSize)*parentCont.gridSize;
+						parentCont.reDrawConnections();
+					}
 					this.propsContainer.showPos(this.x, this.y);
 				}
 				else if (this.parentCont.stateEditor.state == EditorState.NEW_CONN)
@@ -91,7 +103,7 @@
 					this.parentCont.reDrawTempConnection();
 				}
 				// stop Dragging
-				if (dragging)
+				if (dragging && (event.keyCode == Keyboard.DELETE || event.keyCode == Keyboard.CONTROL || event.keyCode == Keyboard.SHIFT))
 				{
 					stopDrag();
 					dragging = false;
@@ -108,6 +120,8 @@
 				event.stopImmediatePropagation();
 				if (this.parentCont.stateEditor.state == EditorState.NOTHING)		// Drag the node
 				{
+					dragRelativeX = mouseX;
+					dragRelativeY = mouseY;
 					startDrag();
 					dragging = true;
 					setAsActiveNode();
