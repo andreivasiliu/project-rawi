@@ -111,7 +111,7 @@
 				var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/PutFileInPackServlet?sessionId=" + 
 						myOwner.ownerOfProps.parentCont.sessionState.sessionId +
 						"&fileId=" + fileIdOnServer + "&fileName=" + fileName +
-						"&packId=" + myOwner.ownerOfProps.nid + "?time=" + new Date().getTime());
+						"&packId=" + myOwner.ownerOfProps.nid + "&time=" + new Date().getTime());
 				trace(request.url);
 				GlobalSettings.configureListeners(loader);
 				loader.addEventListener(Event.COMPLETE, trace);
