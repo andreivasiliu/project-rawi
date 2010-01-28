@@ -6,6 +6,7 @@ package servlets;
 
 import classes.MainBean;
 import classes.Session;
+import classes.UploadedFile;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.rmi.NotBoundException;
@@ -40,7 +41,12 @@ public class PutFileInPackServlet extends HttpServlet {
 
             String baseUrl = pageURL.substring(0, pageURL.indexOf(servletName))
                     + "/TheDownloadServlet/" + sessionId;
-            FileHandle fileHandle = new FileHandle(baseUrl, fileId, fileName);
+            Session session = MainBean.getFromContext(getServletContext())
+                    .getSessionById(Long.parseLong(sessionId));
+            UploadedFile file = session.getFileById(Long.parseLong(fileId));
+
+            FileHandle fileHandle = new FileHandle(baseUrl, fileId, file.logicalName);
+            fileHandle.setZipFile(file.zipFile);
             
             if (sendAssociateRequestToMS(response, sessionId, fileHandle, packId))
                 out.println("Ok!");

@@ -7,13 +7,13 @@ import rawi.common.Notifier;
 import rawi.mainserver.ClusterManager;
 
 /**
- *
  * @author Ioana & Andrei & Whyte
  */
 public class Main
 {
     public static void main(String[] args) throws RemoteException
     {
+        //System.setProperty("java.rmi.server.hostname", "5.146.43.252");
         ClusterManager clusterManager = new ClusterManager();
         Thread t = new Thread(clusterManager, "Cluster-Manager-Thread");
         t.start();
@@ -25,9 +25,7 @@ public class Main
         RMIMainServer s = new RMIMainServer(clusterManager);
         System.out.println("Started RMI server.");
 
-        System.out.println("Beginning...");
         Collection<String> IPs = NetworkUtils.getIPsFromTracker("ClusterComputer");
         clusterManager.addIpsToScan(IPs);
-        System.out.println("Stopped.");
     }
 }

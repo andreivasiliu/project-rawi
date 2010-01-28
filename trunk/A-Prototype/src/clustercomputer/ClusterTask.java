@@ -1,5 +1,6 @@
 package clustercomputer;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.security.NoSuchAlgorithmException;
@@ -16,11 +17,14 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
@@ -69,7 +73,7 @@ public class ClusterTask
     {
         HttpClient httpclient = new DefaultHttpClient();
 
-        File currentDir = new File("task" + task.getId());
+        String currentDir = new File("task" + task.getId()).toString();
 
         List<FileHandle> files = task.getFiles();
         for (FileHandle f : files)
@@ -88,8 +92,47 @@ public class ClusterTask
                     out.write(tmp, 0, length);
                 }
                 out.close();
+                if (f.isZipFile())
+                    unzipFile(currentDir + "/" + f.getLogicalName(), currentDir);
             }
         }
+    }
+
+    private static void unzipFile(String fileName, String currentDir)
+            throws IOException
+    {
+        ZipFile zipFile = new ZipFile(fileName);
+
+        System.out.println("Unzipping archive...");
+        
+        for (ZipEntry zipEntry : Collections.list(zipFile.entries()))
+        {
+            if (zipEntry.isDirectory())
+                new File(zipEntry.getName()).mkdir();
+            else
+            {
+                String outFileName = currentDir + "/" + zipEntry.getName();
+                copyInputStream(zipFile.getInputStream(zipEntry),
+                        new BufferedOutputStream(new FileOutputStream(outFileName)));
+                System.out.println("Extracted " + zipEntry.getName());
+            }
+        }
+
+        zipFile.close();
+        new File(fileName).delete();
+    }
+
+    private static void copyInputStream(InputStream in, OutputStream out)
+            throws IOException
+    {
+        byte[] buffer = new byte[1024];
+        int len;
+
+        while((len = in.read(buffer)) >= 0)
+            out.write(buffer, 0, len);
+
+        in.close();
+        out.close();
     }
 
     /**
@@ -301,7 +344,7 @@ public class ClusterTask
         System.out.println();
 */
         
-        Process p = Runtime.getRuntime().exec(file.getAbsolutePath() + "/" +"myBatch.bat", null, file);
+        Process p = Runtime.getRuntime().exec("\"" + file.getAbsolutePath() + "/" +"myBatch.bat" + "\"", null, file);
         BufferedReader stdout = new BufferedReader(new InputStreamReader(p.getInputStream()));
         String line;
         while ((line = stdout.readLine()) != null)
