@@ -200,7 +200,7 @@
 			{
 				var loader:URLLoader = new URLLoader();
 				// TODO: find out how to cancel the cache - by then add the time parameter at the end 
-				var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/StartStopSession?sessionId=" + sessionState.sessionId + "&action=start?time=" + new Date().getTime());
+				var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/StartStopSession?sessionId=" + sessionState.sessionId + "&action=start&time=" + new Date().getTime());
 				trace(request.url);
 				GlobalSettings.configureListeners(loader);
 				loader.addEventListener(Event.COMPLETE, trace);
@@ -211,7 +211,7 @@
 			{
 				var loader:URLLoader = new URLLoader();
 				// TODO: find out how to cancel the cache - by then add the time parameter at the end 
-				var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/StartStopSession?sessionId=" + sessionState.sessionId + "&action=stop?time=" + new Date().getTime());
+				var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/StartStopSession?sessionId=" + sessionState.sessionId + "&action=stop&time=" + new Date().getTime());
 				trace(request.url);
 				GlobalSettings.configureListeners(loader);
 				loader.addEventListener(Event.COMPLETE, trace);
