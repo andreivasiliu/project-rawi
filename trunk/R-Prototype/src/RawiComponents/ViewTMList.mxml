@@ -2,7 +2,7 @@
 <mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" label="ViewTMList">
 	<mx:DataGrid top="30" right="3" left="3" bottom="3" id="tmListDG" dataProvider="{tmList}">
 		<mx:columns>
-			<mx:DataGridColumn headerText="Column 1" dataField="tmName"/>
+			<mx:DataGridColumn headerText="TM name" dataField="tmName"/>
 			<mx:DataGridColumn headerText="Column 2" dataField="col2"/>
 			<mx:DataGridColumn headerText="Column 3" dataField="col3"/>
 		</mx:columns>
@@ -23,16 +23,6 @@
 			
 			[Bindable]
 			private var tmList:ArrayCollection = new ArrayCollection();
-			private function configureListeners(dispatcher:IEventDispatcher):void
-			{
-				// manage the other events from URLRequest
-	            //dispatcher.addEventListener(Event.COMPLETE, getFromToAirports);
-	            dispatcher.addEventListener(Event.OPEN, trace);
-	            dispatcher.addEventListener(ProgressEvent.PROGRESS, trace);
-	            dispatcher.addEventListener(SecurityErrorEvent.SECURITY_ERROR, trace);
-	            dispatcher.addEventListener(HTTPStatusEvent.HTTP_STATUS, trace);
-	            dispatcher.addEventListener(IOErrorEvent.IO_ERROR, trace);
-	        }
 	        // manage Refresh
 			private function refreshHdlr():void
 			{
@@ -41,7 +31,7 @@
 				var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/GetLists?type=xml" + "&time=" + new Date().getTime());
 				trace(request.url);
 				loader.addEventListener(Event.COMPLETE, getListHdlr);
-				configureListeners(loader);
+				GlobalSettings.configureListeners(loader);
 				loader.load(request);
 			}
 	        private function getListHdlr(event:Event):void
@@ -77,7 +67,7 @@
 					var loader:URLLoader = new URLLoader();
 					var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/ValidateXMLServlet?delete=" + tmListDG.selectedItem.tmName + ".xml&time=" + new Date().getTime());
 					loader.addEventListener(Event.COMPLETE, trace);
-					configureListeners(loader);
+					GlobalSettings.configureListeners(loader);
 					loader.load(request);
 					// request the new list
 					refreshHdlr();
@@ -103,7 +93,7 @@
 					trace(request.url);
 					var geh:GetEditTMHdlr = new GetEditTMHdlr(tmListDG.selectedItem.tmName);
 					loader.addEventListener(Event.COMPLETE, geh.getEditHdlr);
-					configureListeners(loader);
+					GlobalSettings.configureListeners(loader);
 					loader.load(request);
 				}
 			}
@@ -115,9 +105,9 @@
 					// TODO: find out how to cancel the cache - by then add the time parameter at the end
 					var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/CreateSession?modelName=" + this.tmListDG.selectedItem.tmName + ".xml" + "&mainServerIp=&time=" + new Date().getTime());
 					trace(request.url);
-					var geh:GetEditWSHdlr = new GetEditWSHdlr(tmListDG.selectedItem.tmName);
-					loader.addEventListener(Event.COMPLETE, geh.getEditHdlr);
-					configureListeners(loader);
+					var geh:GetEditWSHdlr = new GetEditWSHdlr();
+					loader.addEventListener(Event.COMPLETE, geh.getCreateSessionHdlr);
+					GlobalSettings.configureListeners(loader);
 					loader.load(request);
 				}
 			}

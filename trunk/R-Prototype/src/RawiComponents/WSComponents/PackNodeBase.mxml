@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="400" height="300">
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" mouseDown="mouseDownHdlr(event)">
 	<mx:Script>
 		<![CDATA[
+			import mx.controls.Label;
 			import mx.containers.VBox;
 			import mx.containers.Panel;
 			public var nid:int;
@@ -16,6 +17,7 @@
 			[Bindable]
 			public var propsContainer:propsBase;
 			public var isMultiNode:Boolean = false;
+			public var nodeState:Label;
 			public function get inputCenter():Point
 			{
 				return parentCont.ecran.globalToLocal(localToGlobal(m_inputCenter))
@@ -23,6 +25,11 @@
 			public function get outputCenter():Point
 			{
 				return parentCont.ecran.globalToLocal(localToGlobal(m_outputCenter));
+			}
+			private function mouseDownHdlr(event:MouseEvent):void
+			{
+				event.stopImmediatePropagation();
+				setAsActiveNode();
 			}
 			// update the propsContainer
 			public function setAsActiveNode():void
@@ -33,6 +40,11 @@
 				parentCont.reDrawObjects();
 			}
 			public function drawObject():void {}
+			public function get isJoiner():Boolean
+			{ return false; }
+			public function get isSplitter():Boolean
+			{ return false; }
+
 		]]>
 	</mx:Script>
 </mx:Canvas>

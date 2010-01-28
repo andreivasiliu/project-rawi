@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" initialize="init()"
-	label="{'WS - ' + propsGen.schemaName.text}">
-	<mx:Button x="10" y="0" label="Refresh"/>
-	<mx:Button x="89" y="0" label="Start" width="71"/>
-	<mx:Button x="168" y="0" label="Stop" width="71"/>
+	label="{'WS ' + sessionState.sessionId + '- ' + propsGen.schemaName.text}">
+	<mx:Button x="10" y="0" label="Refresh" click="refreshHdlr()"/>
+	<mx:Button x="89" y="0" label="Start" width="71" id="startBtn" enabled="false" click="startHdlr()"/>
+	<mx:Button x="168" y="0" label="Stop" width="71" id="stopBtn" enabled="false" click="stopHdlr()"/>
 	<mx:HDividedBox left="3" top="30" right="3" bottom="3">
 		<mx:Canvas height="100%" width="100%" id="baseEcran" clipContent="true" mouseDown="mouseDownHdlr(event)">
 			<mx:Canvas id="ecran" x="0" y="0"/>
@@ -12,12 +12,16 @@
 	</mx:HDividedBox>
 	<mx:Script>
 		<![CDATA[
+			import RawiComponents.GlobalSettings;
 			public var nodesMap:Dictionary = new Dictionary();
-			public namespace tm = "http://www.example.org/WorkSession";
+			public namespace ws = "http://www.example.org/WorkSession";
+			public namespace tm = "http://www.example.org/TransformationModel";
 			private var m_activeNode:PackNodeBase = null;
+			[Bindable]
 			public var sessionState:SessionState = new SessionState();
 			[Bindable]
 			public var propsGen:propsGeneral = new propsGeneral;
+			public var refreshTimer:Timer = new Timer(2000);
 			public function set activeNode(value:PackNodeBase):void
 			{
 				m_activeNode = value;
@@ -41,19 +45,67 @@
 			}
 			public function init():void
 			{
-				// TODO: some inits here
+				propsGen.initialize();
+				activeNode = null;
+				refreshTimer.addEventListener(TimerEvent.TIMER, autoRefreshHdlr);
+				refreshTimer.start(); // TODO: uncommnet this line to start auto refresh
 			}
-			public function initFromXml(data:XML):void
+			public function initFromXml(data:XML, tmName:String):void
 			{
-				this.propertiesPanel.removeAllChildren();
+				/*this.propertiesPanel.removeAllChildren();
 				this.propertiesPanel.addChild(propsGen);
 				this.sessionState.sessionId = data.sessionId;
 				this.sessionState.downloadUrl = data.downloadUrl;
 				this.sessionState.uploadUrl = data.uploadUrl;
-				this.sessionState.messageLogIp = data.messageLogIp;
+				this.sessionState.messageLogIp = data.messageLogIp;*/
 				
-				propsGen.uploaderOne.sessionState = this.sessionState;
+				//propsGen.uploaderOne.sessionState = this.sessionState;
 				trace("init ws from XML", data);
+
+				use namespace tm;
+				for each (var node:XML in data.transformationGraph.packNode + data.transformationGraph.packTransformerNode)
+				{
+					var gn:PackNodeBase;
+					if (node.localName() == "packNode")
+					{
+						var pn:packNode = new packNode();
+						gn = pn;
+						ecran.addChild(gn);
+						pn.propsContainer.initialize();
+						pn.propsLocalContainer.pattern.text = node.pattern.@regex;
+						pn.propsLocalContainer.isSplitter.selected = node.@isSplitter == "true" ? true : false;
+						pn.propsLocalContainer.allowsMultipleFiles.selected = node.@allowsMultipleFiles == "true" ? true : false;
+					}
+					if (node.localName() == "packTransformerNode")
+					{
+						var ptn:packTransformerNode = new packTransformerNode();
+						gn = ptn;
+						ecran.addChild(gn);
+						ptn.propsContainer.initialize();
+						ptn.propsLocalContainer.command.text = node.command.@exec;
+						ptn.propsLocalContainer.isJoiner.selected = node.@isJoiner  == "true" ? true : false;
+						ptn.propsLocalContainer.createBatch.selected = node.@createBatch  == "true" ? true : false;
+						ptn.propsLocalContainer.systemCommand.selected = node.@systemCommand  == "true" ? true : false;
+					}
+					gn.nid = node.@id;
+					nodesMap[gn.nid] = gn;
+					gn.x = node.@x;
+					gn.y = node.@y;
+					gn.parentCont = this;
+					gn.propsContainer.nodeName.text = node.@name;
+					
+					for each (var output:XML in node.output)
+						gn.outputToNodes[int(output.@node)] = int(output.@node);
+					
+					for each (var input:XML in node.input)
+						gn.inputFromNodes[int(input.@node)] = int(input.@node);
+				}
+				this.propsGen.schemaDescription.text = data.description;
+				this.propsGen.schemaName.text = tmName;
+				reDrawConnections();
+				reDrawObjects();
+				updateMultiNode();
+				refreshHdlr();
 			}
 			public function reDrawObjects():void
 			{
@@ -81,6 +133,122 @@
 			{
 				activeNode = null;
 				trace("MouseDown from EditWS");
+			}
+			public function autoRefreshHdlr(event:TimerEvent):void
+			{
+				if (stopBtn.enabled)	// if the session is running right now
+					refreshHdlr();
+			}
+			public function refreshHdlr():void
+			{
+				var loader:URLLoader = new URLLoader();
+				// TODO: find out how to cancel the cache - by then add the time parameter at the end 
+				var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/getSessionStatus.jsp?sessionId=" + sessionState.sessionId + "&time=" + new Date().getTime());
+				trace(request.url);
+				loader.addEventListener(Event.COMPLETE, getRefreshHdlr);
+				GlobalSettings.configureListeners(loader);
+				loader.load(request);
+			}
+			public function getRefreshHdlr(event:Event):void
+			{
+				use namespace ws;
+				var loader:URLLoader = URLLoader(event.target);
+				//trace(loader.data);
+				// adauga aici object.data
+				if (loader.data.toString().length > 0)
+				{
+					var xmlData:XML = new XML(loader.data.toString());
+					trace ("Refresh data - status working=", xmlData.globalStatus.@working);
+					// TODO: update nodes here
+					if (xmlData.globalStatus.@working == "true")
+					{
+						this.startBtn.enabled = false;
+						this.stopBtn.enabled = true;
+					}
+					else
+					{
+						this.stopBtn.enabled = false;
+						this.startBtn.enabled = true;
+					}
+					for each (var node:XML in xmlData.nodeInstances.packNode)
+					{
+						PackNodeBase(nodesMap[int(node.@id)]).nodeState.text = "(" + node.subState.(@status == "empty").length() + "/" +
+							node.subState.(@status == "ready").length() + ")";
+						packNode(nodesMap[int(node.@id)]).propsLocalContainer.fileBox.removeAllChildren();
+						for each (var nn:XML in node.subState)
+						{
+							if (nn.@status != "empty")
+							{
+								var upl:Uploader = packNode(nodesMap[int(node.@id)]).propsLocalContainer.addNewUploader();
+								upl.fileName = nn.file.@name;
+								upl.fileIdOnServer = nn.file.@id;
+								upl.viewstack.selectedIndex = 2;
+								trace("Uploader:", nn.file.@name);
+							}
+						}
+						// add a new empty one at the end
+						packNode(nodesMap[int(node.@id)]).propsLocalContainer.addNewUploader();
+					}
+					for each (node in xmlData.nodeInstances.packTransformerNode)
+					{
+						PackNodeBase(nodesMap[int(node.@id)]).nodeState.text = "(" + node.subState.(@status == "pending").length() + "/" +
+							node.subState.(@status == "working").length() + "/" + node.subState.(@status == "done").length() + ")";
+					}
+				}
+			}
+			public function startHdlr():void
+			{
+				var loader:URLLoader = new URLLoader();
+				// TODO: find out how to cancel the cache - by then add the time parameter at the end 
+				var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/StartStopSession?sessionId=" + sessionState.sessionId + "&action=start?time=" + new Date().getTime());
+				trace(request.url);
+				GlobalSettings.configureListeners(loader);
+				loader.addEventListener(Event.COMPLETE, trace);
+				loader.addEventListener(HTTPStatusEvent.HTTP_STATUS, getStartStopHdlr);
+				loader.load(request);
+			}
+			public function stopHdlr():void
+			{
+				var loader:URLLoader = new URLLoader();
+				// TODO: find out how to cancel the cache - by then add the time parameter at the end 
+				var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/StartStopSession?sessionId=" + sessionState.sessionId + "&action=stop?time=" + new Date().getTime());
+				trace(request.url);
+				GlobalSettings.configureListeners(loader);
+				loader.addEventListener(Event.COMPLETE, trace);
+				loader.addEventListener(HTTPStatusEvent.HTTP_STATUS, getStartStopHdlr);
+				loader.load(request);
+			}
+			public function getStartStopHdlr(event:HTTPStatusEvent):void
+			{
+				if (event.status == 200)
+					trace("StartStopSession response succeded:", event);
+				else
+					trace("StartStartStopSession response failed:", event);
+				refreshHdlr();
+			}
+			public function updateMultiNode():void
+			{
+				for each (var nd:PackNodeBase in nodesMap)
+					nd.isMultiNode = false;
+				for each (nd in nodesMap)
+				{
+					if (nd.isSplitter)
+					{
+						marked = new Dictionary();
+						DFS(nd);
+					}
+				}
+				reDrawObjects();
+			}
+			private var marked:Dictionary;
+			private function DFS(nd:PackNodeBase):void
+			{
+				if (!nd.isJoiner)
+				{
+					nd.isMultiNode = true;
+					for each (var child:int in nd.outputToNodes)
+						DFS(nodesMap[child]);
+				}
 			}
 		]]>
 	</mx:Script>

@@ -148,6 +148,7 @@
 						pn.propsContainer.initialize();
 						pn.propsLocalContainer.pattern.text = node.pattern.@regex;
 						pn.propsLocalContainer.isSplitter.selected = node.@isSplitter == "true" ? true : false;
+						pn.propsLocalContainer.allowsMultipleFiles.selected = node.@allowsMultipleFiles == "true" ? true : false;
 					}
 					if (node.localName() == "packTransformerNode")
 					{

@@ -1,4 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="200" height="100">
-	
-</mx:Canvas>
+<PackNodeBase xmlns="RawiComponents.WSComponents.*" xmlns:mx="http://www.adobe.com/2006/mxml" initialize="init()" >
+	<mx:Label x="2" y="2" text="{propsContainer.nodeName.text}" id="nodeName" resize="drawObject()"/>
+	<mx:Label x="2" y="23" text="(e/r)" id="m_nodeState"/>
+	<mx:Script>
+		<![CDATA[
+			public var propsLocalContainer:propsPN;
+			public var myHeight:int = 22;
+			private function init():void
+			{
+				this.nodeType = "packNode";
+				this.m_inputCenter = new Point(0, 2);
+				this.m_outputCenter = new Point(0, myHeight);
+				this.propsLocalContainer = new propsPN(); 
+				this.propsContainer = this.propsLocalContainer;
+				this.clipContent = false;
+				this.propsContainer.ownerOfProps = this;
+				this.nodeState = m_nodeState; 
+				trace("init from packNode");
+			}
+			public override function drawObject():void
+			{
+				this.nodeName.x = -nodeName.width/2
+				this.graphics.clear();
+				var multiOffset:int = 4;
+				var radius:int = 20;
+				
+				var fillType:String = GradientType.LINEAR;
+				var colors:Array = [0xC0C9CF, 0xffffff];
+				var alphas:Array = [1, 1];
+				var ratios:Array = [0x00, 0xFF];
+				var matr:Matrix = new Matrix();
+				matr.createGradientBox(nodeName.width + 10, 25, Math.PI/2, 0, 0);
+				var spreadMethod:String = SpreadMethod.PAD;
+				// Draw shadow
+				this.graphics.lineStyle(0, 0xcccccc, 0.8, false);
+				this.graphics.beginFill(0xcccccc, 0.8);
+				if (isMultiNode)
+				{
+					this.graphics.beginFill(0xcccccc, 0.8);
+					this.graphics.drawRoundRect(nodeName.x - 3 + multiOffset * 2, 2 - multiOffset * 2, nodeName.width + 10, myHeight, radius, radius);
+					this.graphics.endFill();
+					this.graphics.beginFill(0xcccccc, 0.8);
+					this.graphics.drawRoundRect(nodeName.x - 3 + multiOffset * 1, 2 - multiOffset * 1, nodeName.width + 10, myHeight, radius, radius);
+					this.graphics.endFill();
+				}
+				this.graphics.beginFill(0xcccccc, 0.8);
+				this.graphics.drawRoundRect(nodeName.x - 3, 2, nodeName.width + 10, myHeight, radius, radius);
+				this.graphics.endFill();
+
+				// Draw the object
+				if (this.parentCont.activeNode == this)
+					this.graphics.lineStyle(2, 0x555588, 1, true);
+				else
+					this.graphics.lineStyle(0, 0x888888, 1, true);
+				if (isMultiNode)
+				{
+					//colors = [0xC0C9CF, 0xffffff];
+					this.graphics.beginGradientFill(fillType, colors, alphas, ratios, matr, spreadMethod);
+					this.graphics.drawRoundRect(nodeName.x - 5 + multiOffset * 2, 0 - multiOffset * 2, nodeName.width + 10, myHeight, radius, radius);
+					this.graphics.endFill();
+
+					this.graphics.beginGradientFill(fillType, colors, alphas, ratios, matr, spreadMethod);
+					this.graphics.drawRoundRect(nodeName.x - 5 + multiOffset * 1, 0 - multiOffset * 1, nodeName.width + 10, myHeight, radius, radius);
+					this.graphics.endFill();
+				}
+				//colors = [0xffffff, 0xC0C9CF];
+				this.graphics.beginGradientFill(fillType, colors, alphas, ratios, matr, spreadMethod);
+				this.graphics.drawRoundRect(nodeName.x - 5, 0, nodeName.width + 10, myHeight, radius, radius);
+				this.graphics.endFill();
+			}
+			public override function get isSplitter():Boolean
+			{
+				return this.propsLocalContainer.isSplitter.selected;
+			}
+		]]>
+	</mx:Script>
+</PackNodeBase>
