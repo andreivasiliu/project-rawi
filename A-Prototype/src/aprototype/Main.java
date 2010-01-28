@@ -18,7 +18,7 @@ public class Main extends Thread
     public static void main(String[] args) throws RemoteException, IOException,
             NotBoundException
     {
-        System.setProperty("java.rmi.server.hostname", "5.242.52.108");
+        //System.setProperty("java.rmi.server.hostname", "5.242.52.108");
         ClusterComputer cc = new ClusterComputer();
 
         Collection<String> mainServerIpList = NetworkUtils.getIPsFromTracker("MainServer");

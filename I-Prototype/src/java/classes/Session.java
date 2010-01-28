@@ -1,7 +1,7 @@
 package classes;
 
-import java.io.File;
 import java.util.HashMap;
+import rawi.common.SessionInfo;
 
 public class Session {
     Long id;
@@ -9,6 +9,7 @@ public class Session {
     public String xmlContents;
     public String folderName;
     public String mainServerIp;
+    public SessionInfo sessionInfo;
     HashMap<Long, UploadedFile> fileList = new HashMap<Long, UploadedFile>();
     long lastUsedFileId = 0;
 
@@ -44,8 +45,8 @@ public class Session {
         fileList.put(file.id, file);
     }
 
-    public File getFileById(long id) {
-        return fileList.get(id).theFile;
+    public UploadedFile getFileById(long id) {
+        return fileList.get(id);
         //return fileList.get("name/of/the/file.txt");
     }
 

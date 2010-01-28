@@ -34,6 +34,9 @@ public class TheUploadServlet extends HttpServlet {
         String url = request.getPathInfo();
         String sessionId = url.split("/")[1];
         String fileLogicalName = url.substring(2 + sessionId.length());
+        boolean zipFile = Boolean.valueOf(request.getParameter("zipFile"));
+        if (zipFile)
+            System.out.println("Received a zip file.");
 
         // Check that we have a file upload request
         boolean isMultipart = ServletFileUpload.isMultipartContent(request);
@@ -62,8 +65,9 @@ public class TheUploadServlet extends HttpServlet {
 
             if (!item.isFormField()) {
                 long fileId = processUploadedFile(item, new Long(sessionId),
-                        fileLogicalName);
+                        fileLogicalName, zipFile);
                 out.println("File ID: " + fileId + "\n");
+                break;
             }
         }
 
@@ -75,7 +79,7 @@ public class TheUploadServlet extends HttpServlet {
 //        doPost(request, response);
 //    }
     private long processUploadedFile(FileItem item, Long sessionId,
-            String fileLogicalName) throws IOException {
+            String fileLogicalName, boolean zipFile) throws IOException {
 
         InputStream uploadedStream = item.getInputStream();
 
@@ -93,15 +97,17 @@ public class TheUploadServlet extends HttpServlet {
         File myFile = new File(session.folderName + "/" + fullFileName);
 
         FileOutputStream fos = new FileOutputStream(myFile);
+        byte[] bytes = new byte[4096];
         int bytesRead;
-        while ((bytesRead = uploadedStream.read()) != -1) {
-            fos.write(bytesRead);
+        while ((bytesRead = uploadedStream.read(bytes, 0, 4096)) != -1) {
+            fos.write(bytes, 0, bytesRead);
         }
         fos.close();
         uploadedStream.close();
 
         // add file to session's file list
-        session.addFileToList(new UploadedFile(fileId, fileLogicalName, myFile));
+        session.addFileToList(new UploadedFile(fileId, fileLogicalName, myFile,
+                zipFile));
 
         return fileId;
     }

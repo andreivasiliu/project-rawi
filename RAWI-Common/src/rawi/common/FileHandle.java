@@ -6,6 +6,7 @@
 package rawi.common;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 /**
  *
@@ -13,9 +14,11 @@ import java.io.Serializable;
  */
 public class FileHandle implements Serializable
 {
+    String uniqueId = UUID.randomUUID().toString();
     String baseURL;
     String id;
     String logicalName;
+    boolean zipFile = false;
 
     public FileHandle(String logicalName)
     {
@@ -42,6 +45,11 @@ public class FileHandle implements Serializable
         return id;
     }
 
+    public String getUniqueId()
+    {
+        return uniqueId;
+    }
+
     public String getLogicalName()
     {
         return logicalName;
@@ -60,5 +68,15 @@ public class FileHandle implements Serializable
     public void setLogicalName(String logicalName)
     {
         this.logicalName = logicalName;
+    }
+
+    public boolean isZipFile()
+    {
+        return zipFile;
+    }
+
+    public void setZipFile(boolean zipFile)
+    {
+        this.zipFile = zipFile;
     }
 }

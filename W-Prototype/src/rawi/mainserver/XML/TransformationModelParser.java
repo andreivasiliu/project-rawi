@@ -61,42 +61,63 @@ public class TransformationModelParser extends DefaultHandler
     public void startElement(String uri, String localName, String name,
             Attributes attributes) throws SAXException
     {
-        if (!uri.equals(URI)) {
+        if (!uri.equals(URI))
             return;
-        }
 
-        if (localName.equals("packNode")) {
+        if (localName.equals("packNode"))
+        {
             packNode = model.addPackNode();
 
             currentID = attributes.getValue("id");
             localIdToNode.put(currentID, packNode);
 
             String nodeName = attributes.getValue("name");
-            if (nodeName != null) {
+            if (nodeName != null)
                 packNode.setName(nodeName);
-            }
 
-            if (attributes.getValue("isSplitter") != null &&
-                    attributes.getValue("isSplitter").equals("true"))
+            if (attributes.getValue("isSplitter") != null
+                    && attributes.getValue("isSplitter").equals("true"))
                 packNode.setIsSplitter(true);
-        } else if (localName.equals("packTransformerNode")) {
+
+            String x = attributes.getValue("x");
+            if (x != null)
+                packNode.setCoordX(Long.parseLong(x));
+
+            String y = attributes.getValue("y");
+            if (y != null)
+                packNode.setCoordY(Long.parseLong(y));
+        }
+        else if (localName.equals("packTransformerNode"))
+        {
             packTransformerNode = model.addPackTransformerNode();
 
             currentID = attributes.getValue("id");
             localIdToNode.put(currentID, packTransformerNode);
 
             String nodeName = attributes.getValue("name");
-            if (nodeName != null) {
+            if (nodeName != null)
+            {
                 packTransformerNode.setName(nodeName);
             }
 
-            if (attributes.getValue("isJoiner") != null &&
-                    attributes.getValue("isJoiner").equals("true"))
+            if (attributes.getValue("isJoiner") != null
+                    && attributes.getValue("isJoiner").equals("true"))
                 packTransformerNode.setIsJoiner(true);
-        } else if (localName.equals("output")) {
+
+            String x = attributes.getValue("x");
+            if (x != null)
+                packTransformerNode.setCoordX(Long.parseLong(x));
+
+            String y = attributes.getValue("y");
+            if (y != null)
+                packTransformerNode.setCoordY(Long.parseLong(y));
+        }
+        else if (localName.equals("output"))
+        {
             // TODO: Throw exception if ID is null.
 
-            if (!localIdToOutputList.containsKey(currentID)) {
+            if (!localIdToOutputList.containsKey(currentID))
+            {
                 localIdToOutputList.put(currentID, new HashSet<String>());
             }
 
@@ -116,31 +137,44 @@ public class TransformationModelParser extends DefaultHandler
     public void endElement(String uri, String localName, String name)
             throws SAXException
     {
-        if (localName.equals("packNode")) {
+        if (localName.equals("packNode"))
+        {
             packNode = null;
-        } else if (localName.equals("packTransformerNode")) {
+        }
+        else if (localName.equals("packTransformerNode"))
+        {
             packTransformerNode = null;
-        } else if (localName.equals("transformationGraph")) {
+        }
+        else if (localName.equals("transformationGraph"))
+        {
             linkAllNodes();
         }
     }
 
     private void linkAllNodes()
     {
-        for (String from : localIdToOutputList.keySet()) {
+        for (String from : localIdToOutputList.keySet())
+        {
             Set<String> toList = localIdToOutputList.get(from);
 
             Node fromNode = localIdToNode.get(from);
             if (fromNode == null);// TODO: throw Exception
-            for (String to : toList) {
+            for (String to : toList)
+            {
                 Node toNode = localIdToNode.get(to);
                 if (toNode == null);// TODO: throw Exception
 
-                if (fromNode instanceof Pack && toNode instanceof PackTransformer) {
+                if (fromNode instanceof Pack
+                        && toNode instanceof PackTransformer)
+                {
                     model.addOutput((Pack) fromNode, (PackTransformer) toNode);
-                } else if (fromNode instanceof PackTransformer && toNode instanceof Pack) {
+                }
+                else if (fromNode instanceof PackTransformer
+                        && toNode instanceof Pack)
+                {
                     model.addOutput((PackTransformer) fromNode, (Pack) toNode);
-                } else;// TODO: throw Exception
+                }
+                else;// TODO: throw Exception
             }
         }
     }

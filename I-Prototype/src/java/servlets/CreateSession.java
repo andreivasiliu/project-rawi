@@ -8,12 +8,13 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.util.List;
+import java.util.Collection;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import rawi.common.MainServerInterface;
+import rawi.common.NetworkUtils;
 import rawi.common.Ports;
 import rawi.common.SessionInfo;
 import rawi.rmiinfrastructure.RMIClientModel;
@@ -115,13 +116,13 @@ public class CreateSession extends HttpServlet {
 
     // gets the ip of a running Main Server
     private String getMainServerIp() {
-        List<String> mainServersIps = theBean.getListOfMainServers();
-        mainServersIps.add(0, "127.0.0.1");
+        Collection<String> mainServersIps = NetworkUtils.getIPsFromTracker("MainServer");
         
         for (String mainServerIp : mainServersIps) {
             try {
                 InetAddress addr = InetAddress.getByName(mainServerIp);
                 if (addr.isReachable(5000)) {
+                    // TODO: check through RMI as well
                     return mainServerIp;
                 }
             } catch (IOException ex) {
@@ -157,6 +158,8 @@ public class CreateSession extends HttpServlet {
                     theBean.getXmlContentByName(session.xmlName));
 
             msi.createSession(sessionInfo);
+
+            session.sessionInfo = sessionInfo;
             return sessionInfo;
 
         } catch (UnknownHostException ex) {

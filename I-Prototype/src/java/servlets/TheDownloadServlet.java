@@ -42,7 +42,7 @@ public class TheDownloadServlet extends HttpServlet {
 
     private void deleteFile(Session session, long fileId,
             HttpServletResponse response) throws IOException {
-        File fileToDelete = session.getFileById(fileId);
+        File fileToDelete = session.getFileById(fileId).theFile;
         fileToDelete.delete();
         session.deleteFileById(fileId);
 
@@ -56,7 +56,7 @@ public class TheDownloadServlet extends HttpServlet {
         response.setContentType("application/octet-stream");
 
         OutputStream out = response.getOutputStream();
-        File requestedFile = session.getFileById(fileId);
+        File requestedFile = session.getFileById(fileId).theFile;
         InputStream is = new FileInputStream(requestedFile);
 
         byte[] buf = new byte[1024];

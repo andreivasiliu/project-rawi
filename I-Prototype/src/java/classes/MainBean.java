@@ -1,10 +1,5 @@
 package classes;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.Collection;
@@ -16,6 +11,7 @@ import rawi.common.MainServerInterface;
 import rawi.common.MainServerStatus;
 import rawi.common.NetworkUtils;
 import rawi.common.Ports;
+import rawi.common.WorkSessionStatus;
 import rawi.rmiinfrastructure.RMIClientModel;
 
 public class MainBean {
@@ -109,5 +105,18 @@ public class MainBean {
         System.out.println("Done checking IPs.");
 
         return mainServersIps;
+    }
+
+    public WorkSessionStatus getSessionStatus(long sessionId) {
+        Session session = sessionList.get(sessionId);
+
+        try {
+            MainServerInterface msi = new RMIClientModel
+                    <MainServerInterface>(session.mainServerIp,
+                    Ports.MainServerPort).getInterface();
+            return msi.getSessionStatus(session.id.toString());
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }
