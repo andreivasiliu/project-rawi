@@ -51,6 +51,7 @@ package RawiComponents.TMComponents
 			configureListeners(loader);
 			loader.load(request);
 			trace("Save", m_editor.propsGen.schemaName.text + ".xml");
+			(Application.application as RAWI).viewTmList.refreshHdlr();
 		}
 		public function Close():void
 		{

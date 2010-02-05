@@ -7,7 +7,15 @@ package RawiComponents
 	
 	public class GlobalSettings extends Object
 	{
-		public static var baseUri:String = "http://localhost:8080/I-Prototype";
+		public static function get baseUri():String
+		{
+			// return "" if you are in browser, and the full adress if you are in debugg mode
+			// A.a.url returns http:// if running from browser
+			if (Application.application.url.charAt(0) == 'h')
+				return "";
+			else
+				return "http://localhost:8080/I-Prototype";
+		}
 		public static function configureListeners(dispatcher:IEventDispatcher):void
 		{
 			// manage the other events from URLRequest

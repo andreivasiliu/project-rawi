@@ -35,6 +35,9 @@ package RawiComponents.WSComponents
 			loader.addEventListener(Event.COMPLETE, getTmXml);
 			GlobalSettings.configureListeners(loader);
 			loader.load(request);
+			// refresh the ViewWSList when creating a new working session
+			if ((Application.application as RAWI).viewWsList.initialized)
+				(Application.application as RAWI).viewWsList.refreshHdlr();
 		}
 		private function getTmXml(event:Event):void
 		{

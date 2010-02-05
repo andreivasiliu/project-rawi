@@ -9,6 +9,8 @@
 				this.clipContent = false;
 				this.nodeName.x = -nodeName.width/2
 				this.graphics.clear();
+				var multiOffset:int = 4;
+				var radius:int = 20;
 				
 				var fillType:String = GradientType.LINEAR;
 				var colors:Array = [0xC0C9CF, 0xffffff];
@@ -20,14 +22,16 @@
 				// Draw shadow
 				this.graphics.lineStyle(0, 0xcccccc, 0.8, false);
 				this.graphics.beginFill(0xcccccc, 0.8);
-				this.graphics.drawRoundRect(nodeName.x - 3, 2, nodeName.width + 10, myHeight, myHeight, myHeight);
+
+				this.graphics.beginFill(0xcccccc, 0.8);
+				this.graphics.drawRoundRect(nodeName.x - 3, 2, nodeName.width + 10, myHeight, radius, radius);
 				this.graphics.endFill();
 
 				// Draw the object
+					this.graphics.lineStyle(0, 0x888888, 1, true);
 				//colors = [0xffffff, 0xC0C9CF];
-				this.graphics.lineStyle(0, 0xffffff, 1, true);
 				this.graphics.beginGradientFill(fillType, colors, alphas, ratios, matr, spreadMethod);
-				this.graphics.drawRoundRect(nodeName.x - 5, 0, nodeName.width + 10, myHeight, myHeight, myHeight);
+				this.graphics.drawRoundRect(nodeName.x - 5, 0, nodeName.width + 10, myHeight, radius, radius);
 				this.graphics.endFill();
 			}
 		]]>
