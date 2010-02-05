@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"  width="100%" height="100%" label="ViewWSList">
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"  width="100%" height="100%" label="ViewWSList" initialize="refreshHdlr()">
 	<mx:DataGrid top="30" right="3" left="3" bottom="3" id="wsListDG" dataProvider="{wsList}">
 		<mx:columns>
 			<mx:DataGridColumn headerText="Session Id" dataField="sessionId"/>
@@ -22,7 +22,7 @@
 			[Bindable]
 			private var wsList:ArrayCollection = new ArrayCollection();
 	        // manage Refresh
-			private function refreshHdlr():void
+			public function refreshHdlr():void
 			{
 				var loader:URLLoader = new URLLoader();
 				// TODO: find out how to cancel the cache - by then add the time parameter at the end 

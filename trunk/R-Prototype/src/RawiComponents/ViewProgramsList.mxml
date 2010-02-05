@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" label="ProgramsList">
+	<mx:Button x="10" y="0" label="Refresh"/>
+	<mx:HDividedBox left="3" top="30" right="3" bottom="3" id="dividerBox">
+		<mx:Tree width="100%" height="100%" showRoot="false" dataProvider="{treeData}" labelField="@label" change="treeChanged(event)" />
+		<mx:Panel layout="absolute" id="propertiesPanel" top="0" right="0" bottom="0" width="254" height="100%" title="Properties" minWidth="254">
+			<mx:Form  width="100%" height="100%" paddingLeft="4" paddingTop="5" paddingRight="5" indicatorGap="4">
+				<mx:FormHeading label="Program properties" />
+				<mx:FormItem label="Name" width="100%">
+					<mx:TextInput editable="false" id="progName" width="100%"/>
+				</mx:FormItem>
+			</mx:Form>
+			
+
+		</mx:Panel>
+	</mx:HDividedBox>
+	<mx:Script>
+		<![CDATA[
+			// Event handler for the Tree control change event.
+            public function treeChanged(event:Event):void {
+                //selectedNode = Tree(event.target).selectedItem as XML;
+                progName.text = (Tree(event.target).selectedItem as XML).@label;
+            }
+		]]>
+	</mx:Script>
+	<mx:XMLList id="treeData">
+        <node label="Mail Box">
+            <node label="Inbox">
+                <node label="Marketing"/>
+                <node label="Product Management"/>
+                <node label="Personal"/>
+            </node>
+            <node label="Outbox">
+                <node label="Professional"/>
+                <node label="Personal"/>
+            </node>
+            <node label="Spam"/>
+            <node label="Sent"/>
+        </node>    
+    </mx:XMLList>
+	<mx:Button x="89" y="0" label="NewFolder"/>
+	<mx:Button x="183" y="0" label="NewProgram"/>
+	<mx:Button x="291" y="0" label="Delete"/>
+</mx:Canvas>

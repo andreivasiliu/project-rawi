@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"
 	xmlns:rc="RawiComponents.*"
-	xmlns:wsc="RawiComponents.WSComponents.*">
+	xmlns:wsc="RawiComponents.WSComponents.*" pageTitle="RAWI - a simple way to control your grid">
 	<mx:ApplicationControlBar id="controlBar" dock="true">
 		<mx:Spacer width="50" />
 		<mx:Label text="RAWI" fontSize="20" alpha="1.0" fontWeight="bold" fontStyle="italic"/>
 		<mx:Spacer width="100" />
 		<mx:HBox id="mainMenu">
-			<mx:Text text="Some text here" id="statusLabel"/>
+			<mx:Text id="statusLabel"/>
 		</mx:HBox>
 	</mx:ApplicationControlBar>
 	<mx:TabNavigator id="tabNav" left="3" top="10" right="3" bottom="3">
-		<rc:ViewTMList label="ViewTMList"/>
-		<rc:ViewWSList label="ViewWSList" />
+		<rc:ViewTMList label="ViewTMList" id="viewTmList"/>
+		<rc:ViewWSList label="ViewWSList" id="viewWsList"/>
 		<rc:FileBox label="FileBox" />
+		<rc:ViewProgramsList label="ProgramsList" />
 	</mx:TabNavigator>
 		
 </mx:Application>

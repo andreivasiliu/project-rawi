@@ -17,15 +17,9 @@
 
 				// Draw the object
 				this.graphics.lineStyle(0, 0xffffff, 1);
-
 				matr.createGradientBox(20, 20, 0, -10, 0);
 				this.graphics.beginGradientFill(fillType, colors, alphas, ratios, matr, spreadMethod);
 				this.graphics.drawCircle(0, 10, 10);
-				this.graphics.endFill();
-				
-				this.graphics.beginFill(0, 0);
-				this.graphics.lineStyle(0, 0, 0);
-				this.graphics.drawRect(-10, 0, 100, 20);
 				this.graphics.endFill();
 			}
 		]]>

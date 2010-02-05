@@ -233,6 +233,7 @@
 				this.refreshTimer.stop();
 				(Application.application as RAWI).tabNav.removeChild(this);
 			}
+			// if a splitter is checked - use this method to update the nodes layout
 			public function updateMultiNode():void
 			{
 				for each (var nd:PackNodeBase in nodesMap)
@@ -250,11 +251,14 @@
 			private var marked:Dictionary;
 			private function DFS(nd:PackNodeBase):void
 			{
-				if (!nd.isJoiner)
+				if (marked[nd.nid] != true && !nd.isJoiner)
 				{
 					nd.isMultiNode = true;
 					for each (var child:int in nd.outputToNodes)
+					{
+						marked[child] = true;
 						DFS(nodesMap[child]);
+					}
 				}
 			}
 		]]>

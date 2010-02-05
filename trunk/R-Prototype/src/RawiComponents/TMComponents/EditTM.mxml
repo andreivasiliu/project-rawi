@@ -4,7 +4,7 @@
 	<mx:Button x="10" y="0" label="Save" width="71" click="svh.Save()"/>
 	<mx:Button x="89" y="0" label="Validate" width="85" click="svh.Validate()"/>
 	<mx:Button x="182" y="0" label="Close" width="71" click="svh.Close()"/>
-	<mx:HDividedBox left="3" top="30" right="3" bottom="3">
+	<mx:HDividedBox left="3" top="30" right="3" bottom="3" id="dividerBox">
 		<mx:Canvas height="100%" width="100%" id="baseEcran" clipContent="true" mouseDown="mouseDownHdlr(event)">
 			<mx:Canvas id="ecran" x="0" y="0"/>
 			<mx:Canvas id="ecranGlass" x="0" y="0" width="{ecran.width}" height="{ecran.height}" />
@@ -39,6 +39,7 @@
 			{
 				return m_activeNode;
 			}
+			// activate the TM Properties
 			private function mouseDownHdlr(event:MouseEvent):void
 			{
 				activeNode = null;
@@ -218,7 +219,7 @@
 				pn.propsContainer.nodeName.text = "new Pack";
 				nodesMap[pn.nid] = pn;
 				reDrawConnections();
-				pn.setAsActiveNode();
+				this.activeNode = pn;
 			}
 			public function addNewPTN(xx:int, yy:int):void
 			{
@@ -233,7 +234,7 @@
 				ptn.propsContainer.nodeName.text = "new Transformer";
 				nodesMap[ptn.nid] = ptn;
 				reDrawConnections();
-				ptn.setAsActiveNode();
+				this.activeNode = ptn;
 			}
 			public function generateUniqueId():int
 			{
@@ -243,6 +244,7 @@
 					id++;
 				return id;
 			}
+			// if a splitter is checked - use this method to update the nodes layout
 			public function updateMultiNode():void
 			{
 				for each (var nd:PackNodeBase in nodesMap)
@@ -260,34 +262,71 @@
 			private var marked:Dictionary;
 			private function DFS(nd:PackNodeBase):void
 			{
-				if (!nd.isJoiner)
+				if (marked[nd.nid] != true && !nd.isJoiner)
 				{
 					nd.isMultiNode = true;
 					for each (var child:int in nd.outputToNodes)
+					{
+						marked[child] = true;
 						DFS(nodesMap[child]);
+					}
 				}
 			}
 		]]>
 	</mx:Script>
 	<TMComponents:PackGraphicLayout x="320" y="0" />
 	<TMComponents:TransformerGraphicLayout x="380" y="0" />
-	<TMComponents:PackGraphicLayout id="dummy1" x="320" y="0" mouseDown="dummy1.startDrag()"
-		 mouseUp="stopDrg1(event)" toolTip="Click or Drag to add a new Pack on the scene."/>
-	<TMComponents:TransformerGraphicLayout id="dummy2" x="380" y="0" mouseDown="{dummy2.startDrag(); trace('TGL', dummy2.width, dummy2.height)}"
+	<TMComponents:PackGraphicLayout id="dummy1" x="320" y="0"
+		mouseDown="mouseDwnHdlr1(event)"
+		mouseMove="moveDrag1(event)"
+		mouseUp="stopDrg1(event)" toolTip="Click or Drag to add a new Pack on the scene."/>
+	<TMComponents:TransformerGraphicLayout id="dummy2" x="380" y="0"
+		mouseDown="mouseDwnHdlr2(event)"
+		mouseMove="moveDrag2(event)"
 		mouseUp="stopDrg2(event)" toolTip="Click or Drag to add a new Transformer on the scene."/>
 	<mx:Script>
 		<![CDATA[
 			// add new packNode
 			private var startPosition:int = 0;	// used to create an offset when creating new nodes by clicking and not dragging
+			private var dragRelativeX:int = 0;
+			private var dragRelativeY:int = 0;
+			private var draggingNew:Boolean = false;
+			private function moveDrag1(event:MouseEvent):void
+			{
+				if (draggingNew && event.altKey) // snap to grid
+				{
+					dummy1.x = int((baseEcran.mouseX - dragRelativeX) / gridSize)*gridSize;
+					dummy1.y = int((baseEcran.mouseY - dragRelativeY) / gridSize)*gridSize + dividerBox.y;
+				}
+			}
+			private function mouseDwnHdlr1(event:MouseEvent):void
+			{
+				dummy1.startDrag();
+				dragRelativeX = dummy1.mouseX;
+				dragRelativeY = dummy1.mouseY;
+				draggingNew = true;
+			}
+			private function mouseDwnHdlr2(event:MouseEvent):void
+			{
+				dummy2.startDrag();
+				dragRelativeX = dummy2.mouseX;
+				dragRelativeY = dummy2.mouseY;
+				draggingNew = true;
+			}
+			private function moveDrag2(event:MouseEvent):void
+			{
+				if (draggingNew && event.altKey) // snap to grid
+				{
+					dummy2.x = int((baseEcran.mouseX - dragRelativeX) / gridSize)*gridSize;
+					dummy2.y = int((baseEcran.mouseY - dragRelativeY) / gridSize)*gridSize + dividerBox.y;
+				}
+			}
 			private function stopDrg1(event:MouseEvent):void
 			{
 				var p:Point = baseEcran.globalToLocal(new Point(event.stageX, event.stageY));
 				// don't drop the button outside the baseEcran, but draw it inside the ecran Canvas
 				if (p.x > 0 && p.y > 0 && p.x < baseEcran.width && p.y < baseEcran.height)
-				{
-					p = ecran.globalToLocal(new Point(event.stageX, event.stageY));
-					addNewPN(p.x, p.y - 12);
-				}
+					addNewPN(dummy1.x, dummy1.y - dividerBox.y);
 				else if (dummy1.x == 320 && dummy1.y == 0)
 				{
 					addNewPN(50 + startPosition * 10, 20 + startPosition * 10);
@@ -296,6 +335,7 @@
 				stopDrag();
 				dummy1.x = 320;
 				dummy1.y = 0;
+				draggingNew = false;
 			}
 			// add new packTransformerNode
 			private function stopDrg2(event:MouseEvent):void
@@ -303,10 +343,7 @@
 				var p:Point = baseEcran.globalToLocal(new Point(event.stageX, event.stageY));
 				// don't drop the button outside the baseEcran, but draw it inside the ecran Canvas
 				if (p.x > 0 && p.y > 0 && p.x < baseEcran.width && p.y < baseEcran.height)
-				{
-					p = ecran.globalToLocal(new Point(event.stageX, event.stageY));
-					addNewPTN(p.x, p.y - 10);
-				}
+					addNewPTN(dummy2.x, dummy2.y - dividerBox.y);
 				else if (dummy2.x == 380 && dummy2.y == 0)
 				{
 					addNewPTN(50 + startPosition * 10, 20 + startPosition * 10);
@@ -315,6 +352,7 @@
 				stopDrag();
 				dummy2.x = 380;
 				dummy2.y = 0;
+				draggingNew = false;
 			}
 		]]>
 	</mx:Script>
