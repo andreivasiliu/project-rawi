@@ -49,12 +49,14 @@ public class ClusterTask
     ClusterComputer clusterComputer;
     Task task;
     HashMap<String, byte[]> map;
+    ClusterCache cache;
 
-    public ClusterTask(ClusterComputer clusterComputer, Task task)
+    public ClusterTask(ClusterComputer clusterComputer, Task task, ClusterCache cache)
     {
         map = new HashMap<String, byte[]>();
         this.clusterComputer = clusterComputer;
         this.task = task;
+        this.cache = cache;
     }
 
     public void createCurrentDir()
@@ -78,12 +80,25 @@ public class ClusterTask
         List<FileHandle> files = task.getFiles();
         for (FileHandle f : files)
         {
+            //resolveSubFolders(f.getLogicalName());
+
+            if (cache.isInCache(f))
+            {
+                cache.copyFromCache(f, currentDir);
+                if (f.isZipFile())
+                {
+                    unzipFile(currentDir + "/" + f.getLogicalName(), currentDir);
+                }
+                continue;
+            }
+
             HttpGet httpget = new HttpGet(f.getFileURL());
             HttpResponse response = httpclient.execute(httpget);
             HttpEntity entity = response.getEntity();
             if (entity != null)
             {
                 InputStream instream = entity.getContent();
+                new File(currentDir + "/" + f.getLogicalName()).getParentFile().mkdirs();
                 OutputStream out = new FileOutputStream(currentDir + "/" + f.getLogicalName());
                 int length;
                 byte[] tmp = new byte[2048];
@@ -93,7 +108,11 @@ public class ClusterTask
                 }
                 out.close();
                 if (f.isZipFile())
+                {
                     unzipFile(currentDir + "/" + f.getLogicalName(), currentDir);
+                }
+
+                cache.setInCache(f, currentDir);
             }
         }
     }
@@ -104,11 +123,15 @@ public class ClusterTask
         ZipFile zipFile = new ZipFile(fileName);
 
         System.out.println("Unzipping archive...");
-        
+
         for (ZipEntry zipEntry : Collections.list(zipFile.entries()))
         {
             if (zipEntry.isDirectory())
-                new File(zipEntry.getName()).mkdir();
+            {
+//                new File(zipEntry.getName()).mkdir();
+                new File((currentDir + "/" + zipEntry.getName())).mkdir();
+
+            }
             else
             {
                 String outFileName = currentDir + "/" + zipEntry.getName();
@@ -119,7 +142,7 @@ public class ClusterTask
         }
 
         zipFile.close();
-        new File(fileName).delete();
+        //new File(fileName).delete();
     }
 
     private static void copyInputStream(InputStream in, OutputStream out)
@@ -128,8 +151,10 @@ public class ClusterTask
         byte[] buffer = new byte[1024];
         int len;
 
-        while((len = in.read(buffer)) >= 0)
+        while ((len = in.read(buffer)) >= 0)
+        {
             out.write(buffer, 0, len);
+        }
 
         in.close();
         out.close();
@@ -147,12 +172,24 @@ public class ClusterTask
 
         for (FileHandle fileHandle : filelist)
         {
-            System.out.println("Uploading " + fileHandle.getLogicalName() +
-                    " to: " + task.getUploadURI() + "/" + fileHandle.getLogicalName());
+            System.out.println("File to upload: " + fileHandle.getLogicalName());
+        }
+
+        for (FileHandle fileHandle : filelist)
+        {
+            File file = new File("task" + task.getId() + "/" + fileHandle.getLogicalName());
+            if (file.isDirectory())
+            {
+                // recurse
+            }
+
+
+            System.out.println("Uploading " + fileHandle.getLogicalName()
+                    + " to: " + task.getUploadURI() + "/" + fileHandle.getLogicalName());
 
             int id = uploadOnlyOneFile(new FilePart(fileHandle.getLogicalName(),
-                    new File("task" + task.getId() + "/" + fileHandle.getLogicalName())),
-                    fileHandle.getLogicalName());
+                    file), fileHandle.getLogicalName());
+
             if (id != -1)
             {
                 fileHandle.setId(Integer.toString(id));
@@ -197,70 +234,90 @@ public class ClusterTask
      */
     protected void deleteCurrentDir()
     {
-        File f = new File("task" + task.getId());
-
-        String[] files = f.list();
-
-        for (int i = 0; i < files.length; i++)
-        {
-            new File(f.getName() + "/" + files[i]).delete();
-        }
-
-        f.delete();
+        deleteDir(new File("task" + task.getId()));
     }
 
-    //map(filename, file_hashcode)
-    public void mapFiles() throws NoSuchAlgorithmException
+    public static void deleteDir(File dir)
     {
-        File f = new File("task" + task.getId());
-
-        String[] files = f.list();
-        MessageDigest m = MessageDigest.getInstance("MD5");
-
-        for (int i = 0; i < files.length; i++)
+        System.out.println("Deleting....");
+        if (dir.isDirectory())
         {
-            File file = new File(f.getName() + "/" + files[i]);
-            try
+            String[] children = dir.list();
+            for (int i = 0; i < children.length; i++)
             {
-                map.put(files[i], m.digest(getBytesFromFile(file)));
-            } catch (IOException ex)
-            {
-                Logger.getLogger(ClusterTask.class.getName()).log(Level.SEVERE, null, ex);
+                deleteDir(new File(dir + "/" + children[i]));
             }
+        }
+        dir.delete();
+    }
+    //map(filename, file_hashcode)
+
+    public void mapFiles() throws NoSuchAlgorithmException, IOException
+    {
+        File root = new File("task" + task.getId());
+        recurseMapping(root.toString(), "");
+    }
+
+    public void recurseMapping(String root, String folder)
+            throws NoSuchAlgorithmException, IOException
+    {
+        System.out.println("Root: " + root + ", folder: " + folder);
+        for (String fName : new File(root + "/" + folder).list())
+        {
+            System.out.println("fName: " + fName);
+            File f = new File(root + "/" + folder + fName);
+
+            if (f.isDirectory())
+            {
+                recurseMapping(root.toString(), folder + fName + "/");
+                continue;
+            }
+
+            MessageDigest m = MessageDigest.getInstance("MD5");
+            byte[] new_file_code = m.digest(getBytesFromFile(new File(root + "/" + folder + fName)));
+            map.put(folder + fName, new_file_code);
         }
     }
 
     // return all new files created
     // needs to be changed in future....
-    public List<FileHandle> getChangedOrNewFiles() throws NoSuchAlgorithmException
+    public List<FileHandle> getChangedOrNewFiles() throws NoSuchAlgorithmException, IOException
     {
         List<FileHandle> list = new LinkedList<FileHandle>();
 
-        File f = new File("task" + task.getId());
+        File root = new File("task" + task.getId());
 
-        String[] files = f.list();
-
-        for (int i = 0; i < files.length; i++)
-        {
-            try
-            {
-                MessageDigest m = MessageDigest.getInstance("MD5");
-                byte[] new_file_code = m.digest(getBytesFromFile(new File(f.getName() + "/" + files[i])));
-                byte[] old_file_code = map.get(files[i]);
-                if (!equals(new_file_code, old_file_code))
-                {
-                    list.add(new FileHandle(task.getDownloadURI(), null, files[i]));
-                }
-            } catch (IOException ex)
-            {
-                Logger.getLogger(ClusterTask.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-
+        recurseIntoFolder(root.toString(), "", list);
         return list;
     }
 
-    // compares two byte arrays contents
+    public void recurseIntoFolder(String root, String folder, List<FileHandle> files)
+            throws NoSuchAlgorithmException, IOException
+    {
+        System.out.println("Root: " + root + ", folder: " + folder);
+        for (String fName : new File(root + "/" + folder).list())
+        {
+            System.out.println("fName: " + fName);
+            File f = new File(root + "/" + folder + fName);
+
+            if (f.isDirectory())
+            {
+                recurseIntoFolder(root, folder + fName + "/", files);
+                continue;
+            }
+
+            MessageDigest m = MessageDigest.getInstance("MD5");
+            byte[] new_file_code = m.digest(getBytesFromFile(new File(root + "/" + folder + fName)));
+            byte[] old_file_code = map.get(folder + fName);
+
+            if (!equals(new_file_code, old_file_code))
+            {
+                files.add(new FileHandle(task.getDownloadURI(), null, folder + fName));
+            }
+        }
+    }
+
+// compares two byte arrays contents
     private boolean equals(byte[] a, byte[] b)
     {
         if (null == a || null == b)
@@ -281,9 +338,10 @@ public class ClusterTask
             }
         }
         return true;
-    }
 
-    // return a byte array coresponding to a given file
+
+    } // return a byte array coresponding to a given file
+
     private byte[] getBytesFromFile(File file) throws IOException
     {
 
@@ -291,6 +349,8 @@ public class ClusterTask
         //System.out.println("\nDEBUG: FileInputStream is " + file);
 
         // Get the size of the file
+
+
         long length = file.length();
         //System.out.println("DEBUG: Length of " + file + " is " + length + "\n");
 
@@ -299,27 +359,34 @@ public class ClusterTask
          * type. Before converting to an int type, check to ensure that file is
          * not loarger than Integer.MAX_VALUE;
          */
+
+
         if (length > Integer.MAX_VALUE)
         {
             System.out.println("File is too large to process");
-            return null;
-        }
 
-        // Create the byte array to hold the data
+
+            return null;
+
+
+        } // Create the byte array to hold the data
         byte[] bytes = new byte[(int) length];
 
         // Read in the bytes
+
+
         int offset = 0;
+
+
         int numRead = 0;
+
+
         while ((offset < bytes.length)
                 && ((numRead = is.read(bytes, offset, bytes.length - offset)) >= 0))
         {
-
             offset += numRead;
 
-        }
-
-        // Ensure all the bytes have been read in
+        } // Ensure all the bytes have been read in
         if (offset < bytes.length)
         {
             throw new IOException("Could not completely read file " + file.getName());
@@ -327,7 +394,6 @@ public class ClusterTask
 
         is.close();
         return bytes;
-
     }
 
     public void exec() throws IOException, InterruptedException
@@ -340,18 +406,22 @@ public class ClusterTask
 
         /*        System.out.println("Executing: ");
         for (int i = 0; i < execString.length; i++)
-            System.out.print(execString[i] + " ");
+        System.out.print(execString[i] + " ");
         System.out.println();
-*/
-        
-        Process p = Runtime.getRuntime().exec("\"" + file.getAbsolutePath() + "/" +"myBatch.bat" + "\"", null, file);
+         */
+
+        Process p = Runtime.getRuntime().exec("\"" + file.getAbsolutePath() + "/" + "myBatch.bat" + "\"", null, file);
         BufferedReader stdout = new BufferedReader(new InputStreamReader(p.getInputStream()));
         String line;
-        while ((line = stdout.readLine()) != null)
-            System.out.println("stdout: " + line);
-        p.waitFor();
-    }
 
+
+        while ((line = stdout.readLine()) != null)
+        {
+            System.out.println("stdout: " + line);
+        }
+        p.waitFor();
+        new File("task" + task.getId() + "/myBatch.bat").delete();
+    }
 
     public void createLocalBatch(String path, String command) throws IOException
     {
@@ -378,7 +448,7 @@ public class ClusterTask
 
             //Execution
             exec();
-            
+
             //Uploading files
             List<FileHandle> uploaded = uploadFiles();
 
@@ -397,4 +467,15 @@ public class ClusterTask
             Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
+    public void resolveSubFolders(String logicalName)
+    {
+        if (logicalName.lastIndexOf("/") < 0)
+        {
+            return;
+        }
+        String hierarchy = "task" + task.getId() + "/" + logicalName.substring(0, logicalName.lastIndexOf("/"));
+        new File(hierarchy).mkdirs();
+    }
+
 }

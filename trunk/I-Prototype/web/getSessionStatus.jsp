@@ -36,7 +36,7 @@
      <% } %>
 
      <% for (PackTransformer transformer : sessionStatus.getPackTransformers()) { %>
-        <packTransformerNode id="4">
+     <packTransformerNode id="<%= transformer.id %>">
          <% for (int subState = 0; subState < transformer.subStates; subState++) { %>
             <subState no="<%= subState %>" status="<%= transformer.getStatus(subState) %>" />
          <% } %>
