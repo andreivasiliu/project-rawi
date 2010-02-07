@@ -15,8 +15,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import rawi.common.ClusterComputerInterface;
 import rawi.common.ClusterComputerStatus;
 import rawi.common.FileHandle;
