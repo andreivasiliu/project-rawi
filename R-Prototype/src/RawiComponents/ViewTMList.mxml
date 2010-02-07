@@ -12,8 +12,11 @@
 	<mx:Button x="168" y="0" label="Edit" width="71" click="editHdlr()" id="editBtn" enabled="false"/>
 	<mx:Button x="247" y="0" label="Delete" width="71" click="deleteHdlr()" id="deleteBtn" enabled="false"/>
 	<mx:Button x="326" y="0" label="CreateWS" id="createWSBtn" enabled="false" click="createWSHdlr()"/>
+	<mx:Button x="417" y="0" label="Download" id="dldBtn" enabled="false" click="downloadTMHdlr()"/>
+	<mx:Button x="507" y="0" label="Upload" click="uploadTMHdlr()"/>
 	<mx:Script>
 		<![CDATA[
+			import mx.controls.Alert;
 			import RawiComponents.WSComponents.GetEditWSHdlr;
 			import RawiComponents.TMComponents.GetEditTMHdlr;
 			import RawiComponents.TMComponents.EditTM;
@@ -23,6 +26,8 @@
 			
 			[Bindable]
 			private var tmList:ArrayCollection = new ArrayCollection();
+			private var fileDld:FileReference;
+			private var fileUpl:FileReference;
 	        // manage Refresh
 			public function refreshHdlr():void
 			{
@@ -41,6 +46,7 @@
 				this.editBtn.enabled = false;
 				this.deleteBtn.enabled = false;
 				this.createWSBtn.enabled = false;
+				this.dldBtn.enabled = false;
 				trace(loader.data);
 				// adauga aici object.data
 				if (loader.data.toString().length > 0)
@@ -55,6 +61,7 @@
 						this.editBtn.enabled = true;
 						this.deleteBtn.enabled = true;
 						this.createWSBtn.enabled = true;
+						this.dldBtn.enabled = true;
 					}
 					tmListDG.selectedIndex = 0;
 	        	}
@@ -66,12 +73,17 @@
 				{
 					var loader:URLLoader = new URLLoader();
 					var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/ValidateXMLServlet?delete=" + tmListDG.selectedItem.tmName + ".xml&time=" + new Date().getTime());
-					loader.addEventListener(Event.COMPLETE, trace);
+					loader.addEventListener(Event.COMPLETE, delayedRefresher);
 					GlobalSettings.configureListeners(loader);
 					loader.load(request);
-					// request the new list
-					refreshHdlr();
 				}
+			}
+			// after delete you have to wait for the response and then ask for the refresh
+			private function delayedRefresher(event:Event):void
+			{
+				// request the new list
+				trace("event after delete", event);
+				refreshHdlr();
 			}
 			// manage New
 			private function newHdlr():void
@@ -112,7 +124,50 @@
 					loader.load(request);
 				}
 			}
-			
+			private function downloadTMHdlr():void
+			{
+				fileDld = new FileReference();
+				var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/DownloadXMLServlet?name=" + tmListDG.selectedItem.tmName + ".xml&time=" + new Date().getTime());
+				GlobalSettings.configureListeners(fileDld);
+				fileDld.download(request, tmListDG.selectedItem.tmName + ".xml");
+				trace(request.url);
+			}
+			private function uploadTMHdlr():void
+			{
+				fileUpl = new FileReference();
+				fileUpl.browse();
+				fileUpl.addEventListener(Event.SELECT, uploadTMSelected);
+			}
+			private function uploadTMSelected(event:Event):void
+			{
+				var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/ValidateXMLServlet?" + 
+						"name="+ fileUpl.name + "&savexml=SaveXML&time="+ new Date().getTime());
+/* 				var variables:URLVariables = new URLVariables();
+				variables.time = new Date().getTime()
+				variables.name = fileUpl.name;
+				variables.savexml = "SaveXML";
+				request.data = variables;
+				request.method = URLRequestMethod.POST;
+ */				fileUpl.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, uploadTMResponseHdlr);
+				
+				GlobalSettings.configureListeners(fileUpl);
+				fileUpl.upload(request);
+				trace("Upload TM:", request.url, fileUpl.name);
+			}
+			private function uploadTMResponseHdlr(event:DataEvent):void
+			{
+				// adauga aici object.data
+				if (event.data.toString().length > 0)
+				{
+					var xmlData:XML = new XML(event.data.toString());
+					if (xmlData.elements("xml-success"))
+					{
+					}
+					else
+						Alert.show(xmlData.elements("xml-message"), "Error saving" + xmlData.elements("xml-name"));
+				}
+				refreshHdlr();
+			}
 		]]>
 	</mx:Script>
 </mx:Canvas>

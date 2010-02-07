@@ -135,6 +135,7 @@
 				//downloadURL.url = GlobalSettings.baseUri + "/TheDownloadServlet/" + myOwner.ownerOfProps.parentCont.sessionState.sessionId +
 				//	"/" + fileIdOnServer + "/" + fileName;
 				downloadURL.url = this.fileUrl;
+				trace("download file from url", downloadURL.url);
 				fileDld.download(downloadURL, fileName);
 			}
 			private function openDldHandler(event:Event):void

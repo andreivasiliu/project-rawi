@@ -30,7 +30,7 @@ package RawiComponents.TMComponents
 			request.method = URLRequestMethod.POST;
 			loader.addEventListener(Event.COMPLETE, validateResponse);
 			
-			configureListeners(loader);
+			GlobalSettings.configureListeners(loader);
 			loader.load(request);
 			trace("Validate", m_editor.propsGen.schemaName.text + ".xml");
 		}
@@ -42,13 +42,12 @@ package RawiComponents.TMComponents
 			variables.time = new Date().getTime()
 			variables.name = m_editor.propsGen.schemaName.text + ".xml";
 			variables.xml = m_editor.getSchemaXmlRepresentation().toString();
-			variables.name = m_editor.propsGen.schemaName.text + ".xml";
 			variables.savexml = "SaveXML";
 			request.data = variables;
 			request.method = URLRequestMethod.POST;
 			loader.addEventListener(Event.COMPLETE, saveResponse);
 			
-			configureListeners(loader);
+			GlobalSettings.configureListeners(loader);
 			loader.load(request);
 			trace("Save", m_editor.propsGen.schemaName.text + ".xml");
 			(Application.application as RAWI).viewTmList.refreshHdlr();
@@ -66,16 +65,6 @@ package RawiComponents.TMComponents
 			if (event.detail == Alert.YES)
 				(Application.application as RAWI).tabNav.removeChild(m_editor);
 		}
-		private function configureListeners(dispatcher:IEventDispatcher):void
-		{
-			// manage the other events from URLRequest
-            //dispatcher.addEventListener(Event.COMPLETE, getFromToAirports);
-            dispatcher.addEventListener(Event.OPEN, trace);
-            dispatcher.addEventListener(ProgressEvent.PROGRESS, trace);
-            dispatcher.addEventListener(SecurityErrorEvent.SECURITY_ERROR, trace);
-            dispatcher.addEventListener(HTTPStatusEvent.HTTP_STATUS, trace);
-            dispatcher.addEventListener(IOErrorEvent.IO_ERROR, trace);
-        }
 		private function validateResponse(event:Event):void
 		{
 			var loader:URLLoader = URLLoader(event.target);

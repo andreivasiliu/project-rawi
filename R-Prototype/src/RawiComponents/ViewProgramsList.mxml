@@ -24,18 +24,25 @@
 		]]>
 	</mx:Script>
 	<mx:XMLList id="treeData">
-        <node label="Mail Box">
-            <node label="Inbox">
-                <node label="Marketing"/>
-                <node label="Product Management"/>
-                <node label="Personal"/>
+        <node label="ProgramFiles">
+            <node label="RayTracer">
+	            <node label="Renderer">
+	                <node label="RayTracer.exe"/>
+	                <node label="functions.dll"/>
+	                <node label="settings.xml"/>
+	            </node>
+	            <node label="Joiner" />
+	            <node label="Splitter" />
             </node>
-            <node label="Outbox">
-                <node label="Professional"/>
-                <node label="Personal"/>
+            <node label="Adnotator">
+            	<node label="Adnotator">
+            		<node label="main.exe" />
+            		<node label="database.db" />
+            	</node>
+            	<node label="Splitter.exe" />
+            	<node label="joiner.exe" />
             </node>
-            <node label="Spam"/>
-            <node label="Sent"/>
+            <node label="idle.exe" />
         </node>    
     </mx:XMLList>
 	<mx:Button x="89" y="0" label="NewFolder"/>
