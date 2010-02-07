@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 import rawi.common.Command;
 import rawi.exceptions.DoubleSplitterException;
 import rawi.exceptions.DuplicateNameException;
+import rawi.exceptions.InvalidIdException;
 
 /** 
  * An abstract description of the processing graph.
@@ -21,6 +22,7 @@ import rawi.exceptions.DuplicateNameException;
 public class TransformationModel
 {
     private List<Node> nodes = new LinkedList<Node>();
+    private Map<Integer, Node> nodeIdToNode = new HashMap<Integer, Node>();
     private Map<Integer, Pack> packIdToPack = new HashMap<Integer, Pack>();
     private Map<String, Pack> packNameToPack = new HashMap<String, Pack>();
     private Map<Integer, PackTransformer> packTransformerIdToPack =
@@ -36,26 +38,39 @@ public class TransformationModel
         return nodes;
     }
     
-    public Pack addPackNode()
+    public Pack addPackNode(int id)
     {
-        Pack pack = new Pack();
+        if (id > lastUsedID)
+            lastUsedID = id;
+
+        Pack pack = new Pack(id);
 
         for (ModelChangeListener listener: listeners)
             listener.packAdded(pack);
 
         return pack;
     }
-    
-    public PackTransformer addPackTransformerNode()
+
+    public Pack addPackNode()
     {
-        PackTransformer packTransformer = new PackTransformer();
+        return addPackNode(lastUsedID + 1);
+    }
+
+    public PackTransformer addPackTransformerNode(int id)
+    {
+        PackTransformer packTransformer = new PackTransformer(id);
 
         for (ModelChangeListener listener: listeners)
             listener.packTransformerAdded(packTransformer);
 
         return packTransformer;
     }
-    
+
+    public PackTransformer addPackTransformerNode()
+    {
+        return new PackTransformer(lastUsedID + 1);
+    }
+
     public void addOutput(Pack fromNode, PackTransformer toNode)
     {
         if (fromNode == null || toNode == null)
@@ -123,7 +138,7 @@ public class TransformationModel
                 addOutput((PackTransformer) nodes[i], (Pack) nodes[i+1]);
         }
     }
-    
+
     public Pack getPack(int packId)
     {
         return packIdToPack.get(packId);
@@ -159,7 +174,7 @@ public class TransformationModel
      */
     public abstract class Node
     {
-        private int ID = ++lastUsedID;
+        private int ID;
         private String name = null;
         protected Pack splitterPack;
         private long x, y;
@@ -167,9 +182,15 @@ public class TransformationModel
         abstract public Set<? extends Node> getInputs();
         abstract public Set<? extends Node> getOutputs();
 
-        private Node()
+        private Node(int id)
         {
+            if (nodeIdToNode.containsKey(id))
+                throw new InvalidIdException("A node with the id " + id +
+                        " already exists.");
+
+            ID = id;
             nodes.add(this);
+            nodeIdToNode.put(id, this);
         }
         
         public int getId()
@@ -280,10 +301,11 @@ public class TransformationModel
         private List<Pattern> patternList;
         private boolean isSplitter = false;
         private boolean allowsEmptyPack;
+        private boolean allowsMultipleFiles;
 
-        private Pack()
+        private Pack(int id)
         {
-            super();
+            super(id);
             
             packIdToPack.put(getId(), this);
         }
@@ -340,6 +362,16 @@ public class TransformationModel
 
                 throw e;
             }
+        }
+
+        public boolean allowsMultipleFiles()
+        {
+            return allowsMultipleFiles;
+        }
+
+        public void setAllowsMultipleFiles(boolean allowsMultipleFiles)
+        {
+            this.allowsMultipleFiles = allowsMultipleFiles;
         }
 
         public boolean allowsEmptyPack()
@@ -418,9 +450,9 @@ public class TransformationModel
         private Command command;
         private boolean isJoiner;
 
-        private PackTransformer()
+        private PackTransformer(int id)
         {
-            super();
+            super(id);
             
             packTransformerIdToPack.put(getId(), this);
         }
@@ -505,13 +537,5 @@ public class TransformationModel
         {
             this.command = command;
         }
-    }
-    
-    /**
-     * A pack transformer that does nothing.
-     */
-    public class FileDistributer extends PackTransformer
-    {
-        // TODO
     }
 }

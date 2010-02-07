@@ -1,6 +1,5 @@
 package rawi;
 
-import com.sun.rmi.rmid.ExecOptionPermission;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -144,9 +143,11 @@ public class RMIMainServer extends RMIServerModel
         return clusterManager.getSessionStatus(sessionId);
     }
 
-    public void taskFailed(String id, String clusterComputerId, Throwable exception, boolean impossibleTask) throws RemoteException
+    public void taskFailed(String id, String clusterComputerId, Throwable exception,
+            boolean impossibleTask) throws RemoteException
     {
-        System.out.println("Received exception from " + clusterComputerId + " regarding task " + id);
+        System.out.println("Received exception from " + clusterComputerId +
+                " regarding task " + id);
         System.out.println("Exception received: " + exception.getMessage());
     }
 }

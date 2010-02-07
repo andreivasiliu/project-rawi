@@ -6,14 +6,14 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
     "http://www.w3.org/TR/html4/loose.dtd">
 
-<% MainBean mainBean = (MainBean) getServletContext().getAttribute("mainBean"); %>
-
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>I-Prototype</title>
     </head>
     <body>
+        <a href="RAWI.swf">Flex interface</a>
+        <br /><hr width="500" align="left"/><br />
 
         <a href="transformationModels.jsp">Add/Validate/Delete TM</a> <br />
         <a href="sessions.jsp">Sessions section :)</a> <br />

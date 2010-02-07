@@ -6,13 +6,23 @@ package servlets;
 
 import classes.MainBean;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.util.Iterator;
+import java.util.List;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemFactory;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import rawi.common.MainServerInterface;
 import rawi.common.Ports;
 import rawi.common.ValidateXMLInfo;
@@ -32,6 +42,34 @@ public class ValidateXMLServlet extends HttpServlet {
 
         String xmlContent = request.getParameter("xml");
         String xmlName = request.getParameter("name");
+
+        boolean isMultipart = ServletFileUpload.isMultipartContent(request);
+        if (isMultipart) {
+            try {
+                FileItemFactory factory = new DiskFileItemFactory();
+                ServletFileUpload upload = new ServletFileUpload(factory);
+
+                List items = null;
+                items = upload.parseRequest(request); /* FileItem */
+                Iterator iter = items.iterator();
+
+                while (iter.hasNext()) {
+                    FileItem item = (FileItem) iter.next();
+
+                    if (!item.isFormField()) {
+                        xmlContent = item.getString();
+                        break;
+                    }
+                }
+            } catch (FileUploadException ex) {
+                throw new ServletException(ex);
+            }
+        }
+
+        if (xmlContent == null || xmlContent.isEmpty()) {
+            response.sendError(404, "No XML contents given.");
+            return;
+        }
 
         if (request.getParameter("delete") != null) {
             
@@ -97,8 +135,6 @@ public class ValidateXMLServlet extends HttpServlet {
             throw new ServletException("Remote exception", ex);
         } catch (NotBoundException ex) {
             throw new ServletException("Not bound exception", ex);
-        } finally {
-            out.close();
         }
 
         return info.success;

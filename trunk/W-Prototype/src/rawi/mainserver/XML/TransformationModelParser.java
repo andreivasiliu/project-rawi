@@ -15,19 +15,21 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 import rawi.common.Command;
+import rawi.exceptions.InvalidIdException;
+import rawi.exceptions.InvalidNodeTypeException;
 
 import rawi.mainserver.TransformationModel;
 import rawi.mainserver.TransformationModel.*;
 
 public class TransformationModelParser extends DefaultHandler
 {
-    final String URI = "http://www.example.org/TransformationModel";
-    Map<String, Node> localIdToNode = new HashMap<String, Node>();
-    Map<String, Set<String>> localIdToOutputList = new HashMap<String, Set<String>>();
-    TransformationModel model;
-    Pack packNode = null;
-    PackTransformer packTransformerNode = null;
-    String currentID = null;
+    final static String URI = "http://www.example.org/TransformationModel";
+    private Map<Integer, Node> idToNode = new HashMap<Integer, Node>();
+    private Map<Integer, Set<Integer>> idToOutputList = new HashMap<Integer, Set<Integer>>();
+    private TransformationModel model;
+    private Pack packNode = null;
+    private PackTransformer packTransformerNode = null;
+    private Integer currentID = null;
 
     /**
      * Will produce a graph from an XML description.
@@ -66,18 +68,23 @@ public class TransformationModelParser extends DefaultHandler
 
         if (localName.equals("packNode"))
         {
-            packNode = model.addPackNode();
+            currentID = parseInteger(attributes.getValue("id"));
+            if (currentID == null)
+                throw new InvalidIdException("The XML contains an invalid id " +
+                        "attribute in a packNode element.");
 
-            currentID = attributes.getValue("id");
-            localIdToNode.put(currentID, packNode);
+            packNode = model.addPackNode(currentID);
+            idToNode.put(currentID, packNode);
 
             String nodeName = attributes.getValue("name");
             if (nodeName != null)
                 packNode.setName(nodeName);
 
-            if (attributes.getValue("isSplitter") != null
-                    && attributes.getValue("isSplitter").equals("true"))
+            if (isTrue(attributes.getValue("isSplitter")))
                 packNode.setIsSplitter(true);
+
+            if (isTrue(attributes.getValue("allowsMultipleFiles")))
+                packNode.setAllowsMultipleFiles(true);
 
             String x = attributes.getValue("x");
             if (x != null)
@@ -91,8 +98,8 @@ public class TransformationModelParser extends DefaultHandler
         {
             packTransformerNode = model.addPackTransformerNode();
 
-            currentID = attributes.getValue("id");
-            localIdToNode.put(currentID, packTransformerNode);
+            currentID = parseInteger(attributes.getValue("id"));
+            idToNode.put(currentID, packTransformerNode);
 
             String nodeName = attributes.getValue("name");
             if (nodeName != null)
@@ -100,8 +107,7 @@ public class TransformationModelParser extends DefaultHandler
                 packTransformerNode.setName(nodeName);
             }
 
-            if (attributes.getValue("isJoiner") != null
-                    && attributes.getValue("isJoiner").equals("true"))
+            if (isTrue(attributes.getValue("isJoiner")))
                 packTransformerNode.setIsJoiner(true);
 
             String x = attributes.getValue("x");
@@ -114,19 +120,30 @@ public class TransformationModelParser extends DefaultHandler
         }
         else if (localName.equals("output"))
         {
-            // TODO: Throw exception if ID is null.
+            Integer outputId = parseInteger(attributes.getValue("node"));
+            if (outputId == null)
+                throw new InvalidIdException("The XML contains an invalid node " +
+                        "attribute in an output element.");
 
-            if (!localIdToOutputList.containsKey(currentID))
+            if (!idToOutputList.containsKey(currentID))
             {
-                localIdToOutputList.put(currentID, new HashSet<String>());
+                idToOutputList.put(currentID, new HashSet<Integer>());
             }
 
-            Set<String> outputs = localIdToOutputList.get(currentID);
-            outputs.add(attributes.getValue("node"));
-        } else if (localName.equals("pattern")) {
-            Pattern pattern = Pattern.compile(attributes.getValue("regex"));
-            packNode.setPattern(pattern);
-        } else if (localName.equals("command")) {
+            Set<Integer> outputs = idToOutputList.get(currentID);
+            outputs.add(outputId);
+        }
+        else if (localName.equals("pattern"))
+        {
+            String pattern = attributes.getValue("regex");
+
+            if (pattern == null || pattern.equals(""))
+                pattern = ".*";
+
+            packNode.setPattern(Pattern.compile(attributes.getValue("regex")));
+        }
+        else if (localName.equals("command"))
+        {
             Command cmd = new Command(attributes.getValue("exec").split(" "));
             packTransformerNode.setCommand(cmd);
         }
@@ -153,15 +170,15 @@ public class TransformationModelParser extends DefaultHandler
 
     private void linkAllNodes()
     {
-        for (String from : localIdToOutputList.keySet())
+        for (Integer from : idToOutputList.keySet())
         {
-            Set<String> toList = localIdToOutputList.get(from);
+            Set<Integer> toList = idToOutputList.get(from);
 
-            Node fromNode = localIdToNode.get(from);
+            Node fromNode = idToNode.get(from);
             if (fromNode == null);// TODO: throw Exception
-            for (String to : toList)
+            for (Integer to : toList)
             {
-                Node toNode = localIdToNode.get(to);
+                Node toNode = idToNode.get(to);
                 if (toNode == null);// TODO: throw Exception
 
                 if (fromNode instanceof Pack
@@ -174,8 +191,35 @@ public class TransformationModelParser extends DefaultHandler
                 {
                     model.addOutput((PackTransformer) fromNode, (Pack) toNode);
                 }
-                else;// TODO: throw Exception
+                else
+                    throw new InvalidNodeTypeException("Two nodes of the " +
+                            "same type cannot be directly connected.");
             }
+        }
+    }
+
+    // Utility functions.
+
+    private static boolean isTrue(String str)
+    {
+        if (str != null && str.equalsIgnoreCase("true"))
+            return true;
+
+        return false;
+    }
+
+    private static Integer parseInteger(String str)
+    {
+        if (str == null)
+            return null;
+        
+        try
+        {
+            return Integer.parseInt(str);
+        }
+        catch (NumberFormatException ex)
+        {
+            return null;
         }
     }
 }
