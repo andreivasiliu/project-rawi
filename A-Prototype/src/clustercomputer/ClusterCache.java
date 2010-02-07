@@ -15,6 +15,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.james.mime4j.field.datetime.DateTime;
 import rawi.common.FileHandle;
 
 /**
@@ -52,6 +53,8 @@ public class ClusterCache
         if (resources.containsKey(file.getUniqueId()))
         {
             copy("cache/" + file.getUniqueId(), taskPath + "/" + file.getLogicalName());
+            Calendar calendar = Calendar.getInstance();
+            ((CacheFileData)resources.get(file.getUniqueId())).downloadDate = calendar.getTime();
         }
     }
 
