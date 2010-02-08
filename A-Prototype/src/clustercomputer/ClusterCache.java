@@ -5,17 +5,14 @@
 package clustercomputer;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.james.mime4j.field.datetime.DateTime;
 import rawi.common.FileHandle;
 
 /**
@@ -49,6 +46,7 @@ public class ClusterCache
     }
 
     public void copyFromCache(FileHandle file, String taskPath)
+            throws IOException
     {
         if (resources.containsKey(file.getUniqueId()))
         {
@@ -59,6 +57,7 @@ public class ClusterCache
     }
 
     public void setInCache(FileHandle file, String taskPath)
+            throws IOException
     {
         if (!resources.containsKey(file.getUniqueId()))
         {
@@ -108,46 +107,20 @@ public class ClusterCache
         resources.remove((String) old.getKey());
     }
 
-    private void copy(String from, String to)
+    private void copy(String from, String to) throws IOException
     {
-        FileReader in = null;
-        {
-            FileWriter out = null;
-            try
-            {
-                File inputFile = new File(from);
-                File outputFile = new File(to);
-                in = new FileReader(inputFile);
-                out = new FileWriter(outputFile);
-                int c;
-                while ((c = in.read()) != -1)
-                {
-                    out.write(c);
-                }
-            } catch (IOException ex)
-            {
-                Logger.getLogger(ClusterCache.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            finally
-            {
-                try
-                {
-                    in.close();
-                } catch (IOException ex)
-                {
-                    Logger.getLogger(ClusterCache.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                try
-                {
-                    out.close();
-                } catch (IOException ex)
-                {
-                    Logger.getLogger(ClusterCache.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        }
-    }
+        FileInputStream in = new FileInputStream(from);
+        FileOutputStream out = new FileOutputStream(to);
+        byte[] bytes = new byte[4096];
+        int bytesRead;
 
+        while ((bytesRead = in.read(bytes, 0, 4096)) != -1) {
+            out.write(bytes, 0, bytesRead);
+        }
+        
+        in.close();
+        out.close();
+    }
 }
 
 class CacheFileData

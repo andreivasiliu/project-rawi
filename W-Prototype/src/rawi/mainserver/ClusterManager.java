@@ -169,7 +169,7 @@ public class ClusterManager implements Runnable
         }
 
         workSession.markTaskAsFinished(task, taskResult);
-        workSession.printStatus();
+        //workSession.printStatus();
 
         wakeUp();
     }

@@ -13,7 +13,7 @@ import java.rmi.RemoteException;
 import java.util.Collection;
 import rawi.common.NetworkUtils;
 
-public class Main extends Thread
+public class Main
 {
     public static void main(String[] args) throws RemoteException, IOException,
             NotBoundException
@@ -31,12 +31,4 @@ public class Main extends Thread
 
         new Notifier("ClusterComputer").start();
     }
-
-    @Override
-    public void run()
-    {
-
-    }
-
-
 }

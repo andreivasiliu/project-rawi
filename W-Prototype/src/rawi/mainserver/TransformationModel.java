@@ -58,6 +58,9 @@ public class TransformationModel
 
     public PackTransformer addPackTransformerNode(int id)
     {
+        if (id > lastUsedID)
+            lastUsedID = id;
+
         PackTransformer packTransformer = new PackTransformer(id);
 
         for (ModelChangeListener listener: listeners)
