@@ -16,6 +16,7 @@ public class Finalizer extends Thread
     @Override
     public void run()
     {
+        System.out.println("Deleting cache...");
         ClusterTask.deleteDir(new File("cache"));
     }
 

@@ -91,28 +91,31 @@ public class ClusterTask
                 }
                 continue;
             }
-
-            HttpGet httpget = new HttpGet(f.getFileURL());
-            HttpResponse response = httpclient.execute(httpget);
-            HttpEntity entity = response.getEntity();
-            if (entity != null)
+            else
             {
-                InputStream instream = entity.getContent();
-                new File(currentDir + "/" + f.getLogicalName()).getParentFile().mkdirs();
-                OutputStream out = new FileOutputStream(currentDir + "/" + f.getLogicalName());
-                int length;
-                byte[] tmp = new byte[2048];
-                while ((length = instream.read(tmp)) != -1)
+                HttpGet httpget = new HttpGet(f.getFileURL());
+                HttpResponse response = httpclient.execute(httpget);
+                HttpEntity entity = response.getEntity();
+                if (entity != null)
                 {
-                    out.write(tmp, 0, length);
-                }
-                out.close();
-                if (f.isZipFile())
-                {
-                    unzipFile(currentDir + "/" + f.getLogicalName(), currentDir);
-                }
+                    InputStream instream = entity.getContent();
+                    new File(currentDir + "/" + f.getLogicalName()).getParentFile().mkdirs();
+                    OutputStream out = new FileOutputStream(currentDir + "/" + f.getLogicalName());
+                    int length;
+                    byte[] tmp = new byte[2048];
+                    while ((length = instream.read(tmp)) != -1)
+                    {
+                        out.write(tmp, 0, length);
+                    }
+                    out.close();
 
-                cache.setInCache(f, currentDir);
+                    cache.setInCache(f, currentDir);
+
+                    if (f.isZipFile())
+                    {
+                        unzipFile(currentDir + "/" + f.getLogicalName(), currentDir);
+                    }
+                }
             }
         }
     }
@@ -137,7 +140,7 @@ public class ClusterTask
                 String outFileName = currentDir + "/" + zipEntry.getName();
                 copyInputStream(zipFile.getInputStream(zipEntry),
                         new BufferedOutputStream(new FileOutputStream(outFileName)));
-                System.out.println("Extracted " + zipEntry.getName());
+                //System.out.println("Extracted " + zipEntry.getName());
             }
         }
 
@@ -172,11 +175,6 @@ public class ClusterTask
 
         for (FileHandle fileHandle : filelist)
         {
-            System.out.println("File to upload: " + fileHandle.getLogicalName());
-        }
-
-        for (FileHandle fileHandle : filelist)
-        {
             File file = new File("task" + task.getId() + "/" + fileHandle.getLogicalName());
             if (file.isDirectory())
             {
@@ -184,8 +182,8 @@ public class ClusterTask
             }
 
 
-            System.out.println("Uploading " + fileHandle.getLogicalName()
-                    + " to: " + task.getUploadURI() + "/" + fileHandle.getLogicalName());
+            //System.out.println("Uploading " + fileHandle.getLogicalName()
+            //        + " to: " + task.getUploadURI() + "/" + fileHandle.getLogicalName());
 
             int id = uploadOnlyOneFile(new FilePart(fileHandle.getLogicalName(),
                     file), fileHandle.getLogicalName());
@@ -210,7 +208,8 @@ public class ClusterTask
         };
         post.setRequestEntity(new MultipartRequestEntity(part, post.getParams()));
         int response = client.executeMethod(post);
-        System.out.println("Upload status = " + response);
+        if (response != 200)
+            System.out.println("Upload status = " + response);
         //System.out.println("Post response:" + post.getResponseBodyAsString());
         String resp = post.getResponseBodyAsString();
 
@@ -239,7 +238,10 @@ public class ClusterTask
 
     public static void deleteDir(File dir)
     {
-        System.out.println("Deleting....");
+        if (!dir.exists())
+            return;
+
+        //System.out.println("Deleting....");
         if (dir.isDirectory())
         {
             String[] children = dir.list();
@@ -261,10 +263,10 @@ public class ClusterTask
     public void recurseMapping(String root, String folder)
             throws NoSuchAlgorithmException, IOException
     {
-        System.out.println("Root: " + root + ", folder: " + folder);
+        //System.out.println("Root: " + root + ", folder: " + folder);
         for (String fName : new File(root + "/" + folder).list())
         {
-            System.out.println("fName: " + fName);
+            //System.out.println("fName: " + fName);
             File f = new File(root + "/" + folder + fName);
 
             if (f.isDirectory())
@@ -294,10 +296,10 @@ public class ClusterTask
     public void recurseIntoFolder(String root, String folder, List<FileHandle> files)
             throws NoSuchAlgorithmException, IOException
     {
-        System.out.println("Root: " + root + ", folder: " + folder);
+        //System.out.println("Root: " + root + ", folder: " + folder);
         for (String fName : new File(root + "/" + folder).list())
         {
-            System.out.println("fName: " + fName);
+            //System.out.println("fName: " + fName);
             File f = new File(root + "/" + folder + fName);
 
             if (f.isDirectory())

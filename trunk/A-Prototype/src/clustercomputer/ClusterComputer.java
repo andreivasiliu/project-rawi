@@ -33,7 +33,7 @@ public class ClusterComputer extends RMIServerModel implements ClusterComputerIn
     BlockingQueue<ClusterTask> stage1Queue = new LinkedBlockingQueue<ClusterTask>();
     BlockingQueue<ClusterTask> stage2Queue = new LinkedBlockingQueue<ClusterTask>();
     BlockingQueue<ClusterTask> stage3Queue = new LinkedBlockingQueue<ClusterTask>();
-    ClusterCache cache = new ClusterCache();
+    ClusterCache cache;
 
     public ClusterComputer() throws RemoteException
     {
@@ -56,7 +56,9 @@ public class ClusterComputer extends RMIServerModel implements ClusterComputerIn
         Upload u = new Upload();
         u.start();
 
-        //add finalizer
+        //clear cache and add finalizer
+        ClusterTask.deleteDir(new File("cache"));
+        cache = new ClusterCache();
         Runtime.getRuntime().addShutdownHook(new Finalizer());
     }
 

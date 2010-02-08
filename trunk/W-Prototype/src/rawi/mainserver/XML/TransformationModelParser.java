@@ -96,9 +96,12 @@ public class TransformationModelParser extends DefaultHandler
         }
         else if (localName.equals("packTransformerNode"))
         {
-            packTransformerNode = model.addPackTransformerNode();
-
             currentID = parseInteger(attributes.getValue("id"));
+            if (currentID == null)
+                throw new InvalidIdException("The XML contains an invalid id " +
+                        "attribute in a packNode element.");
+
+            packTransformerNode = model.addPackTransformerNode(currentID);
             idToNode.put(currentID, packTransformerNode);
 
             String nodeName = attributes.getValue("name");
