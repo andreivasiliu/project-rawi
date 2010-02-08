@@ -265,11 +265,9 @@
 				if (marked[nd.nid] != true && !nd.isJoiner)
 				{
 					nd.isMultiNode = true;
+					marked[nd.nid] = true;
 					for each (var child:int in nd.outputToNodes)
-					{
-						marked[child] = true;
 						DFS(nodesMap[child]);
-					}
 				}
 			}
 		]]>

@@ -104,9 +104,9 @@
 				}
 				this.propsGen.schemaDescription.text = data.description;
 				this.propsGen.schemaName.text = tmName;
+				updateMultiNode();
 				reDrawConnections();
 				reDrawObjects();
-				updateMultiNode();
 				refreshHdlr();
 			}
 			public function reDrawObjects():void
@@ -175,21 +175,27 @@
 					{
 						PackNodeBase(nodesMap[int(node.@id)]).nodeState.text = "(" + node.subState.(@status == "empty").length() + "/" +
 							node.subState.(@status == "ready").length() + ")";
-						packNode(nodesMap[int(node.@id)]).propsLocalContainer.fileBox.removeAllChildren();
-						for each (var nn:XML in node.subState)
+						// update the properties pannel only if the process is not working - for performance reasons
+						packNode(nodesMap[int(node.@id)]).propsLocalContainer.fileBox.enabled = false;
+						if (xmlData.globalStatus.@working != "true")
 						{
-							if (nn.@status != "empty")
+							packNode(nodesMap[int(node.@id)]).propsLocalContainer.fileBox.enabled = true;
+							packNode(nodesMap[int(node.@id)]).propsLocalContainer.fileBox.removeAllChildren();
+							for each (var nn:XML in node.subState)
 							{
-								var upl:Uploader = packNode(nodesMap[int(node.@id)]).propsLocalContainer.addNewUploader();
-								upl.fileName = nn.file.@name;
-								upl.fileIdOnServer = nn.file.@id;
-								upl.fileUrl = nn.file.@url;
-								upl.viewstack.selectedIndex = 2;
-								trace("Uploader:", nn.file.@name);
+								if (nn.@status != "empty")
+								{
+									var upl:Uploader = packNode(nodesMap[int(node.@id)]).propsLocalContainer.addNewUploader();
+									upl.fileName = nn.file.@name;
+									upl.fileIdOnServer = nn.file.@id;
+									upl.fileUrl = nn.file.@url;
+									upl.viewstack.selectedIndex = 2;
+									trace("Uploader:", nn.file.@name);
+								}
 							}
+							// add a new empty one at the end
+							packNode(nodesMap[int(node.@id)]).propsLocalContainer.addNewUploader();
 						}
-						// add a new empty one at the end
-						packNode(nodesMap[int(node.@id)]).propsLocalContainer.addNewUploader();
 					}
 					for each (node in xmlData.nodeInstances.packTransformerNode)
 					{
@@ -254,11 +260,9 @@
 				if (marked[nd.nid] != true && !nd.isJoiner)
 				{
 					nd.isMultiNode = true;
+					marked[nd.nid] = true;
 					for each (var child:int in nd.outputToNodes)
-					{
-						marked[child] = true;
 						DFS(nodesMap[child]);
-					}
 				}
 			}
 		]]>
