@@ -11,7 +11,9 @@ import rawi.common.Task;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.RemoteServer;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -19,6 +21,7 @@ import rawi.common.ClusterComputerInterface;
 import rawi.common.FileHandle;
 import rawi.common.MainServerInterface;
 import rawi.common.Ports;
+import rawi.common.TaskStatus;
 import rawi.rmiinfrastructure.RMIClientModel;
 import rawi.rmiinfrastructure.RMIServerModel;
 
@@ -33,6 +36,7 @@ public class ClusterComputer extends RMIServerModel implements ClusterComputerIn
     BlockingQueue<ClusterTask> stage1Queue = new LinkedBlockingQueue<ClusterTask>();
     BlockingQueue<ClusterTask> stage2Queue = new LinkedBlockingQueue<ClusterTask>();
     BlockingQueue<ClusterTask> stage3Queue = new LinkedBlockingQueue<ClusterTask>();
+    final Map<String, TaskStatus> statusOfTask = new HashMap<String, TaskStatus>();
     ClusterCache cache;
 
     public ClusterComputer() throws RemoteException
@@ -88,6 +92,13 @@ public class ClusterComputer extends RMIServerModel implements ClusterComputerIn
         }
 
         ClusterTask ctask = new ClusterTask(this, task, cache);
+
+        synchronized (statusOfTask)
+        {
+            statusOfTask.put(task.getId(), new TaskStatus(
+                    TaskStatus.StatusType.RUNNING));
+        }
+
         stage1Queue.add(ctask);
         //tt.start();
 
@@ -107,6 +118,17 @@ public class ClusterComputer extends RMIServerModel implements ClusterComputerIn
         } catch (ServerNotActiveException ex)
         {
             throw new RuntimeException("Cannot get the client's host address", ex);
+        }
+    }
+
+    public TaskStatus taskStatus(Task task) throws RemoteException
+    {
+        synchronized (statusOfTask)
+        {
+            if (!statusOfTask.containsKey(task.getId()))
+                return new TaskStatus(TaskStatus.StatusType.INEXISTENT);
+            else
+                return statusOfTask.get(task.getId());
         }
     }
 
@@ -240,6 +262,11 @@ public class ClusterComputer extends RMIServerModel implements ClusterComputerIn
 
                     //                    }
                     // task completed.
+                    synchronized (statusOfTask)
+                    {
+                        statusOfTask.put(taskId, new TaskStatus(
+                                TaskStatus.StatusType.COMPLETED));
+                    }
                 } catch (NoSuchAlgorithmException ex)
                 {
                     Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex);
@@ -286,11 +313,12 @@ public class ClusterComputer extends RMIServerModel implements ClusterComputerIn
         {
             Logger.getLogger(ClusterComputer.class.getName()).log(Level.SEVERE, null, ex1);
         }
-    }
 
-    private void deleteCache()
-    {
-        ClusterTask.deleteDir(new File("cache"));
+        synchronized (statusOfTask)
+        {
+            statusOfTask.put(taskId, new TaskStatus(
+                    TaskStatus.StatusType.FAILED));
+        }
     }
 
 }
