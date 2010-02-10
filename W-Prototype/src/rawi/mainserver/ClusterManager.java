@@ -1,5 +1,6 @@
 package rawi.mainserver;
 
+import rawi.common.TaskStatus;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -174,6 +175,18 @@ public class ClusterManager implements Runnable
         wakeUp();
     }
 
+    public void taskFailed(String id, String clusterComputerId, boolean impossibleTask)
+    {
+        ClusterComputer clusterComputer = computerById.get(clusterComputerId);
+        Task task = taskById.get(id);
+        // TODO: check if null.
+
+        clusterComputer.takeTask(task);
+        // TODO: a temporary hack; this needs to be handled better.
+        clusterComputer.unresponsive = true;
+        retryTask(task);
+    }
+
     public void addWorkSession(WorkSession workSession)
     {
         sessionList.add(workSession);
@@ -273,6 +286,8 @@ public class ClusterManager implements Runnable
             return false;
 
         clusterComputer.giveTask(task);
+        System.out.println("Sent task " + task.getId() + " to " +
+                clusterComputer.ipAddress);
         return true;
     }
 
@@ -435,6 +450,11 @@ public class ClusterManager implements Runnable
         {
             return activeTasks.size();
         }
+
+        synchronized boolean hasTask(Task task)
+        {
+            return activeTasks.contains(task);
+        }
     }
 
     private class IPScanner implements Runnable
@@ -480,6 +500,7 @@ public class ClusterManager implements Runnable
     {
         private final Task task;
         private final ClusterManager.ClusterComputer clusterComputer;
+        private int monitorFailures = 0;
 
         public TaskGiver(Task task, ClusterManager.ClusterComputer clusterComputer)
         {
@@ -503,17 +524,114 @@ public class ClusterManager implements Runnable
 
                 cci.execute(task);
             }
-            catch (RemoteException ex)
+            catch (Exception ex)
             {
+                System.out.println("Delivery of task " + task.getId().toString() +
+                        " failed. Exception: " + ex.toString());
                 clusterComputer.unresponsive = true;
                 clusterComputer.takeTask(task);
                 retryTask(task);
+                return;
             }
-            catch (NotBoundException ex)
+
+            monitorClusterComputer();
+        }
+
+        // TODO: The exception messages can probably be improved.
+        private void monitorClusterComputer()
+        {
+            while (true)
             {
-                clusterComputer.unresponsive = true;
-                clusterComputer.takeTask(task);
-                retryTask(task);
+                try
+                {
+                    TaskStatus taskStatus;
+
+                    try
+                    {
+                        Thread.sleep(1000);
+                    }
+                    catch (InterruptedException ex)
+                    {
+                        // Do nothing
+                    }
+
+                    try
+                    {
+                        ClusterComputerInterface cci =
+                                new RMIClientModel<ClusterComputerInterface>(
+                                clusterComputer.ipAddress, Ports.ClusterComputerPort)
+                                .getInterface();
+
+                        taskStatus = cci.taskStatus(task);
+                    }
+                    catch (NotBoundException ex)
+                    {
+                        if (++monitorFailures >= 3)
+                            throw new Exception("Failed to contact the " +
+                                    "ClusterComputer in three tries.", ex);
+                        else
+                            continue;
+                    }
+                    catch (RemoteException ex)
+                    {
+                        if (++monitorFailures >= 3)
+                            throw new Exception("Failed to contact the " +
+                                    "ClusterComputer in three tries.", ex);
+                        else
+                            continue;
+                    }
+
+                    if (!clusterComputer.hasTask(task))
+                        return;
+
+                    // This was a successful RMI call, so reset the counter.
+                    monitorFailures = 0;
+
+                    switch (taskStatus.getStatus())
+                    {
+                        case COMPLETED:
+                            throw new Exception("The ClusterComputer reported the " +
+                                    "task as completed, yet it is still registered " +
+                                    "as active.");
+                        case FAILED:
+                            throw new Exception("The ClusterComputer reported the " +
+                                    "task as failed, yet it is still registered " +
+                                    "as active.");
+                        case INEXISTENT:
+                            throw new Exception("The ClusterComputer no longer " +
+                                    "knows anything about this task.");
+
+                        case RUNNING:
+                            // Do nothing
+                        }
+                }
+                catch (Exception ex)
+                {
+                    System.out.println("While monitoring computer at " +
+                            clusterComputer.ipAddress +
+                            " for task " + task.getId());
+                    System.out.println("Exception: " + ex.toString());
+                    Throwable cause = ex.getCause();
+                    while (cause != null)
+                    {
+                        System.out.println("Caused by: " + cause);
+                        cause = cause.getCause();
+                    }
+
+                    clusterComputer.unresponsive = true;
+                    clusterComputer.takeTask(task);
+                    retryTask(task);
+                    return;
+                }
+
+                try
+                {
+                    Thread.sleep(5000);
+                }
+                catch (InterruptedException ex)
+                {
+                    // Do nothing
+                }
             }
         }
     }

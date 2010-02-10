@@ -101,6 +101,8 @@ public class RMIMainServer extends RMIServerModel
         return status;
     }
 
+    /* This methos is required to return AFTER the task has been removed
+     * from the ClusterManager's list of active tasks. */
     public void taskCompleted(String id, String clusterComputerId,
             List<FileHandle> files) throws RemoteException
     {
@@ -149,6 +151,7 @@ public class RMIMainServer extends RMIServerModel
         System.out.println("Received exception from " + clusterComputerId +
                 " regarding task " + id);
         System.out.println("Exception received: " + exception.getMessage());
+        clusterManager.taskFailed(id, clusterComputerId, impossibleTask);
     }
 }
 

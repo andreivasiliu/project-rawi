@@ -14,4 +14,5 @@ public interface ClusterComputerInterface extends Remote
 {
     void execute(Task task) throws RemoteException;
     ClusterComputerStatus getStatus() throws RemoteException;
+    public TaskStatus taskStatus(Task task) throws RemoteException;
 }
