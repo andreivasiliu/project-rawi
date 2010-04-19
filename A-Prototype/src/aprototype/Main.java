@@ -5,13 +5,10 @@
 package aprototype;
 
 import clustercomputer.ClusterComputer;
-import clustercomputer.MainServerNotification;
-import rawi.common.Notifier;
 import java.io.IOException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.util.Collection;
-import rawi.common.NetworkUtils;
+import java.rmi.server.ExportException;
 
 public class Main
 {
@@ -19,16 +16,16 @@ public class Main
             NotBoundException
     {
         //System.setProperty("java.rmi.server.hostname", "5.242.52.108");
-        ClusterComputer cc = new ClusterComputer();
-
-        Collection<String> mainServerIpList = NetworkUtils.getIPsFromTracker("MainServer");
-
-        for (String serverIP : mainServerIpList)
+        try
         {
-            MainServerNotification msn = new MainServerNotification(serverIP);
-            msn.start();
+            ClusterComputer cc = new ClusterComputer();
         }
+        catch (ExportException e)
+        {
+            System.out.println("Unable to start Cluster Computer: " +
+                    e.getLocalizedMessage());
 
-        new Notifier("ClusterComputer").start();
+            System.exit(1);
+        }
     }
 }

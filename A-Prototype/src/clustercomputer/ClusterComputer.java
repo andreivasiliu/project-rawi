@@ -11,6 +11,8 @@ import rawi.common.Task;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.RemoteServer;
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +22,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import rawi.common.ClusterComputerInterface;
 import rawi.common.FileHandle;
 import rawi.common.MainServerInterface;
+import rawi.common.NetworkUtils;
+import rawi.common.Notifier;
 import rawi.common.Ports;
 import rawi.common.TaskStatus;
 import rawi.rmiinfrastructure.RMIClientModel;
@@ -38,6 +42,7 @@ public class ClusterComputer extends RMIServerModel implements ClusterComputerIn
     BlockingQueue<ClusterTask> stage3Queue = new LinkedBlockingQueue<ClusterTask>();
     final Map<String, TaskStatus> statusOfTask = new HashMap<String, TaskStatus>();
     ClusterCache cache;
+    HashMap<String, Date> recentServerRequests = new HashMap<String, Date>();
 
     public ClusterComputer() throws RemoteException
     {
@@ -63,7 +68,17 @@ public class ClusterComputer extends RMIServerModel implements ClusterComputerIn
         //clear cache and add finalizer
         ClusterTask.deleteDir(new File("cache"));
         cache = new ClusterCache();
-        Runtime.getRuntime().addShutdownHook(new Finalizer());
+        Runtime.getRuntime().addShutdownHook(new Finalizer(this));
+
+        Collection<String> mainServerIpList = NetworkUtils.getIPsFromTracker("MainServer");
+
+        for (String serverIP : mainServerIpList)
+        {
+            MainServerNotification msn = new MainServerNotification(serverIP);
+            msn.start();
+        }
+
+        new Notifier("ClusterComputer").start();
     }
 
     /**
@@ -104,6 +119,28 @@ public class ClusterComputer extends RMIServerModel implements ClusterComputerIn
 
     }
 
+    public void registerIP(String ip)
+    {
+        // new Date() returns the current time.
+        recentServerRequests.put(ip, new Date());
+        updateIPs();
+    }
+
+    public void updateIPs()
+    {
+        // Remove entries older than five minutes.
+        final long fiveMinutes = 300000;
+        HashMap<String, Date> recentServerRequestsClone =
+                (HashMap<String, Date>)recentServerRequests.clone();
+
+        for(String s: recentServerRequestsClone.keySet())
+            if (recentServerRequestsClone.get(s).getTime() -
+                    new Date().getTime() > fiveMinutes)
+            {
+                recentServerRequests.remove(s);
+            }
+    }
+
     public ClusterComputerStatus getStatus() throws RemoteException
     {
         try
@@ -114,6 +151,7 @@ public class ClusterComputer extends RMIServerModel implements ClusterComputerIn
             status.id = uuid;
             status.processors = Runtime.getRuntime().availableProcessors();
             status.mainServerAddr = RemoteServer.getClientHost();
+            registerIP(status.mainServerAddr);
             return status;
         } catch (ServerNotActiveException ex)
         {

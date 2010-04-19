@@ -38,4 +38,5 @@ public interface MainServerInterface extends Remote
 
     WorkSessionStatus getSessionStatus(String sessionId) throws RemoteException;
 
+    void goodBye(String uuid) throws RemoteException;
 }

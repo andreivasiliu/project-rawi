@@ -153,5 +153,11 @@ public class RMIMainServer extends RMIServerModel
         System.out.println("Exception received: " + exception.getMessage());
         clusterManager.taskFailed(id, clusterComputerId, impossibleTask);
     }
+
+    public void goodBye(String uuid)
+    {
+        // TODO
+        System.out.println(uuid + " said Good Bye!");
+    }
 }
 
