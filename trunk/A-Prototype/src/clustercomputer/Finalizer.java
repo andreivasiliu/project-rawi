@@ -4,11 +4,13 @@
  */
 package clustercomputer;
 
+import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.rmi.NotBoundException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import rawi.common.MainServerInterface;
-import rawi.common.NetworkUtils;
 import rawi.common.Ports;
 import rawi.rmiinfrastructure.RMIClientModel;
 
@@ -29,15 +31,20 @@ public class Finalizer extends Thread
     @Override
     public void run()
     {
-        System.out.println("Deleting cache...");
-        ClusterTask.deleteDir(new File("cache"));
+        System.setOut(clustercomputer.originalOut);
+        System.setErr(clustercomputer.originalErr);
 
+        System.out.println("Deleting working folder...");
+        ClusterTask.deleteDir(new File(ClusterComputer.rootFolder));
+
+        System.out.println("Saying Good-bye to all known main servers...");
         clustercomputer.updateIPs();
 
         for (final String ip : clustercomputer.recentServerRequests.keySet())
         {
             Thread t = new Thread(new Runnable()
             {
+
                 public void run()
                 {
                     try
@@ -63,5 +70,7 @@ public class Finalizer extends Thread
 
             t.start();
         }
+
+        System.out.println("Done! Farewell.");
     }
 }

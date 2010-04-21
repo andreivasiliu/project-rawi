@@ -9,9 +9,14 @@ import java.awt.Image;
 import java.awt.SystemTray;
 import java.awt.Toolkit;
 import java.awt.TrayIcon;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ContainerAdapter;
+import java.awt.event.ContainerEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -19,6 +24,7 @@ import java.net.URL;
 import java.rmi.server.ExportException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JTextArea;
 import org.jdesktop.application.Application;
 import org.jdesktop.application.SingleFrameApplication;
 import org.xml.sax.InputSource;
@@ -28,7 +34,7 @@ import org.xml.sax.InputSource;
  */
 public class APrototypeGUIApp extends SingleFrameApplication
 {
-
+    private JTextArea consoleTextArea;
     public APrototypeBean aPrototypeBean;
 
     /**
@@ -42,9 +48,24 @@ public class APrototypeGUIApp extends SingleFrameApplication
 
         aPrototypeBean = view.getAPrototypeBean();
 
+        consoleTextArea = view.getConsoleTextArea();
+
+        consoleTextArea.addContainerListener(new ContainerAdapter()
+        {
+            @Override
+            public void componentRemoved(ContainerEvent e)
+            {
+                super.componentRemoved(e);
+
+                System.out.println("Removed!");
+            }
+        });
+
         // Redirect console output to the listbox.
-        BeanStream writer = new BeanStream(view.getConsoleTextArea());
+        BeanStream writer = new BeanStream(consoleTextArea);
         PrintStream stream = new PrintStream(writer);
+        final PrintStream originalOut = System.out;
+        final PrintStream originalErr = System.err;
         System.setOut(stream);
         System.setErr(stream);
 
@@ -85,6 +106,7 @@ public class APrototypeGUIApp extends SingleFrameApplication
                 try
                 {
                     ClusterComputer cc = new ClusterComputer();
+                    cc.setOriginalStreams(originalOut, originalErr);
                 }
                 catch (ExportException e)
                 {
@@ -113,6 +135,16 @@ public class APrototypeGUIApp extends SingleFrameApplication
     @Override
     protected void configureWindow(java.awt.Window root)
     {
+        root.addWindowListener(new WindowAdapter()
+        {
+            @Override
+            public void windowClosing(WindowEvent e)
+            {
+                super.windowClosing(e);
+
+                System.out.println("Window being closed!");
+            }
+        });
     }
 
     /**

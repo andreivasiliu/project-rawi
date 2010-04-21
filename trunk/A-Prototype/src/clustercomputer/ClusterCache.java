@@ -28,9 +28,9 @@ public class ClusterCache
     public ClusterCache()
     {
         resources = new HashMap<String, CacheFileData>();
-        File file = new File("cache");
+        File file = new File(ClusterComputer.rootFolder + "/cache");
 
-        file.mkdir();
+        file.mkdirs();
 
         String[] files = file.list();
 
@@ -50,7 +50,7 @@ public class ClusterCache
     {
         if (resources.containsKey(file.getUniqueId()))
         {
-            copy("cache/" + file.getUniqueId(), taskPath + "/" + file.getLogicalName());
+            copy(ClusterComputer.rootFolder + "/cache/" + file.getUniqueId(), taskPath + "/" + file.getLogicalName());
             Calendar calendar = Calendar.getInstance();
             ((CacheFileData)resources.get(file.getUniqueId())).downloadDate = calendar.getTime();
         }
@@ -61,7 +61,8 @@ public class ClusterCache
     {
         if (!resources.containsKey(file.getUniqueId()))
         {
-            copy(taskPath + "/" + file.getLogicalName(), "cache/" + file.getUniqueId());
+            copy(taskPath + "/" + file.getLogicalName(), 
+                    ClusterComputer.rootFolder + "/cache/" + file.getUniqueId());
             resources.put(file.getUniqueId(), new CacheFileData(file.getUniqueId()));
             refresh();
         }
@@ -133,7 +134,7 @@ class CacheFileData
     {
         Calendar calendar = Calendar.getInstance();
         downloadDate = calendar.getTime();
-        size = new File("cache/" + UUID).length();
+        size = new File(ClusterComputer.rootFolder + "/cache/" + UUID).length();
     }
 
     public CacheFileData(Date downloadDate, long size)
