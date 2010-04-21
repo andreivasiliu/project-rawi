@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import rawi.common.ClusterComputerStatus;
 import rawi.common.Task;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.rmi.RemoteException;
 import java.rmi.server.RemoteServer;
 import java.util.Collection;
@@ -35,7 +36,8 @@ import rawi.rmiinfrastructure.RMIServerModel;
  */
 public class ClusterComputer extends RMIServerModel implements ClusterComputerInterface
 {
-
+    static String rootFolder = "a-prototype-root";
+    
     String uuid = UUID.randomUUID().toString();
     BlockingQueue<ClusterTask> stage1Queue = new LinkedBlockingQueue<ClusterTask>();
     BlockingQueue<ClusterTask> stage2Queue = new LinkedBlockingQueue<ClusterTask>();
@@ -43,6 +45,8 @@ public class ClusterComputer extends RMIServerModel implements ClusterComputerIn
     final Map<String, TaskStatus> statusOfTask = new HashMap<String, TaskStatus>();
     ClusterCache cache;
     HashMap<String, Date> recentServerRequests = new HashMap<String, Date>();
+    PrintStream originalOut;
+    PrintStream originalErr;
 
     public ClusterComputer() throws RemoteException
     {
@@ -65,8 +69,8 @@ public class ClusterComputer extends RMIServerModel implements ClusterComputerIn
         Upload u = new Upload();
         u.start();
 
-        //clear cache and add finalizer
-        ClusterTask.deleteDir(new File("cache"));
+        //clear root folder and add finalizer
+        ClusterTask.deleteDir(new File(rootFolder));
         cache = new ClusterCache();
         Runtime.getRuntime().addShutdownHook(new Finalizer(this));
 
@@ -79,6 +83,13 @@ public class ClusterComputer extends RMIServerModel implements ClusterComputerIn
         }
 
         new Notifier("ClusterComputer").start();
+    }
+
+    public void setOriginalStreams(PrintStream originalOut,
+            PrintStream originalErr)
+    {
+        this.originalOut = originalOut;
+        this.originalErr = originalErr;
     }
 
     /**

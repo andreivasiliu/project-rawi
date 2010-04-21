@@ -51,6 +51,12 @@ public class ClusterTask
     HashMap<String, byte[]> map;
     ClusterCache cache;
 
+    /**
+     * Ctor of ClusterTask.
+     * @param clusterComputer
+     * @param task
+     * @param cache
+     */
     public ClusterTask(ClusterComputer clusterComputer, Task task, ClusterCache cache)
     {
         map = new HashMap<String, byte[]>();
@@ -59,9 +65,13 @@ public class ClusterTask
         this.cache = cache;
     }
 
+    /**
+     * Creates a temporary directory to store a task.
+     */
     public void createCurrentDir()
     {
-        File currentDir = new File("task" + task.getId());
+        File currentDir = new File(ClusterComputer.rootFolder +
+                "/task" + task.getId());
         currentDir.mkdir();
     }
 
@@ -75,7 +85,7 @@ public class ClusterTask
     {
         HttpClient httpclient = new DefaultHttpClient();
 
-        String currentDir = new File("task" + task.getId()).toString();
+        String currentDir = new File(ClusterComputer.rootFolder + "/task" + task.getId()).toString();
 
         List<FileHandle> files = task.getFiles();
         for (FileHandle f : files)
@@ -120,6 +130,12 @@ public class ClusterTask
         }
     }
 
+    /**
+     * Unzip file fileName in directory currentDir.
+     * @param fileName
+     * @param currentDir
+     * @throws IOException
+     */
     private static void unzipFile(String fileName, String currentDir)
             throws IOException
     {
@@ -175,7 +191,7 @@ public class ClusterTask
 
         for (FileHandle fileHandle : filelist)
         {
-            File file = new File("task" + task.getId() + "/" + fileHandle.getLogicalName());
+            File file = new File(ClusterComputer.rootFolder + "/task" + task.getId() + "/" + fileHandle.getLogicalName());
             if (file.isDirectory())
             {
                 // recurse
@@ -233,7 +249,7 @@ public class ClusterTask
      */
     protected void deleteCurrentDir()
     {
-        deleteDir(new File("task" + task.getId()));
+        deleteDir(new File(ClusterComputer.rootFolder + "/task" + task.getId()));
     }
 
     public static void deleteDir(File dir)
@@ -256,7 +272,7 @@ public class ClusterTask
 
     public void mapFiles() throws NoSuchAlgorithmException, IOException
     {
-        File root = new File("task" + task.getId());
+        File root = new File(ClusterComputer.rootFolder + "/task" + task.getId());
         recurseMapping(root.toString(), "");
     }
 
@@ -287,7 +303,7 @@ public class ClusterTask
     {
         List<FileHandle> list = new LinkedList<FileHandle>();
 
-        File root = new File("task" + task.getId());
+        File root = new File(ClusterComputer.rootFolder + "/task" + task.getId());
 
         recurseIntoFolder(root.toString(), "", list);
         return list;
@@ -401,7 +417,7 @@ public class ClusterTask
     public void exec() throws IOException, InterruptedException
     {
         //Execution
-        File file = new File("task" + task.getId()).getAbsoluteFile();
+        File file = new File(ClusterComputer.rootFolder + "/task" + task.getId()).getAbsoluteFile();
 //        String[] execString = task.getCommand().getExecString(file.getAbsolutePath());
 
         createLocalBatch(file.getAbsolutePath(), task.getCommand().toString());
@@ -422,7 +438,7 @@ public class ClusterTask
             System.out.println("stdout: " + line);
         }
         p.waitFor();
-        new File("task" + task.getId() + "/myBatch.bat").delete();
+        new File(ClusterComputer.rootFolder + "/task" + task.getId() + "/myBatch.bat").delete();
     }
 
     public void createLocalBatch(String path, String command) throws IOException
@@ -476,7 +492,7 @@ public class ClusterTask
         {
             return;
         }
-        String hierarchy = "task" + task.getId() + "/" + logicalName.substring(0, logicalName.lastIndexOf("/"));
+        String hierarchy = ClusterComputer.rootFolder + "/task" + task.getId() + "/" + logicalName.substring(0, logicalName.lastIndexOf("/"));
         new File(hierarchy).mkdirs();
     }
 
