@@ -4,12 +4,9 @@
  */
 package clustercomputer;
 
-import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.rmi.NotBoundException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import rawi.common.MainServerInterface;
 import rawi.common.Ports;
 import rawi.rmiinfrastructure.RMIClientModel;

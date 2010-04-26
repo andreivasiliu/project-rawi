@@ -5,11 +5,7 @@
 package clustercomputer;
 
 import java.io.IOException;
-import java.net.SocketException;
 import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import rawi.common.MainServerInterface;
 import rawi.common.NetworkUtils;
 import rawi.common.Ports;
