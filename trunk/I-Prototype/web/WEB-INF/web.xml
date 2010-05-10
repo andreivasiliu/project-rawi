@@ -40,6 +40,10 @@
         <servlet-name>PutFileInPackServlet</servlet-name>
         <servlet-class>servlets.PutFileInPackServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>ProgramDownloader</servlet-name>
+        <servlet-class>servlets.ProgramDownloader</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>TheDownloadServlet</servlet-name>
         <url-pattern>/TheDownloadServlet/*</url-pattern>
@@ -75,6 +79,10 @@
     <servlet-mapping>
         <servlet-name>PutFileInPackServlet</servlet-name>
         <url-pattern>/PutFileInPackServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ProgramDownloader</servlet-name>
+        <url-pattern>/ProgramDownloader</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>
