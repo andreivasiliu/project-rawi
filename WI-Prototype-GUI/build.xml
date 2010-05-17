@@ -10,6 +10,67 @@
 <project name="WI-Prototype-GUI" default="default" basedir=".">
     <description>Builds, tests, and runs the project WI-Prototype-GUI.</description>
     <import file="nbproject/build-impl.xml"/>
+
+    <property name="appname" value="rawi.web.jsp"/>
+    <property name="src.dir" value="${basedir}/src"/>
+    <property name="lib.dir" value="${basedir}/lib"/>
+    <property name="jsp.dir" value="${src.dir}/rawi/web/jsp"/>
+    <property name="build.dir" value="${basedir}/build"/>
+    <property name="jsp.precompile.dir" value="${basedir}/generated/jsp"/>
+    <property name="build.classes.dir" value="${build.dir}/classes"/>
+    <property name="java-debug" value="on"/>
+
+    <target name="-post-clean">
+        <delete dir="${basedir}/generated"/>
+    </target>
+
+    <target name="-post-compile">
+
+        <path id="jsp.precompile.path">
+            <pathelement location="${build.classes.dir}"/>
+            <fileset dir="${basedir}/lib">
+                <include name="*.jar"/>
+            </fileset>
+
+            <!-- This should not be hard-coded... I have no idea how to properly
+                 pull it out of NetBean's build-impl.xml file, but it should
+                 be possible. -->
+            <fileset dir="${basedir}/../RAWI-Common/dist">
+                <include name="*.jar"/>
+            </fileset>
+        </path>
+
+        <echo message="Yay! I be precompiling JSP to Java code..."/>
+        <java classname="org.apache.jasper.JspC" classpathref="jsp.precompile.path">
+            <!--<arg value="-v"/>-->
+            <arg value="-die"/>
+            <arg value="-d"/>
+            <arg value="${jsp.precompile.dir}"/>
+            <arg value="-p"/>
+            <arg value="${appname}"/>
+    <!--
+            <arg value="-webinc"/>
+            <arg value="${gen.mappings}"/>
+    -->
+            <arg value="-uriroot"/>
+            <arg value="${jsp.dir}"/>
+        </java>
+
+        <echo message="Yay! I be compiling Java code to classes..."/>
+        <mkdir dir="${build.classes.dir}"/>
+        <javac srcdir="${jsp.precompile.dir}"
+                destdir="${build.classes.dir}"
+                classpathref="jsp.precompile.path"
+                debug="${java-debug}">
+            <classpath>
+                <path path="@{classpath}"/>
+            </classpath>
+        </javac>
+    </target>
+
+
+
+
     <!--
 
     There exist several targets which are by default empty and which can be 

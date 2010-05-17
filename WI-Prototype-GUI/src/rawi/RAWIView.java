@@ -18,8 +18,23 @@ import javax.swing.Timer;
 import javax.swing.Icon;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.server.handler.DefaultHandler;
+import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import rawi.mainserver.RAWIMainServer;
+import rawi.web.classes.ServletListener;
+import rawi.web.servlets.CentralMessageService;
+import rawi.web.servlets.CreateSession;
+import rawi.web.servlets.DownloadXMLServlet;
+import rawi.web.servlets.GetLists;
+import rawi.web.servlets.PutFileInPackServlet;
+import rawi.web.servlets.StartStopSession;
+import rawi.web.servlets.TheDownloadServlet;
+import rawi.web.servlets.TheUploadServlet;
+import rawi.web.servlets.ValidateXMLServlet;
 
 /**
  * The application's main frame.
@@ -175,33 +190,29 @@ public class RAWIView extends FrameView
         mainPanel.setLayout(mainPanelLayout);
         mainPanelLayout.setHorizontalGroup(
             mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(mainPanelLayout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 410, Short.MAX_VALUE)
                     .addGroup(mainPanelLayout.createSequentialGroup()
-                        .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 410, Short.MAX_VALUE)
-                            .addGroup(mainPanelLayout.createSequentialGroup()
-                                .addComponent(jButton1)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 222, Short.MAX_VALUE)
-                                .addComponent(jButton2)))
-                        .addContainerGap())
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainPanelLayout.createSequentialGroup()
+                        .addComponent(jButton1)
+                        .addGap(60, 60, 60)
                         .addComponent(jLabel1)
-                        .addGap(165, 165, 165))))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 60, Short.MAX_VALUE)
+                        .addComponent(jButton2)))
+                .addContainerGap())
         );
         mainPanelLayout.setVerticalGroup(
             mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 211, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 239, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton1)
-                    .addComponent(jButton2))
-                .addGap(57, 57, 57))
+                    .addComponent(jButton2)
+                    .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
         );
 
         menuBar.setName("menuBar"); // NOI18N
@@ -243,7 +254,7 @@ public class RAWIView extends FrameView
             .addGroup(statusPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(statusMessageLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 260, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 256, Short.MAX_VALUE)
                 .addComponent(progressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(statusAnimationLabel)
@@ -281,16 +292,74 @@ public class RAWIView extends FrameView
         System.setOut(stream);
         System.setErr(stream);
 
+//        if (war == null)
+//        {
+//            System.out.println("There is no war! Only peace!");
+//            return;
+//        }
+//
+//        System.out.println("War: " + war);
+
         // the port must be changed.
         server = new Server(8083);
-        WebAppContext context = new WebAppContext();
-        context.setWar(war.toString());
-        server.setHandler(context);
+//        WebAppContext context = new WebAppContext();
+//        context.setWar(war.toString());
+//        server.setHandler(context);
+        ServletContextHandler servletHandler =
+                new ServletContextHandler(ServletContextHandler.SESSIONS);
 
-        Jetty jetty = new Jetty(server, war);
-        jetty.start();
+        servletHandler.setWelcomeFiles(new String[] { "index.jsp" }); // FIXME: This does not seem to work...
+        servletHandler.addServlet("rawi.web.jsp.index_jsp", "/index.jsp");
+        servletHandler.addServlet("rawi.web.jsp.getSessionStatus_jsp", "/getSessionStatus.jsp");
+        servletHandler.addServlet("rawi.web.jsp.downUpLoad_jsp", "/downUpLoad.jsp");
+        servletHandler.addServlet("rawi.web.jsp.msgService_jsp", "/msgService.jsp");
+        servletHandler.addServlet("rawi.web.jsp.sessions_jsp", "/sessions.jsp");
+        servletHandler.addServlet("rawi.web.jsp.transformationModels_jsp", "/transformationModels.jsp");
+
+        servletHandler.addServlet(CentralMessageService.class, "/CentralMessageService");
+        servletHandler.addServlet(CreateSession.class, "/CreateSession");
+        servletHandler.addServlet(DownloadXMLServlet.class, "/DownloadXMLServlet");
+        servletHandler.addServlet(GetLists.class, "/GetLists");
+        servletHandler.addServlet(PutFileInPackServlet.class, "/PutFileInPackServlet");
+        servletHandler.addServlet(StartStopSession.class, "/StartStopSession");
+        servletHandler.addServlet(TheDownloadServlet.class, "/TheDownloadServlet/*");
+        servletHandler.addServlet(TheUploadServlet.class, "/TheUploadServlet/*");
+        servletHandler.addServlet(ValidateXMLServlet.class, "/ValidateXMLServlet");
+
+        servletHandler.addEventListener(new ServletListener());
+        servletHandler.setResourceBase(".");
+
+        ResourceHandler resourceHandler = new ResourceHandler();
+        resourceHandler.setResourceBase(this.getClass()
+                .getResource("/rawi/web/files").toExternalForm());
+
+        HandlerList handlerList = new HandlerList();
+        handlerList.setHandlers(new Handler[] { resourceHandler, servletHandler, new DefaultHandler() });
+        server.setHandler(handlerList);
+
+        // A thread whose sole purpose is to join with another thread (an easy
+        // way to redirect any exceptions to the GUI console).
+        Thread t = new Thread(new Runnable()
+        {
+            public void run()
+            {
+                try
+                {
+                    server.start();
+                    server.join();
+                }
+                catch (Exception ex)
+                {
+                    Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+        t.start();
 
         System.out.println("Server Jetty started.");
+
+        new RAWIMainServer().run();
+
         System.out.println("Servers running.");
     }
 
@@ -318,7 +387,7 @@ public class RAWIView extends FrameView
 
     private Server server;
     // to be changed.. need a relative path.
-    private URL war = this.getClass().getResource("/resources/I-Prototype.war");
+    private URL war = this.getClass().getResource("/rawi/resources/I-Prototype.war");
     private URL mainServer;
     private PrintStream originalOut = System.out;
     private PrintStream originalErr = System.err;

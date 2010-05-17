@@ -1,4 +1,4 @@
-package rawi;
+package rawi.mainserver;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -18,9 +18,6 @@ import rawi.common.SessionInfo;
 import rawi.common.TaskResult;
 import rawi.common.ValidateXMLInfo;
 import rawi.common.WorkSessionStatus;
-import rawi.mainserver.ClusterManager;
-import rawi.mainserver.TransformationModel;
-import rawi.mainserver.WorkSession;
 import rawi.mainserver.XML.TransformationModelParser;
 import rawi.rmiinfrastructure.RMIServerModel;
 
