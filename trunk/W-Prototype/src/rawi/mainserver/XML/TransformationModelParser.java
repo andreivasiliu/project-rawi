@@ -143,7 +143,7 @@ public class TransformationModelParser extends DefaultHandler
             if (pattern == null || pattern.equals(""))
                 pattern = ".*";
 
-            packNode.setPattern(Pattern.compile(attributes.getValue("regex")));
+            packNode.setPattern(Pattern.compile(pattern));
         }
         else if (localName.equals("command"))
         {

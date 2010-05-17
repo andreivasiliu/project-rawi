@@ -11,54 +11,58 @@
     </globalParameters>
 
     <transformationGraph>
-        <packNode id="1" name="SceneFile" x="180" y="40">
+        <packNode id="1" name="SceneFile" x="280" y="40">
             <output node="2" />
             <output node="4" />
             <pattern name="scene" regex="cod.cad" />
         </packNode>
-        <packTransformerNode id="2" name="Splitter" x="80" y="120">
+        <packTransformerNode id="2" name="Splitter" x="180" y="120">
             <input node="1" />
             <output node="3" />
-            <command exec="Splitter.exe 8 1234 1324" />
+            <command exec="Splitter.exe 4 500 500" />
         </packTransformerNode>
-        <packNode id="3" name="SectionFile" x="80" y="210" isSplitter="true">
+        <packNode id="3" name="SectionFile" x="180" y="210" isSplitter="true">
             <input node="2" />
             <output node="4" />
             <output node="6" />
-            <pattern name="section" regex=".*\\.rd" />
+            <pattern name="section" regex=".*\.rd" />
         </packNode>
-        <packTransformerNode id="4" name="Renderer" x="180" y="290">
+        <packTransformerNode id="4" name="Renderer" x="280" y="290">
             <input node="1" />
             <input node="3" />
             <output node="5" />
             <command exec="TinyRaytracer.exe $SceneFile $SectionFile" />
         </packTransformerNode>
-        <packNode id="5" x="180" y="380">
+        <packNode id="5" name="RenderedSection" x="280" y="380">
             <input node="4" />
             <output node="6" />
-            <pattern regex=".*\\.png" />
+            <pattern regex=".*\.png" />
         </packNode>
-        <packTransformerNode id="6" name="Joiner" x="80" y="450" isJoiner="true">
+        <packTransformerNode id="6" name="Joiner" x="180" y="450" isJoiner="true">
             <input node="3" />
             <input node="5" />
             <output node="7" />
             <command exec="Joiner.exe $SectionFile" />
         </packTransformerNode>
-        <packNode id="7" name="Rendered Scene" x="80" y="560">
+        <packNode id="7" name="RenderedScene" x="180" y="560">
             <input node="6" />
-            <pattern regex=".*\\.png" />
+            <pattern regex=".*\.png" />
         </packNode>
-        <packNode id="8">
+        <packNode id="8" name="Splitter.exe" x="80" y="50">
             <output node="2" />
         </packNode>
-        <packNode id="9">
+        <packNode id="9" name="TinyRaytracer.exe" x="380" y="100"
+                  allowsMultipleFiles="true">
             <output node="4" />
         </packNode>
-        <packNode id="10">
+        <packNode id="10" name="Joiner.exe" x="80" y="390">
             <output node="6" />
         </packNode>
-        <packNode id="11">
+<!--        <packNode id="11" name="Version12.0.cgt" x="380" y="175">
             <output node="4" />
         </packNode>
+        <packNode id="12" name="GoldParser.dll" x="380" y="250">
+            <output node="4" />
+        </packNode> -->
     </transformationGraph>
 </transformationModel>

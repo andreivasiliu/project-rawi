@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import rawi.RMIMainServer;
+import rawi.mainserver.RMIMainServer;
 import rawi.common.ClusterComputerInterface;
 import rawi.common.ClusterComputerStatus;
 import rawi.common.Command;

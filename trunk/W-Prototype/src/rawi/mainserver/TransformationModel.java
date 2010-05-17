@@ -398,7 +398,7 @@ public class TransformationModel
                 Matcher m = pattern.matcher(fileName);
                 return m.matches();
             }
-            else
+            else if (patternList != null)
             {
                 for (Pattern p: patternList)
                 {
@@ -409,6 +409,8 @@ public class TransformationModel
                 
                 return false;
             }
+            else
+                return true;
         }
 
         public void setPattern(Pattern pattern)

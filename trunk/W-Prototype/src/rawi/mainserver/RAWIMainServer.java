@@ -1,30 +1,35 @@
-package rawi;
+package rawi.mainserver;
 
-import rawi.mainserver.RMIMainServer;
 import java.rmi.RemoteException;
 import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import rawi.common.NetworkUtils;
 import rawi.common.Notifier;
-import rawi.mainserver.ClusterManager;
 
-/**
- * @author Ioana & Andrei & Whyte
- */
-public class Main
+public class RAWIMainServer implements Runnable
 {
-    public static void main(String[] args) throws RemoteException
+    public void run()
     {
-        //System.setProperty("java.rmi.server.hostname", "5.146.43.252");
         ClusterManager clusterManager = new ClusterManager();
         Thread t = new Thread(clusterManager, "Cluster-Manager-Thread");
         t.start();
         System.out.println("Started cluster manager.");
 
+        try
+        {
+            RMIMainServer s = new RMIMainServer(clusterManager);
+        }
+        catch (RemoteException ex)
+        {
+            Logger.getLogger(RAWIMainServer.class.getName()).log(Level.SEVERE, null, ex);
+            return;
+        }
+
+        System.out.println("Started RMI server.");
+
         new Notifier("MainServer").start();
         System.out.println("Started IP notifier.");
-
-        RMIMainServer s = new RMIMainServer(clusterManager);
-        System.out.println("Started RMI server.");
 
         Collection<String> IPs = NetworkUtils.getIPsFromTracker("ClusterComputer");
         clusterManager.addIpsToScan(IPs);
