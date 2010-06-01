@@ -9,12 +9,12 @@ package RawiComponents
 	{
 		public static function get baseUri():String
 		{
-			// return "" if you are in browser, and the full adress if you are in debugg mode
+			// return "/I-Prototype" if you are in browser, and the full adress if you are in debugg mode
 			// A.a.url returns http:// if running from browser
 			if (Application.application.url.charAt(0) == 'h')
 				return "/I-Prototype";
 			else
-				return "http://localhost:8080/I-Prototype";
+				return "http://localhost:8084/I-Prototype";
 		}
 		public static function configureListeners(dispatcher:IEventDispatcher):void
 		{
@@ -30,14 +30,19 @@ package RawiComponents
 
 		public static function alert(msg:String):void
 		{
+			// displays the msg string on the RAWI bar for 5 seconds
 			(Application.application as RAWI).statusLabel.text = msg;
 			clearTimer.start();
 			clearTimer.addEventListener(TimerEvent.TIMER_COMPLETE, endMsg);
 		}
 		private static function endMsg(event:TimerEvent):void
 		{
+			// clears the message from RAWI bar
 			clearTimer.stop();
 			(Application.application as RAWI).statusLabel.text = "";
 		}
+		
+		public static var propsFileOffset:int = 0;		// used by propsPN to request only some files on WS update
+		public static var propsFileAmount:int = 10;		// the same to request a certain amount of files on WS update 
 	}
 }

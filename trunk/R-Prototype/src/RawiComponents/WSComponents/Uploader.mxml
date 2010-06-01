@@ -4,28 +4,30 @@
 		<mx:Canvas label="SelectFile" width="100%" height="100%">
 			<mx:HBox width="100%">
 				<mx:TextInput id="filePathLabel" text="{fileName}" width="100%" paddingTop="3" editable="false"/>
-				<mx:Button label="..." click="browseHdlr()"/>
-				<mx:Button label="Up" enabled="false" id="upButt" click="uploadHdlr()"/>
-				<mx:CheckBox label="zip" id="zipFile"/>
+				<mx:Button label="..." click="browseHdlr()" toolTip="Browse for a file."/>
+				<mx:Button label="Up" enabled="false" id="upButt" click="uploadHdlr()" toolTip="Upload"/>
+				<mx:CheckBox label="zip" id="zipFile">
+					<mx:toolTip>Select, if the file is an archive that needs to be extracted before processing.</mx:toolTip>
+				</mx:CheckBox>
 			</mx:HBox>
 		</mx:Canvas>
 		<mx:Canvas label="ViewProgress" width="100%" height="100%">
 			<mx:HBox width="100%">
 				<mx:ProgressBar height="22" width="100%" id="progressBar" labelPlacement="center" source="{file}"/>
-				<mx:Button label="Cancel" click="{file.cancel(); viewstack.selectedIndex = 0;}"/>
+				<mx:Button label="Cancel" click="{file.cancel(); viewstack.selectedIndex = 0;}" toolTip="Cancel upload."/>
 			</mx:HBox>
 		</mx:Canvas>
 		<mx:Canvas label="FileStatus" width="100%" height="100%" id="third">
 			<mx:HBox width="100%" id="third2">
 				<mx:TextInput id="fileOnServerName" text="{fileName}" width="100%" paddingTop="3" editable="false"/>
-				<mx:Button label="Dld" click="downloadHdlr()"/>
-				<mx:Button label="Del" click="deleteHdlr()"/>
+				<mx:Button label="Dld" click="downloadHdlr()" toolTip="Download the file."/>
+				<mx:Button label="Del" click="deleteHdlr()" toolTip="Delete the file from the server."/>
 			</mx:HBox>
 		</mx:Canvas>
 		<mx:Canvas label="DownloadProgress" width="100%" height="100%">
 			<mx:HBox width="100%">
 				<mx:ProgressBar height="22" width="100%" id="progressBarDld" labelPlacement="center" source="{fileDld}"/>
-				<mx:Button label="Cancel" click="{fileDld.cancel(); viewstack.selectedIndex = 2;}"/>
+				<mx:Button label="Cancel" click="{fileDld.cancel(); viewstack.selectedIndex = 2;}" toolTip="Cancel download."/>
 			</mx:HBox>
 		</mx:Canvas>
 	</mx:ViewStack>
@@ -45,6 +47,7 @@
 			[Bindable]
 			public var fileName:String = "";
 			public var fileUrl:String = "";
+			public var firstTimeSelect:Boolean = true;	// used to remember if it's the first time when I select a file
 			public function init():void
 			{
 				file.addEventListener(Event.CANCEL, cancelHandler);
@@ -99,7 +102,10 @@
 				upButt.enabled = true;
 				fileName = file.name;
 				stateFile.state = FileState.SELECTED;
-				this.myOwner.addNewUploader();
+				if (this.firstTimeSelect) {
+					this.myOwner.addNewUploader();
+					this.firstTimeSelect = false;
+				}
 				trace("selectHandler", event);
 			}
 			private function uploadDataComplete(event:DataEvent):void {

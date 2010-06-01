@@ -13,6 +13,8 @@
 	</mx:HDividedBox>
 	<mx:Script>
 		<![CDATA[
+			import mx.controls.Label;
+			import mx.controls.Spacer;
 			import mx.core.Application;
 			import RawiComponents.GlobalSettings;
 			public var nodesMap:Dictionary = new Dictionary();
@@ -143,8 +145,12 @@
 			public function refreshHdlr():void
 			{
 				var loader:URLLoader = new URLLoader();
-				// TODO: find out how to cancel the cache - by then add the time parameter at the end 
-				var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/getSessionStatus.jsp?sessionId=" + sessionState.sessionId + "&time=" + new Date().getTime());
+				// TODO: find out how to cancel the cache - by then add the time parameter at the end
+				var request:URLRequest = new URLRequest(GlobalSettings.baseUri + "/getSessionStatus.jsp"
+					+ "?sessionId=" + sessionState.sessionId
+					+ "&subStateOffset=" + GlobalSettings.propsFileOffset
+					+ "&maxSubStates=" + GlobalSettings.propsFileAmount
+					+ "&time=" + new Date().getTime());
 				trace(request.url);
 				loader.addEventListener(Event.COMPLETE, getRefreshHdlr);
 				GlobalSettings.configureListeners(loader);
@@ -173,14 +179,28 @@
 					}
 					for each (var node:XML in xmlData.nodeInstances.packNode)
 					{
-						PackNodeBase(nodesMap[int(node.@id)]).nodeState.text = "(" + node.subState.(@status == "empty").length() + "/" +
-							node.subState.(@status == "ready").length() + ")";
+						// updates from an earlyer format 1st June 2010 (added offset because of large amounts of files)
+						//PackNodeBase(nodesMap[int(node.@id)]).nodeState.text = "(" + node.subState.(@status == "empty").length() + "/" +
+						//	node.subState.(@status == "ready").length() + ")";
+						//packNode(nodesMap[int(node.@id)]).emptyNodeInstances = node.subState.(@status == "empty").length();
+						//packNode(nodesMap[int(node.@id)]).readyNodeInstances = node.subState.(@status == "ready").length();
+						packNode(nodesMap[int(node.@id)]).emptySubStates = node.@emptySubPacks;
+						packNode(nodesMap[int(node.@id)]).readySubStates = node.@fullSubPacks;
 						// update the properties pannel only if the process is not working - for performance reasons
 						packNode(nodesMap[int(node.@id)]).propsLocalContainer.fileBox.enabled = false;
-						if (xmlData.globalStatus.@working != "true")
+						//if (xmlData.globalStatus.@working != "true")
 						{
 							packNode(nodesMap[int(node.@id)]).propsLocalContainer.fileBox.enabled = true;
 							packNode(nodesMap[int(node.@id)]).propsLocalContainer.fileBox.removeAllChildren();
+							
+							// add a spacer on top of the visible elements to create the correct scroll bar
+							var offset:int = node.@subStateOffset; 
+							if (offset > 0) {
+								var upSpacer:Spacer = new Spacer();
+								upSpacer.height = 23 * offset;		// 23 = height of Uploader multiplied by the offset
+								packNode(nodesMap[int(node.@id)]).propsLocalContainer.fileBox.addChild(upSpacer);
+							}
+
 							for each (var nn:XML in node.subState)
 							{
 								if (nn.@status != "empty")
@@ -192,15 +212,38 @@
 									upl.viewstack.selectedIndex = 2;
 									trace("Uploader:", nn.file.@name);
 								}
+								else
+								{
+									var emptyLabel:Label = new Label();
+									emptyLabel.text = "empty file slot";
+									emptyLabel.height = 23;
+									packNode(nodesMap[int(node.@id)]).propsLocalContainer.fileBox.addChild(emptyLabel);
+								}
+							}
+							// add a spacer at the bottom of the visible elements to create the correct scroll bar
+							var totalPacks:int = node.@subStateCount;
+							var elemsLeft:int = totalPacks - offset - node.subState.(@status == "empty").length();
+							if (elemsLeft > 0) {
+								var downSpacer:Spacer = new Spacer();
+								downSpacer.height = 23 * elemsLeft;		// 23 = height of Uploader multiplied by the elements left
+								packNode(nodesMap[int(node.@id)]).propsLocalContainer.fileBox.addChild(downSpacer);
 							}
 							// add a new empty one at the end
 							packNode(nodesMap[int(node.@id)]).propsLocalContainer.addNewUploader();
+							packNode(nodesMap[int(node.@id)]).propsLocalContainer.canvasForFileBox.verticalScrollPosition = 23 * offset;
 						}
 					}
 					for each (node in xmlData.nodeInstances.packTransformerNode)
 					{
-						PackNodeBase(nodesMap[int(node.@id)]).nodeState.text = "(" + node.subState.(@status == "pending").length() + "/" +
-							node.subState.(@status == "working").length() + "/" + node.subState.(@status == "done").length() + ")";
+						// updates from an earlyer format 1st June 2010 (added offset because of large amounts of files)
+						//packTransformerNode(nodesMap[int(node.@id)]).pendingTasks = node.subState.(@status == "pending").length();
+						//packTransformerNode(nodesMap[int(node.@id)]).depNotMetTasks = node.subState.(@status == "dependencies not met").length();
+						//packTransformerNode(nodesMap[int(node.@id)]).workingTasks = node.subState.(@status == "working").length();
+						//packTransformerNode(nodesMap[int(node.@id)]).doneTasks = node.subState.(@status == "done").length();
+						packTransformerNode(nodesMap[int(node.@id)]).pendingTasks = node.@pendingTasks;
+						packTransformerNode(nodesMap[int(node.@id)]).depNotMetTasks = node.@pendingTasks;
+						packTransformerNode(nodesMap[int(node.@id)]).workingTasks = node.@workingTasks;
+						packTransformerNode(nodesMap[int(node.@id)]).doneTasks = node.@doneTasks;
 					}
 				}
 			}

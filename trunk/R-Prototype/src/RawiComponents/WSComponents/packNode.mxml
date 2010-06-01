@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PackNodeBase xmlns="RawiComponents.WSComponents.*" xmlns:mx="http://www.adobe.com/2006/mxml" initialize="init()" >
+<PackNodeBase xmlns="RawiComponents.WSComponents.*" xmlns:mx="http://www.adobe.com/2006/mxml"
+	initialize="init()" toolTipCreate="createCustomToolTip(event)" toolTip=" ">
 	<mx:Label x="2" y="2" text="{propsContainer.nodeName.text}" id="nodeName" resize="drawObject()"/>
-	<mx:Label x="2" y="23" text="(e/r)" id="m_nodeState"/>
+	<mx:Label x="2" y="23" text="{'(' + emptySubStates + '/' + readySubStates + ')'}" id="m_nodeState"/>
 	<mx:Script>
 		<![CDATA[
+			import mx.events.ToolTipEvent;
 			public var propsLocalContainer:propsPN;
 			public var myHeight:int = 22;
+			[Bindable]
+			public var emptySubStates:int = 0;		// how many instances of the node are empty
+			[Bindable]
+			public var readySubStates:int = 0;		// how many instances of the node have files ready
+						
 			private function init():void
 			{
 				this.nodeType = "packNode";
@@ -17,6 +24,12 @@
 				this.propsContainer.ownerOfProps = this;
 				this.nodeState = m_nodeState; 
 				trace("init from packNode");
+			}
+			private function createCustomToolTip(event:ToolTipEvent):void {
+				var toolTip:packNodeToolTip = new packNodeToolTip();
+				toolTip.toolTipData.empty = emptySubStates;
+				toolTip.toolTipData.ready = readySubStates;
+				event.toolTip = toolTip;
 			}
 			public override function drawObject():void
 			{
