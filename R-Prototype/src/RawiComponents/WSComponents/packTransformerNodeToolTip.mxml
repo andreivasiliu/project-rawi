@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Form xmlns:mx="http://www.adobe.com/2006/mxml"
+	implements="mx.core.IToolTip" borderThickness="2" borderColor="black"
+	backgroundColor="#FFFFFF" borderStyle="solid" cornerRadius="10"
+	paddingLeft="2" paddingRight="2" paddingTop="2" paddingBottom="2" verticalGap="2">
+	<mx:Script>
+		<![CDATA[
+			[Bindable]
+			public var toolTipData:Object = new Object();
+			public var _text:String = "";
+			public function get text():String {
+				return _text;
+			}
+			public function set text(value:String):void {
+			}
+		]]>
+	</mx:Script>
+	<mx:FormItem label="Pending">
+		<mx:Label text="{toolTipData.pending}"/>
+	</mx:FormItem>
+	<mx:FormItem label="Working">
+		<mx:Label text="{toolTipData.working}"/>
+	</mx:FormItem>
+	<mx:FormItem label="Done">
+		<mx:Label text="{toolTipData.done}"/>
+	</mx:FormItem>
+	
+</mx:Form>

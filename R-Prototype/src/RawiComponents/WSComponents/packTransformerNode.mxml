@@ -1,10 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PackNodeBase xmlns:mx="http://www.adobe.com/2006/mxml" xmlns="RawiComponents.WSComponents.*" initialize="init()">
+<PackNodeBase xmlns:mx="http://www.adobe.com/2006/mxml" xmlns="RawiComponents.WSComponents.*" initialize="init()"
+	toolTipCreate="createCustomToolTip(event)" toolTip=" ">
 	<mx:Label x="10" y="3" text="{propsContainer.nodeName.text}" id="nodeName"/>
-	<mx:Label x="10" y="20" text="(P/W/D)" id="m_nodeState"/>
+	<mx:Label x="10" y="20" id="m_nodeState"
+		text="{'(' + (pendingTasks + depNotMetTasks) + '/'+ workingTasks+ '/'+ doneTasks +')'}"/>
 	<mx:Script>
 		<![CDATA[
+			import mx.events.ToolTipEvent;
 			public var propsLocalContainer:propsPTN;
+			[Bindable]
+			public var pendingTasks:int = 0;		// pending jobs
+			[Bindable]
+			public var depNotMetTasks:int = 0;	// dependencies not met
+			[Bindable]
+			public var workingTasks:int = 0;		// currently working jobs
+			[Bindable]
+			public var doneTasks:int = 0;		// finished jobs
+
 			private function init():void
 			{
 				this.nodeType = "packTransformerNode";
@@ -16,6 +28,13 @@
 				this.propsContainer.ownerOfProps = this;
 				this.nodeState = m_nodeState;
 				trace("init from packTransformerNode");
+			}
+			private function createCustomToolTip(event:ToolTipEvent):void {
+				var toolTip:packTransformerNodeToolTip = new packTransformerNodeToolTip();
+				toolTip.toolTipData.pending = pendingTasks + depNotMetTasks;
+				toolTip.toolTipData.working = workingTasks;
+				toolTip.toolTipData.done = doneTasks;
+				event.toolTip = toolTip;
 			}
 			public override function drawObject():void
 			{

@@ -50,7 +50,6 @@ package RawiComponents.TMComponents
 			GlobalSettings.configureListeners(loader);
 			loader.load(request);
 			trace("Save", m_editor.propsGen.schemaName.text + ".xml");
-			(Application.application as RAWI).viewTmList.refreshHdlr();
 		}
 		public function Close():void
 		{
@@ -91,6 +90,7 @@ package RawiComponents.TMComponents
 				{
 					Alert.show(xmlData.elements("xml-message"), "Saving " + xmlData.elements("xml-name"));
 					savedVersion = m_editor.getSchemaXmlRepresentation().toString();
+					(Application.application as RAWI).viewTmList.refreshHdlr();
 				}
 				else
 					Alert.show(xmlData.elements("xml-message"), "Error saving" + xmlData.elements("xml-name"));

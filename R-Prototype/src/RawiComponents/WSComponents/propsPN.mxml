@@ -10,12 +10,16 @@
 		</mx:FormItem>
 		<mx:CheckBox label="Splitter" id="isSplitter" paddingLeft="8" enabled="false"/>
 		<mx:CheckBox label="Allows multiple files" id="allowsMultipleFiles" paddingLeft="8" enabled="false"/>
-		<mx:VBox id="fileBox" width="100%" height="100%" initialize="addNewUploader()">
-			
-		</mx:VBox>
+		<mx:Canvas width="100%" height="100%" verticalScrollPolicy="auto" id="canvasForFileBox"
+			resize="fileBoxResizeHdlr(event)" scroll="fileBoxScrollHdlr(event)">
+			<mx:VBox id="fileBox" width="100%" height="100%" initialize="addNewUploader()" />
+		</mx:Canvas>
 	</mx:Form>
 	<mx:Script>
 		<![CDATA[
+			import mx.events.ResizeEvent;
+			import RawiComponents.GlobalSettings;
+			import mx.events.ScrollEvent;
 			public function init():void
 			{
 				this.nodeName = this.nodeNameTextInput;
@@ -26,6 +30,23 @@
 				fileBox.addChild(upl);
 				upl.myOwner = this;
 				return upl;
+			}
+			public function fileBoxResizeHdlr(event:ResizeEvent):void 
+			{
+				fileBox.width = canvasForFileBox.width-17;
+				// the amount of visible files that fits int the props container (23 = Uploader.height)
+				GlobalSettings.propsFileAmount = canvasForFileBox.height / 23 + 1;
+				// the scroll position (offset) that the user selected (23 = Uploader.height)
+				GlobalSettings.propsFileOffset = canvasForFileBox.verticalScrollPosition / 23;
+				trace("scrolling to:", GlobalSettings.propsFileOffset, "visible:", GlobalSettings.propsFileAmount);				
+			}
+			public function fileBoxScrollHdlr(event:ScrollEvent):void
+			{
+				// the amount of visible files that fits int the props container (23 = Uploader.height)
+				GlobalSettings.propsFileAmount = canvasForFileBox.height / 23 + 1;
+				// the scroll position (offset) that the user selected (23 = Uploader.height)
+				GlobalSettings.propsFileOffset = canvasForFileBox.verticalScrollPosition / 23;
+				trace("scrolling to:", GlobalSettings.propsFileOffset, "visible:", GlobalSettings.propsFileAmount);
 			}
 		]]>
 	</mx:Script>
