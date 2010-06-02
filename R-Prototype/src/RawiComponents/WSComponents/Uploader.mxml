@@ -128,13 +128,13 @@
 			private function getPutFileInPackServlet(event:HTTPStatusEvent):void
 			{
 				// TODO: this is temporary - the server should actualy return a propper response
-				if (event.status == 200)
+/* 				if (event.status == 200)
 					trace("Asociation succeded-File: " + fileName + " (" + fileIdOnServer + ") on session " +
 						myOwner.ownerOfProps.parentCont.sessionState.sessionId + " node(" +  myOwner.ownerOfProps.nid + ")", event);
 				else
 					GlobalSettings.alert("Error asociating: " + fileName + " (" + fileIdOnServer + ") on session " + myOwner.ownerOfProps.parentCont.sessionState.sessionId +
 						" node(" +  myOwner.ownerOfProps.nid + ")");
-			}
+ */			}
 			private function downloadHdlr():void
 			{
 				var downloadURL:URLRequest = new URLRequest();

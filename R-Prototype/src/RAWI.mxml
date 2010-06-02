@@ -4,15 +4,15 @@
 	xmlns:wsc="RawiComponents.WSComponents.*" pageTitle="RAWI - a simple way to control your grid" initialize="init()">
 	<mx:ApplicationControlBar id="controlBar" dock="true">
 		<mx:Spacer width="50" />
-		<mx:Label text="RAWI" fontSize="20" alpha="1.0" fontWeight="bold" fontStyle="italic"/>
+		<mx:Label text="GECC" fontSize="20" alpha="1.0" fontWeight="bold" fontStyle="italic"/>
 		<mx:Spacer width="100" />
 		<mx:HBox id="mainMenu">
 			<mx:Text id="statusLabel"/>
 		</mx:HBox>
 	</mx:ApplicationControlBar>
 	<mx:TabNavigator id="tabNav" left="3" top="10" right="3" bottom="3">
-		<rc:ViewTMList label="ViewTMList" id="viewTmList"/>
-		<rc:ViewWSList label="ViewWSList" id="viewWsList"/>
+		<rc:ViewTMList label="TM List" id="viewTmList"/>
+		<rc:ViewWSList label="WS List" id="viewWsList"/>
 		<rc:FileBox label="FileBox" />
 		<rc:ViewProgramsList label="ProgramsList" />
 	</mx:TabNavigator>
@@ -22,7 +22,7 @@
 			public function init():void {
 				var startUrl:String = Application.application.url;
 				if (startUrl.charAt(0) == 'h' && startUrl.indexOf("localhost") != -1) {
-					Alert.show("You are about to start the application from http://localhost/ domain.");
+					Alert.show("Warning: You are about to start the application from the http://localhost/ domain.");
 				}
 			}
 		]]>

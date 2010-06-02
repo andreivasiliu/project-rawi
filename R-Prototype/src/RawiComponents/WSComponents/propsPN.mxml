@@ -11,7 +11,8 @@
 		<mx:CheckBox label="Splitter" id="isSplitter" paddingLeft="8" enabled="false"/>
 		<mx:CheckBox label="Allows multiple files" id="allowsMultipleFiles" paddingLeft="8" enabled="false"/>
 		<mx:Canvas width="100%" height="100%" verticalScrollPolicy="auto" id="canvasForFileBox"
-			resize="fileBoxResizeHdlr(event)" scroll="fileBoxScrollHdlr(event)">
+			resize="fileBoxResizeHdlr(event)" scroll="fileBoxScrollHdlr(event)" 
+			mouseUp="this.ownerOfProps.parentCont.refreshHdlr()">
 			<mx:VBox id="fileBox" width="100%" height="100%" initialize="addNewUploader()" />
 		</mx:Canvas>
 	</mx:Form>
