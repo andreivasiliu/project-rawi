@@ -15,7 +15,9 @@ import javax.swing.JTextArea;
  */
 public class OutErrStream extends OutputStream
 {
+    StringBuilder stringBuilder = new StringBuilder(4096);
     JTextArea jta;
+    int lines = 0;
 
     public OutErrStream(JTextArea jta)
     {
@@ -25,6 +27,26 @@ public class OutErrStream extends OutputStream
     @Override
     public void write(int b) throws IOException
     {
-        jta.setText(jta.getText() + (char)b);
+        stringBuilder.append((char) b);
+
+        if (b == '\n')
+        {
+            lines++;
+
+            if (lines > 500)
+            {
+                stringBuilder.delete(0, stringBuilder.indexOf("\n") + 1);
+                lines--;
+            }
+
+            flush();
+        }
+    }
+
+    @Override
+    public void flush() throws IOException
+    {
+        jta.setText(stringBuilder.toString());
+        jta.setCaretPosition(stringBuilder.length());
     }
 }

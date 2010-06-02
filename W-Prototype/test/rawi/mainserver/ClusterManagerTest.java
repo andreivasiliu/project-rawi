@@ -1,4 +1,4 @@
-package rawi.MainServer2;
+package rawi.mainserver;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import rawi.mainserver.RMIMainServer;
 import rawi.common.ClusterComputerInterface;
 import rawi.common.ClusterComputerStatus;
 import rawi.common.Command;
@@ -21,11 +20,8 @@ import rawi.common.Notifier;
 import rawi.common.Ports;
 import rawi.common.Task;
 import rawi.common.TaskResult;
-import rawi.mainserver.ClusterManager;
-import rawi.mainserver.TransformationModel;
 import rawi.mainserver.TransformationModel.Pack;
 import rawi.mainserver.TransformationModel.PackTransformer;
-import rawi.mainserver.WorkSession;
 import rawi.rmiinfrastructure.RMIClientModel;
 
 public class ClusterManagerTest

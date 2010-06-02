@@ -1,4 +1,4 @@
-package rawi.MainServer2;
+package rawi.mainserver;
 
 import static org.junit.Assert.*;
 

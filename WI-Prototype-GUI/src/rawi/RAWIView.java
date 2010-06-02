@@ -27,6 +27,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import rawi.mainserver.RAWIMainServer;
 import rawi.web.classes.ServletListener;
 import rawi.web.servlets.CentralMessageService;
+import rawi.web.servlets.CreateGiantSession;
 import rawi.web.servlets.CreateSession;
 import rawi.web.servlets.DownloadXMLServlet;
 import rawi.web.servlets.GetLists;
@@ -165,7 +166,9 @@ public class RAWIView extends FrameView
         jScrollPane2.setName("jScrollPane2"); // NOI18N
 
         jTextArea2.setColumns(20);
+        jTextArea2.setLineWrap(true);
         jTextArea2.setRows(5);
+        jTextArea2.setWrapStyleWord(true);
         jTextArea2.setName("jTextArea2"); // NOI18N
 
         org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, mainPanel, org.jdesktop.beansbinding.ELProperty.create("${alignmentX}"), jTextArea2, org.jdesktop.beansbinding.BeanProperty.create("alignmentX"));
@@ -310,14 +313,17 @@ public class RAWIView extends FrameView
 
         servletHandler.setWelcomeFiles(new String[] { "index.jsp" }); // FIXME: This does not seem to work...
         servletHandler.addServlet("rawi.web.jsp.index_jsp", "/index.jsp");
+        servletHandler.addServlet("rawi.web.jsp.index_jsp", "/");
         servletHandler.addServlet("rawi.web.jsp.getSessionStatus_jsp", "/getSessionStatus.jsp");
         servletHandler.addServlet("rawi.web.jsp.downUpLoad_jsp", "/downUpLoad.jsp");
         servletHandler.addServlet("rawi.web.jsp.msgService_jsp", "/msgService.jsp");
         servletHandler.addServlet("rawi.web.jsp.sessions_jsp", "/sessions.jsp");
+        servletHandler.addServlet("rawi.web.jsp.svgSessionStatus_jsp", "/svgSessionStatus.jsp");
         servletHandler.addServlet("rawi.web.jsp.transformationModels_jsp", "/transformationModels.jsp");
 
         servletHandler.addServlet(CentralMessageService.class, "/CentralMessageService");
         servletHandler.addServlet(CreateSession.class, "/CreateSession");
+        servletHandler.addServlet(CreateGiantSession.class, "/CreateGiantSession");
         servletHandler.addServlet(DownloadXMLServlet.class, "/DownloadXMLServlet");
         servletHandler.addServlet(GetLists.class, "/GetLists");
         servletHandler.addServlet(PutFileInPackServlet.class, "/PutFileInPackServlet");
@@ -361,6 +367,7 @@ public class RAWIView extends FrameView
         new RAWIMainServer().run();
 
         System.out.println("Servers running.");
+        System.out.flush();
     }
 
     @Action

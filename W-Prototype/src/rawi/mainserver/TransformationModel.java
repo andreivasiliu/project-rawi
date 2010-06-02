@@ -71,7 +71,7 @@ public class TransformationModel
 
     public PackTransformer addPackTransformerNode()
     {
-        return new PackTransformer(lastUsedID + 1);
+        return addPackTransformerNode(lastUsedID + 1);
     }
 
     public void addOutput(Pack fromNode, PackTransformer toNode)

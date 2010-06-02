@@ -139,11 +139,14 @@ public class WorkSession implements ModelChangeListener
         for (PackTransformerInstance packTransformerInstance :
             packTransformerInstances.values())
         {
-            for (int i = 0; i < packTransformerInstance.subPackTransformers(); i++)
+            int subPackTransformers = packTransformerInstance.subPackTransformers();
+
+            for (int i = 0; i < subPackTransformers; i++)
             {
                 if (packTransformerInstance.getState(i) != SubPackTransformerState.PENDING)
                     continue;
 
+                //System.out.println("Making task " + ++c + "...");
                 makeTask(packTransformerInstance, i);
             }
         }
@@ -163,8 +166,9 @@ public class WorkSession implements ModelChangeListener
 
         Task task = new Task(UUID.randomUUID().toString(), files, command);
 
+        // FIXME: Rewrite this to be more efficient
         // TODO: Ugly hack follows:
-        for (Task task2 : pendingTasks)
+        /* for (Task task2 : pendingTasks)
         {
             if (uglyHack_packTransformerOfTask.get(task2) == packTransformerInstance &&
                     uglyHack_subStateOfTask.get(task2) == subPackTransformer)
@@ -176,7 +180,7 @@ public class WorkSession implements ModelChangeListener
                 task.setCommand(command);
                 break;
             }
-        }
+        } */
 
         if (sessionInfo != null)
         {
@@ -272,23 +276,43 @@ public class WorkSession implements ModelChangeListener
     public PackInstance getPackInstance(int id)
     {
         Pack pack = model.getPack(id);
-        
+
         if (pack == null)
             return null;
-        
+
         return packInstances.get(pack);
     }
-    
+
     public PackInstance getPackInstance(String name)
     {
         Pack pack = model.getPack(name);
-        
+
         if (pack == null)
             return null;
-        
+
         return packInstances.get(pack);
     }
-    
+
+    public PackTransformerInstance getPackTransformerInstance(int id)
+    {
+        PackTransformer packTransformer = model.getPackTransformer(id);
+
+        if (packTransformer == null)
+            return null;
+
+        return packTransformerInstances.get(packTransformer);
+    }
+
+    public PackTransformerInstance getPackTransformerInstance(String name)
+    {
+        PackTransformer packTransformer = model.getPackTransformer(name);
+
+        if (packTransformer == null)
+            return null;
+
+        return packTransformerInstances.get(packTransformer);
+    }
+
     private void createInstance(Node node)
     {
         if (node instanceof Pack)
@@ -912,5 +936,43 @@ public class WorkSession implements ModelChangeListener
             command.setSystemCommand(commandTemplate.isSystemCommand());
             return command;
         }
+    }
+
+    public static WorkSession createGiantWorkSession(String sessionId)
+    {
+        TransformationModel model = new TransformationModel();
+
+        Pack pack1 = model.addPackNode();
+        pack1.setIsSplitter(true);
+        pack1.setName("Pack1");
+        pack1.setCoordX(150);
+        pack1.setCoordY(50);
+
+        PackTransformer transformer = model.addPackTransformerNode();
+        transformer.setName("transformer2");
+        transformer.setCommand(new Command("some command"));
+        transformer.setCoordX(150);
+        transformer.setCoordY(125);
+
+        Pack pack2 = model.addPackNode();
+        pack2.setName("Pack2");
+        pack2.setCoordX(150);
+        pack2.setCoordY(200);
+
+        // Connect pack1 to transformer, and transformer to pack2
+        model.addOutputs(pack1, transformer, pack2);
+
+        WorkSession session = new WorkSession(sessionId, model);
+
+        PackInstance packInst = session.getPackInstance("Pack1");
+
+        for (int i = 0; i < 30000; i++)
+        {
+            Integer fileId = i + 1;
+            packInst.putFile(new FileHandle("http://example.com/", fileId.toString(),
+                    "file-" + fileId));
+        }
+        
+        return session;
     }
 }

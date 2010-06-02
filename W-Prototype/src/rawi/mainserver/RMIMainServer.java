@@ -80,6 +80,13 @@ public class RMIMainServer extends RMIServerModel
         }
     }
 
+    public void createGiantTestSession(SessionInfo sessionInfo) throws RemoteException {
+        this.sessionInfo = sessionInfo;
+        WorkSession workSession = WorkSession.createGiantWorkSession(sessionInfo.sessionId);
+        workSession.setSessionInfo(sessionInfo);
+        clusterManager.addWorkSession(workSession);
+    }
+
     public void notifyPresence(Collection<String> IPs) throws RemoteException
     {
         clusterManager.addIpsToScan(IPs);
@@ -136,10 +143,11 @@ public class RMIMainServer extends RMIServerModel
         clusterManager.stopWorkSession(sessionId);
     }
 
-    public WorkSessionStatus getSessionStatus(String sessionId) throws RemoteException
+    public WorkSessionStatus getSessionStatus(String sessionId,
+            int subStatesOffset, int maxSubStates) throws RemoteException
     {
-        System.out.println("Session status requested.");
-        return clusterManager.getSessionStatus(sessionId);
+        return clusterManager.getSessionStatus(sessionId, subStatesOffset,
+                maxSubStates);
     }
 
     public void taskFailed(String id, String clusterComputerId, Throwable exception,

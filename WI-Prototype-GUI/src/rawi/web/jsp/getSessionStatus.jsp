@@ -6,11 +6,39 @@
 <%@ page import="rawi.common.WorkSessionStatus.*" %>
 <%@ page import="java.util.*" %>
 <%@ page import="java.io.*" %>
+
+<%!
+    int checkInt(String intString, int defaultValue)
+    {
+        if (intString == null || intString.isEmpty())
+            return defaultValue;
+
+        try
+        {
+            return Integer.parseInt(intString);
+        }
+        catch (NumberFormatException e)
+        {
+            return defaultValue;
+        }
+    }
+%>
+
 <%
     MainBean mainBean = (MainBean) getServletContext().getAttribute("mainBean");
-    Integer sessionId = Integer.parseInt(request.getParameter("sessionId"));
+    Integer sessionId = checkInt(request.getParameter("sessionId"), 0);
+    Integer subStateOffset = checkInt(request.getParameter("subStateOffset"), 0);
+    Integer maxSubStates = checkInt(request.getParameter("maxSubStates"), 10);
     Session workSession = mainBean.getSessionById(sessionId);
-    WorkSessionStatus sessionStatus = mainBean.getSessionStatus(sessionId);
+
+    if (workSession == null)
+    {
+        response.sendError(404, "Work Session not found.");
+        return;
+    }
+
+    WorkSessionStatus sessionStatus = mainBean.getSessionStatus(sessionId,
+            subStateOffset, maxSubStates);
 %>
 <workSession
    xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
@@ -22,8 +50,9 @@
 
     <nodeInstances>
      <% for (Pack pack : sessionStatus.getPacks()) { %>
-        <packNode id="<%= pack.id %>">
-         <% for (int subState = 0; subState < pack.subStates; subState++) { %>
+        <packNode id="<%= pack.id %>" subStateOffset="<%= pack.subStateOffset %>" subStateCount="<%= pack.subStates %>"
+                  emptySubPacks="<%= pack.emptySubPacks %>" fullSubPacks="<%= pack.fullSubPacks %>">
+         <% for (int subState = pack.subStateOffset; subState < pack.subStateOffset + pack.subStatesShown; subState++) { %>
             <subState no="<%= subState %>" status="<%= pack.getStatus(subState) %>">
              <% if (pack.status.get(subState) != PackStatus.EMPTY) { %>
              <% for (FileHandle file : pack.subStateFiles.get(subState)) { %>
@@ -36,8 +65,9 @@
      <% } %>
 
      <% for (PackTransformer transformer : sessionStatus.getPackTransformers()) { %>
-        <packTransformerNode id="<%= transformer.id %>">
-         <% for (int subState = 0; subState < transformer.subStates; subState++) { %>
+        <packTransformerNode id="<%= transformer.id %>" subStateOffset="<%= transformer.subStateOffset %>" subStateCount="<%= transformer.subStates %>"
+                             dnmTasks="<%= transformer.dnmTasks %>" pendingTasks="<%= transformer.pendingTasks %>" workingTasks="<%= transformer.workingTasks %>" doneTasks="<%= transformer.doneTasks %>">
+         <% for (int subState = transformer.subStateOffset; subState < transformer.subStateOffset + transformer.subStatesShown; subState++) { %>
             <subState no="<%= subState %>" status="<%= transformer.getStatus(subState) %>" />
          <% } %>
         </packTransformerNode>

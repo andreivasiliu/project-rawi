@@ -83,12 +83,20 @@ public class WorkSessionStatus implements Serializable
         public long x, y;
         public boolean isMulti;
         public int subStates;
+
+        // NOT IMPLEMENTED YET
+        public int subStateOffset;
+        public int subStatesShown;
     }
 
     public class Pack extends Node implements Serializable
     {
         public ArrayList<PackStatus> status;
         public ArrayList<Collection<FileHandle>> subStateFiles;
+
+        // NOT IMPLEMENTED YET
+        public int emptySubPacks;
+        public int fullSubPacks;
 
         public Pack()
         {
@@ -120,6 +128,12 @@ public class WorkSessionStatus implements Serializable
     public class PackTransformer extends Node implements Serializable
     {
         public ArrayList<PackTransformerStatus> status;
+
+        // NOT IMPLEMENTED YET
+        public int dnmTasks;
+        public int pendingTasks;
+        public int workingTasks;
+        public int doneTasks;
 
         public PackTransformer()
         {

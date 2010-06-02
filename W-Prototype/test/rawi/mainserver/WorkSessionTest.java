@@ -1,4 +1,4 @@
-package rawi.MainServer2;
+package rawi.mainserver;
 
 import static org.junit.Assert.*;
 
@@ -20,9 +20,7 @@ import rawi.common.Task;
 import rawi.common.TaskResult;
 
 import rawi.exceptions.DoubleSplitterException;
-import rawi.mainserver.TransformationModel;
 import rawi.mainserver.TransformationModel.*;
-import rawi.mainserver.WorkSession;
 import rawi.mainserver.WorkSession.*;
 import rawi.mainserver.XML.TransformationModelParser;
 

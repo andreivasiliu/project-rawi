@@ -11,7 +11,7 @@ public class RAWIMainServer implements Runnable
 {
     public void run()
     {
-        ClusterManager clusterManager = new ClusterManager();
+        final ClusterManager clusterManager = new ClusterManager();
         Thread t = new Thread(clusterManager, "Cluster-Manager-Thread");
         t.start();
         System.out.println("Started cluster manager.");
@@ -31,7 +31,15 @@ public class RAWIMainServer implements Runnable
         new Notifier("MainServer").start();
         System.out.println("Started IP notifier.");
 
-        Collection<String> IPs = NetworkUtils.getIPsFromTracker("ClusterComputer");
-        clusterManager.addIpsToScan(IPs);
+        Thread t2 = new Thread()
+        {
+            @Override
+            public void run()
+            {
+                Collection<String> IPs = NetworkUtils.getIPsFromTracker("ClusterComputer");
+                clusterManager.addIpsToScan(IPs);
+            }
+        };
+        t2.start();
     }
 }
