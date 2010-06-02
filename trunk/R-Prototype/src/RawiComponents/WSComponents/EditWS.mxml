@@ -25,7 +25,7 @@
 			public var sessionState:SessionState = new SessionState();
 			[Bindable]
 			public var propsGen:propsGeneral = new propsGeneral;
-			public var refreshTimer:Timer = new Timer(2000);
+			public var refreshTimer:Timer = new Timer(5000);
 			public function set activeNode(value:PackNodeBase):void
 			{
 				m_activeNode = value;
@@ -241,7 +241,7 @@
 						//packTransformerNode(nodesMap[int(node.@id)]).workingTasks = node.subState.(@status == "working").length();
 						//packTransformerNode(nodesMap[int(node.@id)]).doneTasks = node.subState.(@status == "done").length();
 						packTransformerNode(nodesMap[int(node.@id)]).pendingTasks = node.@pendingTasks;
-						packTransformerNode(nodesMap[int(node.@id)]).depNotMetTasks = node.@pendingTasks;
+						packTransformerNode(nodesMap[int(node.@id)]).depNotMetTasks = node.@dnmTasks;
 						packTransformerNode(nodesMap[int(node.@id)]).workingTasks = node.@workingTasks;
 						packTransformerNode(nodesMap[int(node.@id)]).doneTasks = node.@doneTasks;
 					}

@@ -20,12 +20,19 @@
 			{
 				var repr:XMLNode = new XMLNode(XMLNodeType.ELEMENT_NODE, this.nodeType);
 				repr.attributes.id = this.nid;
+				
 				if (this.propsContainer.nodeName.text != "")
 					repr.attributes.name = this.propsContainer.nodeName.text;
+				
 				repr.attributes.x = this.x;
 				repr.attributes.y = this.y;
+				
+				if (this.propsLocalContainer.allowsMultipleFiles.selected)
+					repr.attributes.allowsMultipleFiles = true;
+				
 				if (this.propsLocalContainer.isSplitter.selected)
 					repr.attributes.isSplitter = true;
+				
 				for each (var ref:String in inputFromNodes)
 				{
 					var tempNode:XMLNode = new XMLNode(XMLNodeType.ELEMENT_NODE, "input");

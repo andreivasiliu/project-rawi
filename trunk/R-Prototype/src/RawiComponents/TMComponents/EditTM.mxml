@@ -18,6 +18,7 @@
 			public var activeOverNode:PackNodeBase = null;
 			public var stateEditor:EditorState = new EditorState();
 			public var gridSize:int = 5;
+			public var packNumber:int = 1, transformerNumber:int = 1;
 			public function set activeNode(value:PackNodeBase):void
 			{
 				m_activeNode = value;
@@ -216,7 +217,7 @@
 				pn.nid = generateUniqueId();
 				pn.parentCont = this;
 				pn.propsContainer.initialize();
-				pn.propsContainer.nodeName.text = "new Pack";
+				pn.propsContainer.nodeName.text = "Pack" + packNumber++;
 				nodesMap[pn.nid] = pn;
 				reDrawConnections();
 				this.activeNode = pn;
@@ -231,7 +232,7 @@
 				ptn.parentCont = this;
 				ptn.nid = generateUniqueId();
 				ptn.propsContainer.initialize();
-				ptn.propsContainer.nodeName.text = "new Transformer";
+				ptn.propsContainer.nodeName.text = "Transformer" + transformerNumber++;
 				nodesMap[ptn.nid] = ptn;
 				reDrawConnections();
 				this.activeNode = ptn;

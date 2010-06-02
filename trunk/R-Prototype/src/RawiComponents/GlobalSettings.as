@@ -12,9 +12,9 @@ package RawiComponents
 			// return "/I-Prototype" if you are in browser, and the full adress if you are in debugg mode
 			// A.a.url returns http:// if running from browser
 			if (Application.application.url.charAt(0) == 'h')
-				return "/I-Prototype";
+				return ""; //"/I-Prototype";
 			else
-				return "http://localhost:8084/I-Prototype";
+				return "http://localhost:8083"; ///I-Prototype";
 		}
 		public static function configureListeners(dispatcher:IEventDispatcher):void
 		{
