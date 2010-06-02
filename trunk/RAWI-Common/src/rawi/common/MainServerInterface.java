@@ -13,6 +13,9 @@ public interface MainServerInterface extends Remote
     /** Used by a WebServer to create a WorkSession. */
     void createSession(SessionInfo sessionInfo) throws RemoteException;
 
+    /** Used by a WebServer to create a WorkSession. */
+    void createGiantTestSession(SessionInfo sessionInfo) throws RemoteException;
+
     /** Used by a WebServer to start a WorkSession. */
     void startSession(String sessionId) throws RemoteException;
 
@@ -36,7 +39,8 @@ public interface MainServerInterface extends Remote
     boolean putFileInPack(String sessionId, FileHandle file, String packId)
             throws RemoteException;
 
-    WorkSessionStatus getSessionStatus(String sessionId) throws RemoteException;
+    WorkSessionStatus getSessionStatus(String sessionId, int subStatesOffset,
+            int maxSubStates) throws RemoteException;
 
     void goodBye(String uuid) throws RemoteException;
 }

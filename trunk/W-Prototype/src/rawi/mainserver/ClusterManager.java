@@ -358,9 +358,18 @@ public class ClusterManager implements Runnable
         return session;
     }
 
-    // Probably one of the ugliest methods ever.
     public WorkSessionStatus getSessionStatus(String sessionId)
     {
+        return getSessionStatus(sessionId, 0, 10);
+    }
+
+    // Probably one of the ugliest methods ever.
+    public WorkSessionStatus getSessionStatus(String sessionId,
+            int subStatesOffset, int maxSubStates)
+    {
+        System.out.println("Get session status with offset: " + subStatesOffset +
+                " and max sub states: " + maxSubStates);
+
         WorkSession session = getSessionById(sessionId);
         WorkSessionStatus sessionStatus = new WorkSessionStatus();
 
@@ -376,6 +385,16 @@ public class ClusterManager implements Runnable
             pack.x = packInstance.getOrigin().getCoordX();
             pack.y = packInstance.getOrigin().getCoordY();
             pack.subStates = packInstance.subPacks();
+
+            // FIXME: Just counting them for now.
+            for (int i = 0; i < packInstance.subPacks(); i++)
+                if (packInstance.getState(i) == WorkSession.SubPackState.HAS_FILES)
+                    pack.fullSubPacks++;
+                else
+                    pack.emptySubPacks++;
+            pack.subStatesShown = Math.min(maxSubStates, pack.subStates);
+            pack.subStateOffset = Math.min(subStatesOffset,
+                    Math.max(0, pack.subStates - pack.subStatesShown));
 
             pack.status = new ArrayList<WorkSessionStatus.PackStatus>(packInstance.subPacks());
             pack.subStateFiles = new ArrayList<Collection<FileHandle>>(packInstance.subPacks());
@@ -402,6 +421,23 @@ public class ClusterManager implements Runnable
             packTransformer.x = packTransformerInstance.getOrigin().getCoordX();
             packTransformer.y = packTransformerInstance.getOrigin().getCoordY();
             packTransformer.subStates = packTransformerInstance.subPackTransformers();
+
+            // FIXME: Just counting them for now. Not scalable.
+            for (int i = 0; i < packTransformerInstance.subPackTransformers(); i++)
+            {
+                WorkSession.SubPackTransformerState subState = packTransformerInstance.getState(i);
+                if (subState == WorkSession.SubPackTransformerState.DONE)
+                    packTransformer.doneTasks++;
+                else if (subState == WorkSession.SubPackTransformerState.WORKING)
+                    packTransformer.workingTasks++;
+                else if (subState == WorkSession.SubPackTransformerState.PENDING)
+                    packTransformer.pendingTasks++;
+                else if (subState == WorkSession.SubPackTransformerState.DEPENDENCIES_NOT_MET)
+                    packTransformer.dnmTasks++;
+            }
+            packTransformer.subStatesShown = Math.min(maxSubStates, packTransformer.subStates);
+            packTransformer.subStateOffset = Math.min(subStatesOffset,
+                    Math.max(0, packTransformer.subStates - packTransformer.subStatesShown));
 
             packTransformer.status = new ArrayList<WorkSessionStatus.PackTransformerStatus>
                     (packTransformerInstance.subPackTransformers());

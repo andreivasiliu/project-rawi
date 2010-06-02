@@ -1,4 +1,4 @@
-package rawi.MainServer2.XML;
+package rawi.mainserver.XML;
 
 import rawi.mainserver.*;
 import java.io.InputStream;
@@ -11,7 +11,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import org.junit.Before;
 import org.junit.Test;
-import rawi.mainserver.XML.TransformationModelParser;
 
 public class TransformationModelParserTest
 {

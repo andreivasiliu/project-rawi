@@ -107,16 +107,22 @@ public class MainBean {
         return mainServersIps;
     }
 
-    public WorkSessionStatus getSessionStatus(long sessionId) {
+    public WorkSessionStatus getSessionStatus(long sessionId,
+            int subStatesOffset, int maxSubStates) {
         Session session = sessionList.get(sessionId);
 
         try {
             MainServerInterface msi = new RMIClientModel
                     <MainServerInterface>(session.mainServerIp,
                     Ports.MainServerPort).getInterface();
-            return msi.getSessionStatus(session.id.toString());
+            return msi.getSessionStatus(session.id.toString(), subStatesOffset,
+                    maxSubStates);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    public WorkSessionStatus getSessionStatus(long sessionId) {
+        return getSessionStatus(sessionId, 0, 10);
     }
 }
