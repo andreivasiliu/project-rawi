@@ -1,0 +1,1 @@
+Project RAWI is an attempt at creating a Makefile-like builder, using a graphical graph to describe the build process, and a cluster to run the build tasks.
